@@ -5,13 +5,16 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-NORMALIZER_VERSION = 1
+NORMALIZER_VERSION = 2
 
 
 class CompanyInfo(BaseModel):
     name: str
     domain: str | None = None
     hq_country: str | None = None  # ISO alpha-2
+    industry: str | None = None
+    is_staffing: bool = False
+    exclude_reason: str | None = None
     size_bucket: str | None = None  # '1-10','11-50','51-200','201-1000','1001-5000','5000+'
 
 
@@ -43,4 +46,8 @@ class NormalizedJob(BaseModel):
     description_text: str | None = None
     posted_at: datetime | None = None
     apply_url: str | None = None
+    years_min: int | None = None
+    years_max: int | None = None
+    visa_status: str = "not_stated"
+    visa_evidence: str | None = None
     normalizer_version: int = NORMALIZER_VERSION

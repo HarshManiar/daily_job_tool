@@ -129,10 +129,20 @@ class NormContext:
     data: NormData
     fx_rates: dict[str, float]  # USD per 1 unit of currency
     fx_is_fallback: bool = False
+    visa_phrases: Any = None  # VisaPhrases; None = built-in supplement only
 
     @classmethod
-    def load(cls, fx_rates: dict[str, float] | None = None) -> "NormContext":
+    def load(
+        cls, fx_rates: dict[str, float] | None = None, visa_phrases: Any = None
+    ) -> "NormContext":
         """Load data files once (cached). Without `fx_rates` the dev-only fallback table is used."""
+        if visa_phrases is None:
+            try:
+                from firsthand.match.profile import get_profile
+
+                visa_phrases = get_profile().visa_phrases()
+            except Exception:  # noqa: BLE001
+                visa_phrases = None
         if fx_rates:
-            return cls(load_data(), dict(fx_rates), False)
-        return cls(load_data(), dict(FALLBACK_USD_PER_UNIT), True)
+            return cls(load_data(), dict(fx_rates), False, visa_phrases)
+        return cls(load_data(), dict(FALLBACK_USD_PER_UNIT), True, visa_phrases)

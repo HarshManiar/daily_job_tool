@@ -292,3 +292,78 @@ def registry_verify(
         )
     ok = sum(r.result == "ok" for r in rows)
     typer.echo(f"{ok}/{len(rows)} ok")
+
+
+match_app = typer.Typer(no_args_is_help=True, help="Personal match engine (profile-driven).")
+app.add_typer(match_app, name="match")
+
+
+@match_app.command("explain")
+def match_explain(job_id: Annotated[int, typer.Argument()]) -> None:
+    """Show tier/status/reasons/visa evidence/years for one job."""
+    from sqlalchemy import text
+
+    from firsthand.db.session import get_engine
+
+    async def run() -> Any:
+        async with get_engine().connect() as c:
+            return (
+                await c.execute(
+                    text(
+                        "SELECT j.id, j.title, j.title_norm, co.name AS company, j.match_tier, "
+                        "j.match_status, j.match_reasons, j.visa_status, j.visa_evidence, "
+                        "j.years_min, j.years_max, j.industry_rank, j.location_rank, j.fit_score, "
+                        "j.employment_type, j.salary_max_usd FROM jobs j "
+                        "JOIN companies co ON co.id = j.company_id WHERE j.id = :i"
+                    ),
+                    {"i": job_id},
+                )
+            ).first()
+
+    r = asyncio.run(run())
+    if r is None:
+        typer.echo(f"job {job_id} not found")
+        raise typer.Exit(1)
+    typer.echo(f"job {r.id}: {r.title} @ {r.company}  (title_norm: {r.title_norm})")
+    typer.echo(f"  tier={r.match_tier} status={r.match_status} fit={r.fit_score}")
+    typer.echo(f"  reasons: {', '.join(r.match_reasons) or '-'}")
+    typer.echo(f"  ranks: location={r.location_rank} industry={r.industry_rank}")
+    typer.echo(f"  employment={r.employment_type} salary_max_usd={r.salary_max_usd}")
+    typer.echo(f"  years: min={r.years_min} max={r.years_max}")
+    typer.echo(
+        f"  visa: {r.visa_status}" + (f"  evidence: {r.visa_evidence!r}" if r.visa_evidence else "")
+    )
+
+
+@match_app.command("stats")
+def match_stats() -> None:
+    """Counts by status / tier / reason for open jobs."""
+    from sqlalchemy import text
+
+    from firsthand.db.session import get_engine
+
+    async def run() -> dict[str, list[Any]]:
+        q = {
+            "status": "SELECT match_status AS k, count(*) FROM jobs "
+            "WHERE closed_at IS NULL GROUP BY 1 ORDER BY 1",
+            "tier": "SELECT coalesce(match_tier::text,'none') AS k, count(*) FROM jobs "
+            "WHERE closed_at IS NULL GROUP BY 1 ORDER BY 1",
+            "reason": "SELECT r AS k, count(*) FROM jobs, unnest(match_reasons) r "
+            "WHERE closed_at IS NULL GROUP BY 1 ORDER BY 2 DESC",
+        }
+        async with get_engine().connect() as c:
+            return {k: list((await c.execute(text(v))).all()) for k, v in q.items()}
+
+    for name, rows in asyncio.run(run()).items():
+        typer.echo(f"by {name}:")
+        for k, n in rows:
+            typer.echo(f"  {k:28} {n}")
+
+
+@match_app.command("rescore")
+def match_rescore() -> None:
+    """Recompute match columns for all open jobs from stored data (no HTTP)."""
+    from firsthand.db.session import get_engine
+    from firsthand.pipeline.renormalize import rescore
+
+    typer.echo(f"rescored {asyncio.run(rescore(get_engine()))} jobs")

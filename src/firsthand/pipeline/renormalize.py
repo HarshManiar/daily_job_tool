@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from firsthand.adapters import registry
 from firsthand.adapters.base import Adapter
 from firsthand.db.schema import jobs
+from firsthand.match.profile import Profile, get_profile
 from firsthand.normalize import NORMALIZER_VERSION, CompanyInfo, NormContext, SourceInfo, normalize
 from firsthand.pipeline.ingest import (
     _job_values,
@@ -41,7 +42,13 @@ async def _free_key(conn, company_id: int, job_id: int, base: str) -> str:
     return k
 
 
-async def renormalize(engine: AsyncEngine, ctx: NormContext, *, only_outdated: bool = True) -> int:
+async def renormalize(
+    engine: AsyncEngine,
+    ctx: NormContext,
+    *,
+    only_outdated: bool = True,
+    profile: Profile | None = None,
+) -> int:
     """Re-run normalize over open postings that are the primary of their job. Returns jobs updated.
 
     Skips postings with an empty payload and postings whose adapter cannot rebuild a RawJob.
@@ -52,6 +59,7 @@ async def renormalize(engine: AsyncEngine, ctx: NormContext, *, only_outdated: b
     Bumps jobs.normalizer_version to the current version.
     """
     registry._load()  # noqa: SLF001
+    profile = profile or get_profile()
     cache: dict[str, Adapter] = {}
     updated = 0
     now = datetime.now(UTC)
@@ -61,7 +69,8 @@ async def renormalize(engine: AsyncEngine, ctx: NormContext, *, only_outdated: b
                 text(
                     "SELECT j.id AS job_id, j.company_id, j.dedupe_key, p.id AS posting_id, "
                     "p.payload, s.adapter, s.token, "
-                    "c.name, c.domain, c.hq_country, c.size_bucket "
+                    "c.name, c.domain, c.hq_country, c.size_bucket, "
+                    "c.industry, c.is_staffing, c.exclude_reason "
                     "FROM jobs j JOIN postings p ON p.id = j.primary_posting_id "
                     "JOIN sources s ON s.id = p.source_id JOIN companies c ON c.id = j.company_id "
                     "WHERE j.closed_at IS NULL AND p.closed_at IS NULL "
@@ -90,7 +99,13 @@ async def renormalize(engine: AsyncEngine, ctx: NormContext, *, only_outdated: b
             if raw is None:
                 continue
             company = CompanyInfo(
-                name=r.name, domain=r.domain, hq_country=r.hq_country, size_bucket=r.size_bucket
+                name=r.name,
+                domain=r.domain,
+                hq_country=r.hq_country,
+                size_bucket=r.size_bucket,
+                industry=r.industry,
+                is_staffing=r.is_staffing,
+                exclude_reason=r.exclude_reason,
             )
             try:
                 n = normalize(raw, company, SourceInfo(adapter=r.adapter, token=r.token), ctx)
@@ -112,7 +127,7 @@ async def renormalize(engine: AsyncEngine, ctx: NormContext, *, only_outdated: b
                 continue
             if unknown:
                 _mark_unknown(n, raw)
-            values = _job_values(n, raw)
+            values = _job_values(n, raw, company, profile)
             base = base_dedupe_key(n)
             if r.dedupe_key.split("#")[0] != base:
                 values["dedupe_key"] = await _free_key(conn, r.company_id, r.job_id, base)
@@ -128,3 +143,54 @@ async def renormalize(engine: AsyncEngine, ctx: NormContext, *, only_outdated: b
 
 
 __all__ = ["raw_from_payload", "renormalize"]
+
+
+async def rescore(engine: AsyncEngine, profile: Profile | None = None) -> int:
+    """Recompute match columns for all open jobs from stored columns (no HTTP, no re-parse)."""
+    from firsthand.match.engine import match as run_match
+    from firsthand.normalize.models import NormalizedJob
+
+    profile = profile or get_profile()
+    fields = [f for f in NormalizedJob.model_fields if f not in {"normalizer_version"}]
+    cols = ", ".join(f"j.{f}" for f in fields)
+    async with engine.begin() as conn:
+        rows = (
+            (
+                await conn.execute(
+                    text(
+                        f"SELECT j.id AS job_id, {cols}, c.name AS c_name, "
+                        "c.industry AS c_industry, "
+                        "c.is_staffing AS c_staffing, c.exclude_reason AS c_excl "
+                        "FROM jobs j JOIN companies c ON c.id = j.company_id "
+                        "WHERE j.closed_at IS NULL"
+                    )
+                )
+            )
+            .mappings()
+            .all()
+        )
+        for r in rows:
+            n = NormalizedJob(**{f: r[f] for f in fields})
+            co = CompanyInfo(
+                name=r["c_name"],
+                industry=r["c_industry"],
+                is_staffing=r["c_staffing"],
+                exclude_reason=r["c_excl"],
+            )
+            m = run_match(n, co, profile)
+            await conn.execute(
+                jobs.update()
+                .where(jobs.c.id == r["job_id"])
+                .values(
+                    match_tier=m.tier,
+                    match_status=m.status,
+                    match_reasons=m.reasons,
+                    industry_rank=m.industry_rank,
+                    location_rank=m.location_rank,
+                    fit_score=m.fit_score,
+                )
+            )
+    return len(rows)
+
+
+__all__ = ["raw_from_payload", "renormalize", "rescore"]

@@ -35,6 +35,8 @@ from firsthand.http.errors import (
     NotFound,
     RobotsDisallowed,
 )
+from firsthand.match.engine import match as run_match
+from firsthand.match.profile import Profile, get_profile
 from firsthand.normalize import NORMALIZER_VERSION, CompanyInfo, NormContext, SourceInfo, normalize
 from firsthand.normalize.models import NormalizedJob
 
@@ -214,8 +216,23 @@ class _Entry:
     key: str | None = None
 
 
-def _job_values(n: NormalizedJob, raw: RawJob) -> dict[str, Any]:
+def _job_values(
+    n: NormalizedJob,
+    raw: RawJob,
+    company: CompanyInfo | None = None,
+    profile: Profile | None = None,
+) -> dict[str, Any]:
     v = n.model_dump()
+    if company is not None:
+        m = run_match(n, company, profile or get_profile())
+        v.update(
+            match_tier=m.tier,
+            match_status=m.status,
+            match_reasons=m.reasons,
+            industry_rank=m.industry_rank,
+            location_rank=m.location_rank,
+            fit_score=m.fit_score,
+        )
     v["apply_url"] = n.apply_url or raw.apply_url or raw.url
     v["normalizer_version"] = NORMALIZER_VERSION
     return v
@@ -325,7 +342,8 @@ async def rebuild_job_from_posting(
         await conn.execute(
             text(
                 "SELECT p.payload, s.adapter, s.token, c.name, c.domain, c.hq_country, "
-                "c.size_bucket FROM postings p JOIN sources s ON s.id = p.source_id "
+                "c.size_bucket, c.industry, c.is_staffing, c.exclude_reason "
+                "FROM postings p JOIN sources s ON s.id = p.source_id "
                 "JOIN jobs j ON j.id = :j JOIN companies c ON c.id = j.company_id "
                 "WHERE p.id = :p"
             ),
@@ -339,7 +357,13 @@ async def rebuild_job_from_posting(
     if raw is None:
         return False
     company = CompanyInfo(
-        name=r.name, domain=r.domain, hq_country=r.hq_country, size_bucket=r.size_bucket
+        name=r.name,
+        domain=r.domain,
+        hq_country=r.hq_country,
+        size_bucket=r.size_bucket,
+        industry=r.industry,
+        is_staffing=r.is_staffing,
+        exclude_reason=r.exclude_reason,
     )
     try:
         n = normalize(raw, company, SourceInfo(adapter=r.adapter, token=r.token), ctx)
@@ -348,7 +372,9 @@ async def rebuild_job_from_posting(
         return False
     if is_us_eligible(n)[1]:
         _mark_unknown(n, raw)
-    await conn.execute(jobs.update().where(jobs.c.id == job_id).values(**_job_values(n, raw)))
+    await conn.execute(
+        jobs.update().where(jobs.c.id == job_id).values(**_job_values(n, raw, company))
+    )
     return True
 
 
@@ -366,6 +392,7 @@ async def ingest_source(
     *,
     now: datetime | None = None,
     us_only: bool = True,
+    profile: Profile | None = None,
 ) -> IngestResult:
     now = now or datetime.now(UTC)
     t0 = time.monotonic()
@@ -379,7 +406,8 @@ async def ingest_source(
                     "SELECT s.id, s.company_id, s.adapter, s.token, s.config, s.last_crawled_at, "
                     "s.last_success_at, "
                     "s.new_postings_ewma, s.consecutive_failures, c.name, c.domain, c.hq_country, "
-                    "c.size_bucket FROM sources s JOIN companies c ON c.id = s.company_id "
+                    "c.size_bucket, c.industry, c.is_staffing, c.exclude_reason "
+                    "FROM sources s JOIN companies c ON c.id = s.company_id "
                     "WHERE s.id = :id"
                 ),
                 {"id": source_id},
@@ -397,8 +425,15 @@ async def ingest_source(
     src = row
     ref = SourceRef(id=source_id, adapter=src.adapter, token=src.token, config=src.config or {})
     company = CompanyInfo(
-        name=src.name, domain=src.domain, hq_country=src.hq_country, size_bucket=src.size_bucket
+        name=src.name,
+        domain=src.domain,
+        hq_country=src.hq_country,
+        size_bucket=src.size_bucket,
+        industry=src.industry,
+        is_staffing=src.is_staffing,
+        exclude_reason=src.exclude_reason,
     )
+    profile = profile or get_profile()
     sinfo = SourceInfo(adapter=src.adapter, token=src.token)
     res = IngestResult(source_id=source_id, run_id=run_id, outcome="ok")
 
@@ -690,7 +725,7 @@ async def ingest_source(
                     if moved is not None:
                         e.job_id = e.ex.job_id
                         continue
-                vals = _job_values(e.norm, e.raw)
+                vals = _job_values(e.norm, e.raw, company, profile)
                 first = now
                 fresh = min(e.norm.posted_at or first, first)
                 stmt = (
@@ -800,7 +835,7 @@ async def ingest_source(
                     await conn.execute(
                         jobs.update()
                         .where(jobs.c.id == e.job_id)
-                        .values(**_job_values(e.norm, e.raw))
+                        .values(**_job_values(e.norm, e.raw, company, profile))
                     )
                     applied.add(e.job_id)
             resolve = _resolver(adapter)

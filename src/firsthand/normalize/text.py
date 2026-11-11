@@ -60,3 +60,21 @@ def fold(s: str) -> str:
     s = re.sub(r"[.'’`]", "", s)
     s = re.sub(r"[-_–—]", " ", s)
     return re.sub(r"[ \t\r\n\xa0]+", " ", s).strip()
+
+
+_BLOCK_CLOSE = re.compile(r"</?(?:p|div|li|ul|ol|br|h[1-6]|tr|table|section|article)\b[^>]*>", re.I)
+
+
+def html_to_lines(raw: str | None) -> str | None:
+    """Like html_to_text, but keeps block boundaries as newlines (for section-aware parsing)."""
+    if not raw or not raw.strip():
+        return None
+    s = _maybe_unescape(raw)
+    s = re.sub(r"<(?:script|style)\b.*?</(?:script|style)>", " ", s, flags=re.I | re.S)
+    s = _BLOCK_CLOSE.sub("\n", s)
+    s = _INLINE_TAG.sub("", s)
+    s = _ANY_TAG.sub(" ", s)
+    s = html.unescape(s).replace("\xa0", " ")
+    lines = [re.sub(r"[ \t\r\f\v]+", " ", ln).strip() for ln in s.split("\n")]
+    out = "\n".join(ln for ln in lines if ln)
+    return out or None

@@ -15,9 +15,11 @@ from firsthand.normalize.remote import derive_remote_regions, infer_remote_type
 from firsthand.normalize.salary import extract_salary
 from firsthand.normalize.seniority import infer_seniority
 from firsthand.normalize.techtags import extract_tech_tags
-from firsthand.normalize.text import clean_title, html_to_text, sanitize_html
+from firsthand.normalize.text import clean_title, html_to_lines, html_to_text, sanitize_html
 from firsthand.normalize.title import normalize_title
 from firsthand.normalize.url import canonical_apply_url
+from firsthand.normalize.visa import classify_visa
+from firsthand.normalize.years import extract_years
 
 __all__ = [
     "NORMALIZER_VERSION",
@@ -39,6 +41,7 @@ def normalize(
 
     desc_html = sanitize_html(raw.description_html)
     desc_text = html_to_text(raw.description_html)
+    desc_lines = html_to_lines(raw.description_html) or desc_text
 
     locs = parse_locations(raw.locations_raw, ctx, company.hq_country)
     remote_type = infer_remote_type(
@@ -47,6 +50,8 @@ def normalize(
     regions = derive_remote_regions(remote_type, locs.fragments, desc_text)
 
     sal = extract_salary(raw.salary, desc_text, ctx)
+    years_min, years_max = extract_years(desc_lines)
+    visa = classify_visa(desc_lines, ctx.visa_phrases)
 
     return NormalizedJob(
         title=title,
@@ -54,7 +59,7 @@ def normalize(
         seniority=seniority,
         function=function,
         department_raw=raw.department_raw,
-        employment_type=infer_employment_type(raw.employment_type_raw, title),
+        employment_type=infer_employment_type(raw.employment_type_raw, title, desc_text),
         remote_type=remote_type,
         remote_regions=regions,
         locations=locs.locations,
@@ -71,5 +76,9 @@ def normalize(
         description_text=desc_text,
         posted_at=raw.posted_at,
         apply_url=canonical_apply_url([raw.apply_url, raw.url], company.domain),
+        years_min=years_min,
+        years_max=years_max,
+        visa_status=str(visa),
+        visa_evidence=visa.evidence,
         normalizer_version=NORMALIZER_VERSION,
     )

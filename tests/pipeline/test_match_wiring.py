@@ -1,0 +1,76 @@
+from sqlalchemy import text
+
+from firsthand.match.profile import load_profile
+from firsthand.pipeline.renormalize import renormalize, rescore
+from tests.pipeline.helpers import CTX, FakeAdapter, crawl, job, rows, scalar, seed
+
+PROFILE = load_profile("data/profile.example.yaml")
+
+
+async def test_visa_exclusion_stored_not_dropped(db_clean):
+    eng = db_clean
+    sid = await seed(eng)
+    ad = FakeAdapter().push(
+        [
+            job("1", "Senior Data Analyst", "Edison, NJ", desc="<p>No visa sponsorship.</p>"),
+            job(
+                "2",
+                "Data Engineer",
+                "Austin, TX",
+                desc="<p>SQL Python</p><p>3+ years of experience</p>",
+            ),
+        ]
+    )
+    await crawl(eng, sid, ad, 0, profile=PROFILE)
+    r = (await rows(eng, "SELECT * FROM jobs WHERE title = 'Senior Data Analyst'"))[0]
+    assert r.match_status == "excluded" and "visa:not_available" in r.match_reasons
+    assert r.visa_status == "not_available" and "sponsorship" in r.visa_evidence.lower()
+    assert r.location_rank == 0 and r.match_tier == 2
+    r2 = (await rows(eng, "SELECT * FROM jobs WHERE title = 'Data Engineer'"))[0]
+    assert r2.years_min == 3 and r2.location_rank == 3 and r2.fit_score == 2
+    assert r2.match_status != "excluded"
+
+
+async def test_location_ranks_at_ingest(db_clean):
+    eng = db_clean
+    sid = await seed(eng)
+    locs = {
+        "a": ("Edison, NJ", 0), "b": ("Jersey City, NJ", 0), "c": ("Brooklyn, NY", 1),
+        "d": ("Remote - US", 2), "e": ("Austin, TX", 3),
+    }  # fmt: skip
+    ad = FakeAdapter().push([job(k, "Data Analyst", v[0]) for k, v in locs.items()])
+    await crawl(eng, sid, ad, 0, profile=PROFILE)
+    for k, (_, rank) in locs.items():
+        assert (
+            await scalar(
+                eng,
+                "SELECT location_rank FROM jobs WHERE apply_url LIKE :u",
+                u=f"%/jobs/{k}",
+            )
+            == rank
+        ), k
+
+
+async def test_renormalize_populates_match_columns_on_old_rows(db_clean):
+    eng = db_clean
+    sid = await seed(eng)
+    ad = FakeAdapter().push(
+        [job("1", "Data Analyst", "Edison, NJ", desc="<p>No sponsorship. SQL</p>")]
+    )
+    await crawl(eng, sid, ad, 0, profile=PROFILE)
+    async with eng.begin() as conn:
+        await conn.execute(
+            text(
+                "UPDATE jobs SET normalizer_version = 1, match_status = 'include', match_tier = NULL, "
+                "match_reasons = '{}', visa_status = 'not_stated', location_rank = 3, fit_score = 0"
+            )
+        )
+    assert await renormalize(eng, CTX, profile=PROFILE) == 1
+    r = (await rows(eng, "SELECT * FROM jobs"))[0]
+    assert r.normalizer_version == 2 and r.match_status == "excluded" and r.location_rank == 0
+    assert r.match_tier == 2
+
+    async with eng.begin() as conn:
+        await conn.execute(text("UPDATE jobs SET match_status = 'include', match_reasons = '{}'"))
+    assert await rescore(eng, PROFILE) == 1
+    assert (await rows(eng, "SELECT match_status FROM jobs"))[0].match_status == "excluded"

@@ -1,0 +1,82 @@
+"""Golden cases for classify_visa with the example-profile phrases: (text, expected status)."""
+
+NA, OF, NS = "not_available", "offered", "not_stated"
+
+VISA: list[tuple[str, str]] = [
+    # --- not available
+    ("No visa sponsorship is available for this role.", NA),
+    ("No sponsorship.", NA),
+    ("We will not sponsor employment visas.", NA),
+    ("The company is unable to sponsor work visas at this time.", NA),
+    ("We are not able to provide visa sponsorship.", NA),
+    ("Sponsorship is not available for this position.", NA),
+    ("Visa sponsorship: Not available", NA),
+    ("Visa sponsorship: no", NA),
+    ("Must be authorized to work in the US without sponsorship.", NA),
+    (
+        "Applicants must be legally authorized to work in the United States without visa sponsorship now or in the future.",
+        NA,
+    ),
+    ("U.S. citizens only.", NA),
+    ("US citizens only", NA),
+    ("US citizenship required.", NA),
+    ("Green card required.", NA),
+    ("Open to U.S. citizens or permanent residents only.", NA),
+    ("Candidates must be able to work without sponsorship.", NA),
+    ("We do not sponsor H-1B visas.", NA),
+    ("We don't provide visa sponsorship for this role.", NA),
+    ("Company cannot sponsor candidates for work visas.", NA),
+    ("This position is not eligible for visa sponsorship.", NA),
+    ("No H-1B sponsorship available.", NA),
+    ("We are not accepting applicants who require sponsorship.", NA),
+    ("Applicants must not require sponsorship now or in the future.", NA),
+    ("Sponsorship will not be provided.", NA),
+    ("We offer equal opportunity. We do not provide visa sponsorship.", NA),
+    (
+        "About us\nWe provide visa sponsorship for some roles.\nThis role does not offer sponsorship.",
+        NA,
+    ),
+    (
+        "Requirements\n- 3+ years SQL\n- Must be authorized to work in the US without sponsorship",
+        NA,
+    ),
+    ("As an equal opportunity employer, we cannot sponsor visas.", NA),
+    ("Must be a US citizen.", NA),
+    ("Only US citizens will be considered.", NA),
+    # --- near-misses that must NOT exclude
+    ("We do not discriminate on the basis of visa status.", NS),
+    ("We do not discriminate against applicants who need visa sponsorship.", NS),
+    ("Applicants must be authorized to work in the US.", NS),
+    ("Must be legally authorized to work in the United States.", NS),
+    ("Employment eligibility verification (I-9) is required upon hire.", NS),
+    ("We consider all applicants regardless of visa status.", NS),
+    ("No US citizenship required.", NS),
+    ("US citizenship is not required.", NS),
+    ("Not limited to US citizens, all qualified applicants are welcome.", NS),
+    ("We are an equal opportunity employer and welcome sponsorship of ideas from our team.", NS),
+    ("Sponsorship may be available for exceptional candidates.", OF),
+    ("Visa sponsorship is not available except for exceptional candidates.", NS),
+    ("We generally do not sponsor, but make exceptions for the right candidate.", NS),
+    ("Our sponsorship of local events is a point of pride.", NS),
+    ("", NS),
+    ("A great analytics role with strong SQL skills.", NS),
+    # --- offered
+    ("We provide visa sponsorship for qualified candidates.", OF),
+    ("Visa sponsorship is available.", OF),
+    ("Sponsorship is offered for this position.", OF),
+    ("H-1B transfer is supported.", OF),
+    ("H1B sponsorship available", OF),
+    ("We are open to sponsor the right candidate.", OF),
+    ("We will offer sponsorship to eligible candidates.", OF),
+    ("We are able to sponsor visas.", OF),
+    ("Benefits\n- Visa sponsorship available\n- 401k", OF),
+    # --- precedence: exclusion beats offer
+    ("We provide sponsorship in some cases. This role cannot sponsor.", NA),
+    (
+        "Sponsorship is available. Applicants must be authorized to work in the US without sponsorship.",
+        NA,
+    ),
+    # --- offer negated is not offer
+    ("We don't offer visa sponsorship.", NA),
+    ("We will not provide sponsorship.", NA),
+]
