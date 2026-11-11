@@ -7,7 +7,7 @@ Each task = one subagent run, ends with tests passing + one commit.
 
 1. **Main thread runs on Sonnet during implementation** (`/model sonnet`). Switch to Opus (`/model opus`) only for: phase-end reports, the 2.5 detection review, and design changes. When a Sonnet main thread needs a deep review, it delegates to the `architect` subagent with `model: "opus"` instead of switching.
 2. **Every delegation passes `model` explicitly** (`"sonnet"` / `"haiku"` / `"opus"`).
-3. **Reviews are spot-checks by default:** read the diff summary + tests, skim hot spots, no line-by-line read. **Full Opus review (via `architect`) only for:** DB schema (1.2), CrawlClient (1.3), ingest closing/dedupe (1.7), and auth (3.3, security-sensitive; added beyond the original three).
+3. **Reviews are spot-checks by default:** read the diff summary + tests, skim hot spots, no line-by-line read. **Full Opus review (via `architect`) only for:** DB schema (1.2), CrawlClient (1.3), ingest closing/dedupe (1.7). (Auth removed: personal single-user site.)
 4. **Small related tasks are bundled** into one subagent run.
 5. **Stop at each phase end**, as before. Each phase leaves a working product.
 6. Stretch work is moved to **Deferred** (bottom). Pull items back only if usage allows.
@@ -67,10 +67,10 @@ Dependencies are in `(after …)`. Tasks without mutual dependencies run in para
 
 - ☐ **3.1** `[sonnet/builder]` `SearchFilters` model + query builder for all filters, filter UI (HTMX, URL state), indexes. *AC:* DB test per filter; p95 < 300 ms on 150k synthetic jobs.
 - ☐ **3.2** `[sonnet/builder]` Nightly `company_daily_stats`, company list + pages with 90-day SVG sparkline **+** badges (high-salary percentile, hidden gem, "Hidden gems" view). `[haiku/grunt]` builds `data/well_known.csv` first. *(Bundles old 3.2 + 3.7.)*
-- ☐ **3.3** `[sonnet/builder]` Auth: users/plans/tokens/sessions migration, magic-link login, email backend abstraction. **Full review (architect/opus).**
-- ☐ **3.4** `[sonnet/builder]` Saved searches CRUD + plan limits **+** RSS/Atom (per saved search + anonymous filter URLs). *(Bundles old 3.4 + 3.6.)*
-- ☐ **3.5** `[sonnet/builder]` Alerts: matcher, daily digest, instant 15-min batches, idempotency, `alert_delay`, unsubscribe.
-- ☐ **3.6** `[sonnet/builder]` Removal flow (`/remove`, domain-email verification, admin approve, block + hide) **+** `[haiku/grunt]` static pages (about, privacy, `/bot`, removal policy, README).
+- ~~**3.3** Auth~~ **Removed: personal single-user site, no accounts.** Replaced by a tiny `OWNER_TOKEN` env check (below) folded into 3.4.
+- ☐ **3.4** `[sonnet/builder]` Saved searches CRUD (no users table; one owner; write routes and `/admin` guarded by a single `OWNER_TOKEN` env secret, set once via cookie/`?token=`, constant-time compare; if unset, writes are allowed only from localhost) **+** RSS/Atom (per saved search via unguessable `rss_token` + filter URLs). *(Bundles old 3.4 + 3.6.)*
+- ☐ **3.5** `[sonnet/builder]` Alerts to the owner's single `ALERT_EMAIL` (env): matcher, daily digest, instant 15-min batches, idempotency. No unsubscribe flow or plan delay needed.
+- ☐ **3.6** `[sonnet/builder]` Removal flow (`/remove` form for companies that ask, admin approve via OWNER_TOKEN, block + hide; keep: it's a compliance rule) **+** `[haiku/grunt]` static pages (about, privacy, `/bot`, removal policy, README).
 - ☐ **3.7** `[sonnet/builder]` Deploy: Dockerfile, compose (postgres, web, worker, caddy), backups, `make deploy` for the chosen host.
 - ☐ **3.8** `[opus/main — switch to Opus]` **Phase 3 report**. Wait.
 

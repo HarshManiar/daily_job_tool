@@ -45,7 +45,7 @@ Status: **Draft v1, Phase 0**. Waiting for approval. Owner of this doc: main thr
 ```
              ┌────────────────────────────────────────────────────────────┐
              │                        Postgres                            │
-             │ companies · sources · postings · jobs · crawl_runs · users │
+             │ companies · sources · postings · jobs · crawl_runs        │
              │ saved_searches · alert_deliveries · fx_rates · robots_cache│
              └───▲─────────────▲──────────────▲───────────────▲───────────┘
                  │             │              │               │
@@ -266,28 +266,12 @@ CREATE TABLE robots_cache (host text PRIMARY KEY, body text, status int, fetched
 CREATE TABLE fx_rates (day date, currency char(3), usd_per_unit numeric NOT NULL, PRIMARY KEY (day, currency));
 CREATE TABLE llm_extractions (page_hash bytea PRIMARY KEY, model text, result jsonb, cost_usd numeric, created_at timestamptz DEFAULT now());
 
--- ── Users / product (Phase 3) ─────────────────────────────────────────────
-CREATE TABLE plans (                                  -- monetization-ready, only 'free' exists at first
-  code                text PRIMARY KEY,               -- 'free','pro'
-  max_saved_searches  int NOT NULL,
-  instant_alerts      boolean NOT NULL,
-  alert_delay         interval NOT NULL DEFAULT '0'   -- e.g. free users' alerts delayed vs pro
-);
-CREATE TABLE users (
-  id bigserial PRIMARY KEY, email citext UNIQUE NOT NULL,
-  plan_code text NOT NULL DEFAULT 'free' REFERENCES plans(code),
-  created_at timestamptz NOT NULL DEFAULT now(), last_login_at timestamptz,
-  email_verified_at timestamptz
-);
-CREATE TABLE auth_tokens (token_hash bytea PRIMARY KEY, user_id bigint REFERENCES users(id) ON DELETE CASCADE,
-  purpose text NOT NULL, expires_at timestamptz NOT NULL, used_at timestamptz);
-CREATE TABLE sessions (id_hash bytea PRIMARY KEY, user_id bigint REFERENCES users(id) ON DELETE CASCADE,
-  expires_at timestamptz NOT NULL);
+-- ── Product (Phase 3) — SINGLE-USER: no users, plans, sessions or login ──
 CREATE TABLE saved_searches (
-  id bigserial PRIMARY KEY, user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id bigserial PRIMARY KEY,
   name text NOT NULL, query jsonb NOT NULL,           -- serialized SearchFilters (same model as the UI)
   alert_frequency text NOT NULL DEFAULT 'daily' CHECK (alert_frequency IN ('off','daily','instant')),
-  rss_token text UNIQUE NOT NULL,
+  rss_token text UNIQUE NOT NULL,                      -- unguessable; RSS URL is the only "auth"
   last_alert_cursor timestamptz,                       -- jobs.first_seen_at high-water mark
   created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -302,7 +286,7 @@ CREATE TABLE alert_deliveries (
 Notes:
 - `postings.payload` keeps only the **latest** payload, not history, to keep storage bounded. If a version history turns out to be useful, add `posting_versions` later.
 - `NORMALIZER_VERSION` bump → `firsthand renormalize` reprocesses every open posting from `payload` without any HTTP.
-- The money fields support a paid tier through `plans` (alert limits, alert delay) without schema changes.
+- Monetization / multi-user is out of scope (personal site). Adding `users` and `plans` tables later would not require changes to the crawl/jobs tables.
 
 ---
 
@@ -471,12 +455,11 @@ Dedupe runs **only within a company** (cross-company duplicates are not a real c
 - **One `SearchFilters` Pydantic model** is the single source of truth for querystring ↔ SQL ↔ saved-search JSON ↔ RSS ↔ alert matching. Fields: `q, title, company, countries[], remote (any|remote|hybrid|onsite), salary_min_usd, seniority[], function[], tech[], posted_within_days, has_salary, hidden_gems, high_salary`.
 - Pagination: keyset on `(freshness_at, id)`.
 - Search ranking: when `q` is present, sort by `ts_rank_cd(search_tsv, websearch_to_tsquery(q)) * freshness_decay`. Otherwise sort by freshness.
-- Browsing needs no login. Auth is magic-link email only (no passwords).
+- **Personal site, single owner: no accounts, sign-up, or login.** Browsing is open. Owner-only actions (saved searches, `/admin`, removal approvals) are guarded by one `OWNER_TOKEN` env secret (constant-time compare; if unset, only localhost may write). Alerts go to one `ALERT_EMAIL`. A `users`/`plans` layer can be added later if this ever becomes multi-user.
 
 ### Alerts
 - **Daily digest** (one per user at about 08:00 in their timezone, default UTC): for each saved search, jobs with `first_seen_at > last_alert_cursor` that match the filters, top 50, then advance the cursor. `alert_deliveries` makes sends idempotent.
-- **Instant**: a batch every 15 minutes (not per job), holding back jobs younger than `plans.alert_delay`.
-- Every email has one-click unsubscribe (`List-Unsubscribe` + signed link).
+- **Instant**: a batch every 15 minutes (not per job), sent to the single `ALERT_EMAIL`.
 
 ---
 
