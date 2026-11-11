@@ -135,6 +135,7 @@ LOCATIONS: list[tuple] = [
     ("Remote (EMEA)", [N]),
     ("Remote - Europe", [N]),
     ("Remote - Anywhere", [N]),
+    ("San Francisco or Remote (Canada)", [SF, (None, None, "CA")]),
     ("Remote (US or Canada)", [(None, None, "US"), (None, None, "CA")]),
     ("Hybrid - London", [("London", None, "GB")]),
     ("London (Hybrid)", [("London", None, "GB")]),

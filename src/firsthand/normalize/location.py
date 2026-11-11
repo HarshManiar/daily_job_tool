@@ -62,6 +62,19 @@ class LocationResult:
     fragments: list[Frag]
 
 
+def _split_or(p: str) -> list[str]:
+    """Split on ' or ' occurring outside parentheses."""
+    out: list[str] = []
+    last = 0
+    for m in _OR.finditer(p):
+        depth = p.count("(", 0, m.start()) - p.count(")", 0, m.start())
+        if depth <= 0:
+            out.append(p[last : m.start()])
+            last = m.end()
+    out.append(p[last:])
+    return out
+
+
 def _split_top(s: str) -> list[str]:
     """Split on | ; bullet / and ' or ', ignoring separators inside parentheses."""
     parts: list[str] = []
@@ -79,7 +92,7 @@ def _split_top(s: str) -> list[str]:
     parts.append("".join(cur))
     out: list[str] = []
     for p in parts:
-        out.extend(_OR.split(p) if "(" not in p else [p])
+        out.extend(_split_or(p))
     return [p.strip() for p in out if p.strip()]
 
 

@@ -40,3 +40,10 @@ def get_adapter(name: str) -> Adapter:
 def all_adapters() -> list[Adapter]:
     _load()
     return [cls() for _, cls in sorted(_REGISTRY.items())]
+
+
+def get_tier(name: str) -> int:
+    """Source tier of a registered adapter (lower is better); 99 for unknown names."""
+    _load()
+    cls = _REGISTRY.get(name)
+    return cls.tier if cls is not None else 99

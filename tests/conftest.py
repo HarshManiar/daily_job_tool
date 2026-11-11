@@ -1,10 +1,13 @@
 import asyncio
+import os
 from pathlib import Path
 
 import pytest
 import pytest_asyncio
 from alembic import command
 from alembic.config import Config
+from sqlalchemy import text
+from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -29,28 +32,54 @@ async def _ping(url: str) -> None:
         await engine.dispose()
 
 
-@pytest.fixture(scope="session")
-def test_db_url() -> str:
-    return get_settings().test_database_url
-
-
-@pytest.fixture(scope="session")
-def migrated_db(test_db_url: str):
-    """Run `alembic upgrade head` on the test DB for the session; `downgrade base` at the end."""
-    try:
-        asyncio.run(_ping(test_db_url))
-    except Exception as exc:  # noqa: BLE001
-        pytest.skip(f"test database unreachable ({test_db_url}): {exc!r}")
-    from sqlalchemy.engine import make_url
-
-    assert (make_url(test_db_url).database or "").endswith("_test"), (
-        "refusing to wipe a non-test DB"
+async def _admin(url: URL, sql: str) -> None:
+    """Run one statement on the `postgres` maintenance DB in autocommit mode."""
+    engine = create_async_engine(
+        url.set(database="postgres"), poolclass=NullPool, isolation_level="AUTOCOMMIT"
     )
-    cfg = alembic_config(test_db_url)
-    command.downgrade(cfg, "base")  # start clean even if a previous run crashed
-    command.upgrade(cfg, "head")
-    yield test_db_url
-    command.downgrade(cfg, "base")
+    try:
+        async with engine.connect() as c:
+            await c.execute(text(sql))
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture(scope="session")
+def migrated_db():
+    """Per-process database `firsthand_<pid>_test`, migrated to head and dropped at the end.
+
+    Isolation lets several pytest processes (or agents) run concurrently. Set
+    FIRSTHAND_TEST_SHARED_DB=1 to use TEST_DATABASE_URL (must end in `_test`) as-is instead.
+    """
+    base = make_url(get_settings().test_database_url)
+    shared = os.environ.get("FIRSTHAND_TEST_SHARED_DB") == "1"
+    own = not shared
+    url = base if shared else base.set(database=f"firsthand_{os.getpid()}_test")
+    assert (url.database or "").endswith("_test"), "refusing to wipe a non-test DB"
+    try:
+        asyncio.run(_ping(base.set(database="postgres") if own else base))
+        if own:
+            asyncio.run(_admin(base, f'DROP DATABASE IF EXISTS "{url.database}" WITH (FORCE)'))
+            asyncio.run(_admin(base, f'CREATE DATABASE "{url.database}"'))
+    except Exception as exc:  # noqa: BLE001
+        pytest.skip(f"test database unreachable ({base}): {exc!r}")
+    rendered = url.render_as_string(hide_password=False)
+    cfg = alembic_config(rendered)
+    try:
+        if shared:
+            command.downgrade(cfg, "base")
+        command.upgrade(cfg, "head")
+        yield rendered
+    finally:
+        if own:
+            asyncio.run(_admin(base, f'DROP DATABASE IF EXISTS "{url.database}" WITH (FORCE)'))
+        else:
+            command.downgrade(cfg, "base")
+
+
+@pytest.fixture(scope="session")
+def test_db_url(migrated_db: str) -> str:
+    return migrated_db
 
 
 @pytest_asyncio.fixture

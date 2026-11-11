@@ -21,13 +21,18 @@ def at(day: float) -> datetime:
 def job(
     ext: str, title: str = "Software Engineer", loc: str | None = "New York, NY", **kw
 ) -> RawJob:
+    desc = kw.pop("desc", None)
     payload = {"id": ext, "title": title, "loc": loc, **kw.pop("extra", {})}
+    if desc:
+        payload["desc"] = desc
+    if kw.get("apply_url"):
+        payload["apply"] = kw["apply_url"]
     return RawJob(
         external_id=ext,
         title=title,
         url=f"https://example.com/jobs/{ext}",
         locations_raw=[loc] if loc else [],
-        description_html="<p>desc</p>",
+        description_html=desc or "<p>desc</p>",
         payload=payload,
         **kw,
     )
@@ -56,6 +61,21 @@ class FakeAdapter(Adapter):
         if isinstance(step, Exception):
             raise step
         return step
+
+    def _map(self, payload: dict[str, Any]) -> RawJob:
+        """Rebuild a RawJob from a stored payload (what renormalize / refresh rely on)."""
+        loc = payload.get("loc")
+        return RawJob(
+            external_id=payload["id"],
+            title=payload["title"],
+            url=f"https://example.com/jobs/{payload['id']}",
+            apply_url=payload.get("apply"),
+            locations_raw=[loc] if loc else [],
+            description_html="<p>detailed</p>"
+            if payload.get("detail")
+            else payload.get("desc", "<p>desc</p>"),
+            payload=payload,
+        )
 
     async def fetch_detail(self, src: SourceRef, job: RawJob, http) -> RawJob:
         self.detail_calls.append(job.external_id)

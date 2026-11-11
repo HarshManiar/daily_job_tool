@@ -284,7 +284,8 @@ async def test_us_filter(db_clean):
     assert r.skipped_non_us == 2 and r.jobs_created == 4
     for ext in ("lon", "rde"):
         p = await posting(eng, sid, ext)
-        assert p.job_id is None and p.payload == {} and len(p.payload_hash) == 32
+        assert p.job_id is None and len(p.payload_hash) == 32
+        assert p.payload == {"_skipped_v": NORMALIZER_VERSION}
     for ext in ("rus", "nyc", "rem", "unk"):
         assert (await posting(eng, sid, ext)).job_id is not None
     unk = (
@@ -319,7 +320,7 @@ async def test_changed_posting_becomes_non_us_detaches_job(db_clean):
     r = await crawl(eng, sid, fa, 1)
     assert r.postings_updated == 1 and r.skipped_non_us == 1
     p = await posting(eng, sid, "a")
-    assert p.job_id is None and p.payload == {}
+    assert p.job_id is None and p.payload == {"_skipped_v": NORMALIZER_VERSION}
     assert await scalar(eng, "SELECT count(*) FROM jobs WHERE closed_at IS NULL") == 0
 
 
@@ -344,7 +345,7 @@ async def test_needs_detail_only_for_new_or_changed(db_clean):
     assert (await posting(eng, sid, "b")).payload["rev"] == 2
 
 
-async def test_detail_failure_is_partial_and_retried(db_clean):
+async def test_detail_failure_is_ok_with_warning_and_retried(db_clean):
     eng = db_clean
     sid = await seed(eng)
 
@@ -362,7 +363,8 @@ async def test_detail_failure_is_partial_and_retried(db_clean):
     fa = Flaky()
     fa.push([a, b]).push([a, b])
     r1 = await crawl(eng, sid, fa, 0)
-    assert r1.outcome == "partial" and r1.postings_new == 1
+    assert r1.outcome == "ok" and r1.detail_failures == 1 and r1.postings_new == 1
+    assert "b:" in (await scalar(eng, "SELECT error FROM crawl_runs WHERE id = :i", i=r1.run_id))
     assert await scalar(eng, "SELECT count(*) FROM postings") == 1
     r2 = await crawl(eng, sid, fa, 1)
     assert r2.outcome == "ok" and r2.postings_new == 1
