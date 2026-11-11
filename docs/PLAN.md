@@ -68,10 +68,10 @@ Dependencies are in `(after …)`. Tasks without mutual dependencies run in para
 - ☐ **3.1** `[sonnet/builder]` `SearchFilters` model + query builder for all filters, filter UI (HTMX, URL state), indexes. *AC:* DB test per filter; p95 < 300 ms on 150k synthetic jobs.
 - ☐ **3.2** `[sonnet/builder]` Nightly `company_daily_stats`, company list + pages with 90-day SVG sparkline **+** badges (high-salary percentile, hidden gem, "Hidden gems" view). `[haiku/grunt]` builds `data/well_known.csv` first. *(Bundles old 3.2 + 3.7.)*
 - ~~**3.3** Auth~~ **Removed: personal single-user site, no accounts.** Replaced by a tiny `OWNER_TOKEN` env check (below) folded into 3.4.
-- ☐ **3.4** `[sonnet/builder]` Saved searches CRUD (no users table; one owner; write routes and `/admin` guarded by a single `OWNER_TOKEN` env secret, set once via cookie/`?token=`, constant-time compare; if unset, writes are allowed only from localhost) **+** RSS/Atom (per saved search via unguessable `rss_token` + filter URLs). *(Bundles old 3.4 + 3.6.)*
-- ☐ **3.5** `[sonnet/builder]` Alerts to the owner's single `ALERT_EMAIL` (env): matcher, daily digest, instant 15-min batches, idempotency. No unsubscribe flow or plan delay needed.
-- ☐ **3.6** `[sonnet/builder]` Removal flow (`/remove` form for companies that ask, admin approve via OWNER_TOKEN, block + hide; keep: it's a compliance rule) **+** `[haiku/grunt]` static pages (about, privacy, `/bot`, removal policy, README).
-- ☐ **3.7** `[sonnet/builder]` Deploy: Dockerfile, compose (postgres, web, worker, caddy), backups, `make deploy` for the chosen host.
+- ☐ **3.4** `[sonnet/builder]` Saved searches CRUD (no users table; single owner; the app listens on 127.0.0.1 only, so no token or login at all) **+** RSS/Atom (per saved search via unguessable `rss_token` + filter URLs). *(Bundles old 3.4 + 3.6.)*
+- ☐ **3.5** `[sonnet/builder]` Alerts for the owner: matcher, daily digest, instant 15-min batches, idempotency. Delivery channels: macOS desktop notification (osascript) + a local `/alerts` inbox page by default; optional email via SMTP (`ALERT_EMAIL`, `SMTP_*` in `.env`, e.g. a Gmail app password), off by default.
+- ☐ **3.6** `[sonnet/builder]` Removal flow (`/remove` form for companies that ask, admin approve on the local `/admin` page, block + hide; keep: it's a compliance rule) **+** `[haiku/grunt]` static pages (about, privacy, `/bot`, removal policy, README).
+- ☐ **3.7** `[sonnet/builder]` Local run, no hosting: `make up` starts web (bound to **127.0.0.1 only**) + worker + alerts; a `launchd` plist (`make install-agent`) to start them at login and keep the worker running; `make backup` = `pg_dump` to `~/Backups/firsthand/`. Worker must tolerate the laptop sleeping (due-time claims already catch up; no burst: cap catch-up to the normal per-host rate limits).
 - ☐ **3.8** `[opus/main — switch to Opus]` **Phase 3 report**. Wait.
 
 ---

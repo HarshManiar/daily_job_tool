@@ -31,12 +31,12 @@ Status: **Draft v1, Phase 0**. Waiting for approval. Owner of this doc: main thr
 | Queue / scheduler | **Postgres only** (`SELECT … FOR UPDATE SKIP LOCKED` on `sources.next_crawl_at`) | **Change:** no Redis/arq. The crawl unit is a row with a due time, so a separate queue would just duplicate state. |
 | API + UI | **FastAPI + Jinja2 + HTMX**, Tailwind via the standalone CLI (no Node) | **Change (needs your OK):** server-rendered instead of Next.js. One deploy, no Node toolchain (Node isn't installed here), SEO-friendly company pages, and plenty for a feed-plus-filters product. The JSON API (`/api/v1`) still exists, so a Next.js frontend can be added later. |
 | CLI | `typer` | `firsthand crawl/detect/registry/report/fixtures …` |
-| Email | Provider abstraction; **Resend** or **Postmark** in prod, console backend in dev | Magic-link auth and alerts. |
+| Alerts | macOS notification (`osascript`) + local inbox page; optional SMTP email | No auth, no email provider needed. |
 | Geocoding | **GeoNames** offline dumps (`cities15000`, `admin1`, `countryInfo`, alt names), CC-BY | No external API calls at runtime. |
 | FX | ECB daily reference rates (free XML), cached in `fx_rates` | |
 | LLM (**deferred**) | Anthropic API, `claude-haiku-5-5`, results cached by page hash | Last-resort extraction for custom career pages only, with a hard monthly cost cap. Cut from the lean plan along with Playwright and the iCIMS/SuccessFactors/Jobvite adapters (see PLAN "Deferred"). The interfaces still allow them. |
 | Local dev | **Homebrew Postgres 17** (Docker isn't installed) + `docker-compose.yml` kept for deploy parity | See open question Q3. |
-| Deploy | One small VM (e.g. Hetzner CX22, ~US$5/mo, 4 GB RAM) running Postgres + web + worker under Docker Compose + Caddy (TLS). Nightly `pg_dump` to object storage. | Managed-Postgres free tiers (~0.5 GB) are too small. Estimate: 1–3 GB within months. |
+| Deploy | **Local only (own laptop)**: Homebrew Postgres + `make up`, `launchd` agent, `pg_dump` backups. (Earlier idea, not used: one small VM (e.g. Hetzner CX22, ~US$5/mo, 4 GB RAM) running Postgres + web + worker under Docker Compose + Caddy (TLS). Nightly `pg_dump` to object storage. | Managed-Postgres free tiers (~0.5 GB) are too small. Estimate: 1–3 GB within months. |
 
 ---
 
@@ -455,7 +455,7 @@ Dedupe runs **only within a company** (cross-company duplicates are not a real c
 - **One `SearchFilters` Pydantic model** is the single source of truth for querystring ↔ SQL ↔ saved-search JSON ↔ RSS ↔ alert matching. Fields: `q, title, company, countries[], remote (any|remote|hybrid|onsite), salary_min_usd, seniority[], function[], tech[], posted_within_days, has_salary, hidden_gems, high_salary`.
 - Pagination: keyset on `(freshness_at, id)`.
 - Search ranking: when `q` is present, sort by `ts_rank_cd(search_tsv, websearch_to_tsquery(q)) * freshness_decay`. Otherwise sort by freshness.
-- **Personal site, single owner: no accounts, sign-up, or login.** Browsing is open. Owner-only actions (saved searches, `/admin`, removal approvals) are guarded by one `OWNER_TOKEN` env secret (constant-time compare; if unset, only localhost may write). Alerts go to one `ALERT_EMAIL`. A `users`/`plans` layer can be added later if this ever becomes multi-user.
+- **Personal site, single owner: no accounts, sign-up, or login.** Browsing is open. **Runs only on the owner's laptop**: the web app binds to `127.0.0.1`, so no auth or token is needed (never bind `0.0.0.0`). Alerts: macOS desktop notification + local `/alerts` page; optional SMTP email. If this is ever hosted publicly, add auth first (a `users`/`plans` layer won't touch the crawl/jobs tables).
 
 ### Alerts
 - **Daily digest** (one per user at about 08:00 in their timezone, default UTC): for each saved search, jobs with `first_seen_at > last_alert_cursor` that match the filters, top 50, then advance the cursor. `alert_deliveries` makes sends idempotent.
