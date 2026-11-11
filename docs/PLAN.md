@@ -16,6 +16,12 @@ Dependencies are in `(after …)`. Tasks without mutual dependencies run in para
 
 ---
 
+## Scope: United States jobs only (see ARCHITECTURE §0)
+
+Tasks below are adjusted: 1.7 adds the US-eligibility filter; 2.5/2.6 drop Personio, Teamtailor, Recruitee and SmartRecruiters to Deferred (keep Workable + BambooHR); 3.1 filters by US state/metro instead of country; 4.3 uses a US-only gazetteer.
+
+---
+
 ## Phase 0 — Plan ✅
 
 - ☑ **0.1** `[opus/main]` Create `.claude/agents/{architect,builder,grunt}.md`. — done by: opus
@@ -37,7 +43,7 @@ Dependencies are in `(after …)`. Tasks without mutual dependencies run in para
 - ☑ **1.4** `[haiku/grunt]` (after 1.3) Record fixtures (3 small boards + one 404 token each for Greenhouse, Lever, Ashby; the main thread supplies tokens). Also write the data files: `titles.yaml`, `functions.yaml`, `tech_tags.yaml` (~300 tags with `requires_context`), `blocked_domains.csv`, and the Phase 1 location table. *(Bundles old 1.5 + 1.7a.)* *AC:* fixtures ≤500 KB each; YAML loads. Spot-check 30 data entries.
 - ☐ **1.5** `[sonnet/builder]` (after 1.4) **All three Tier 1 adapters in one run:** Greenhouse (verify the pay-transparency detail param), Lever (US/EU region, pagination), Ashby (compensation, workplaceType). Offline tests for each: mapping, empty, 404, malformed record. *(Bundles old 1.6a–c.)*
 - ☐ **1.6** `[sonnet/builder]` (after 1.2, 1.4) **Normalizer in one run:** text sanitize, title_norm, seniority, function, employment type, locations v1, remote type + regions, tech tags, salary (structured + regex v1) + annualization + FX (ECB fetch + `fx_rates`). Golden tests: ≥200 titles, ≥100 locations, ≥150 salary strings. *AC:* ≥95% title golden accuracy. *(Bundles old 1.7b–d.)*
-- ☐ **1.7** `[sonnet/builder]` (after 1.5, 1.6) Ingest: posting upsert + hash, detail-on-new hook, normalize → jobs, dedupe (ARCH §7), closing with `complete` + mass-disappearance guard, reopen within 14 days, crawl_runs, `firsthand renormalize`. *AC:* fixture-sequence DB tests (new → unchanged → missed 1 → closed → reopened; suspicious drop not closed). **Full review (architect/opus).**
+- ☐ **1.7** `[sonnet/builder]` (after 1.5, 1.6) Ingest (**with US-only filter per ARCH §0**: non-US-eligible postings stored as id+hash only, `job_id NULL`): posting upsert + hash, detail-on-new hook, normalize → jobs, dedupe (ARCH §7), closing with `complete` + mass-disappearance guard, reopen within 14 days, crawl_runs, `firsthand renormalize`. *AC:* fixture-sequence DB tests (new → unchanged → missed 1 → closed → reopened; suspicious drop not closed). **Full review (architect/opus).**
 - ☐ **1.8** `[sonnet/builder]` (after 1.7) Worker (SKIP LOCKED claim, concurrency, interval/priority/jitter, breaker, `crawl --once`, `worker`) **+ registry importer** (`registry import` idempotent, blocked domains enforced; `registry verify`). *(Bundles old 1.9 + 1.10.)* *AC:* two-worker no-double-claim test; breaker test; re-import no-op.
 - ☐ **1.9** `[haiku/grunt]` (after 1.8) Compile `data/seeds.csv` (~250 companies on Greenhouse/Lever/Ashby), run `registry verify`, drop failures. *AC:* ≥200 verified rows.
 - ☐ **1.10** `[sonnet/builder]` (after 1.7) Web v1: FastAPI + Jinja + HTMX + Tailwind standalone CLI. Feed (keyset pagination), keyword search (FTS + trigram), job detail with apply link, `/bot`, `/api/v1/jobs`. *AC:* route tests; feed < 300 ms server time on 20k synthetic jobs.
@@ -53,8 +59,8 @@ Dependencies are in `(after …)`. Tasks without mutual dependencies run in para
 - ☐ **2.2** `[sonnet/builder]` (after 2.1) Detector per ARCH §9 (patterns, slug probing + identity verification, confidence) and `firsthand detect`. *AC:* ≥95% on fixtures, 0 false positives on custom-page fixtures. Spot-check.
 - ☐ **2.3** `[haiku/grunt]` (after 2.2) Run the detector over candidates in batches of 200 → `data/detected.csv`. Then record fixtures for 2.5–2.7 using tokens from detected.csv. *(Bundles old 2.4 + 2.7.)*
 - ☐ **2.4** `[opus/main — switch to Opus]` Review 50 random detections + all probe-based hits; tune; import accepted rows.
-- ☐ **2.5** `[sonnet/builder]` Adapters, run 1: Workable, Recruitee, Personio (XML).
-- ☐ **2.6** `[sonnet/builder]` Adapters, run 2: Teamtailor (RSS + JSON-LD), BambooHR (verify first; stop if no public JSON), SmartRecruiters public pages + JSON-LD (only if Q5 = keep).
+- ☐ **2.5** `[sonnet/builder]` Adapters, run 1: Workable, BambooHR (verify first; stop if no public JSON). (Recruitee and Personio deferred: European-skewed.)
+- ☐ **2.6** `[sonnet/builder]` Adapters, run 2: **cancelled** (Teamtailor, SmartRecruiters deferred/dropped under US-only scope). Re-add if US coverage on the 2,000-company set turns out thin.
 - ☐ **2.7** `[sonnet/builder]` Workday adapter (tenant/site parsing, pagination, sitemap-first diff, detail-on-new, 0.5 req/s) **+ Oracle Recruiting Cloud**. Spot-check, with closer attention to Workday's `complete` handling.
 - ☐ **2.8** `[sonnet/builder]` Adaptive scheduling (EWMA), `not_found`×3 → broken + re-detect, **+** `firsthand report` and `/admin` (failing sources, per-adapter success 24h/7d, opened/closed per day, normalizer coverage). *(Bundles old 2.11 + 2.12.)*
 - ☐ **2.9** `[opus/main — switch to Opus]` Scale run to 2,000+, **Phase 2 report**. Wait.
@@ -82,13 +88,14 @@ Dependencies are in `(after …)`. Tasks without mutual dependencies run in para
 
 - ☐ **4.1** `[sonnet/builder]` `jsonld` adapter (careers page + sitemap → JobPosting JSON-LD) **+** `html` link-list heuristic adapter. Spot-check.
 - ☐ **4.2** `[haiku/grunt]` Download GeoNames + loader script; draft golden sets (200 salary strings, 200 locations) from crawled data.
-- ☐ **4.3** `[sonnet/builder]` Full GeoNames geocoder + salary/location parser v2 against the golden sets.
+- ☐ **4.3** `[sonnet/builder]` US-only gazetteer geocoder (US cities >15k + states, not worldwide GeoNames) + salary/location parser v2 against the golden sets.
 - ☐ **4.4** `[opus/main — switch to Opus]` **Phase 4 report**.
 
 ---
 
 ## Deferred (stretch, cut to save usage)
 
+- Recruitee, Personio, Teamtailor adapters (European-skewed; US-only scope). SmartRecruiters dropped (robots blocks the API).
 - iCIMS, SuccessFactors, and Jobvite adapters (old 2.10)
 - Playwright headless fallback (old 4.4)
 - LLM extraction with Haiku via API (old 4.5)

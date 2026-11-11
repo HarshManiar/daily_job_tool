@@ -6,7 +6,16 @@ Status: **Draft v1, Phase 0**. Waiting for approval. Owner of this doc: main thr
 
 ---
 
-## 0. Principles
+## 0. Scope: United States only (owner decision)
+
+Config `US_ONLY=true` (default). Effects:
+- **Ingest filter (task 1.7):** after normalization a posting becomes a `jobs` row only if it is *US-eligible*: any location resolves to `US`; **or** it is remote with `remote_regions` containing `US`, `NORTH_AMERICA` or `WORLD`; **or** location is unknown/unparseable (kept, flagged `location_unknown`, so we never silently lose a US job). Everything else is skipped (posting row kept with `job_id NULL` and **no payload**, only id + hash, so closing logic and change detection still work cheaply).
+- **Registry:** seed US-HQ companies first. Non-US-HQ companies are still allowed (many hire in the US) but get priority 8 until they show US-eligible jobs.
+- **Adapter order:** US-heavy ATSs first (Greenhouse, Lever, Ashby, Workday, Workable). European-skewed ones (Personio, Teamtailor, Recruitee) move to Deferred; SmartRecruiters is dropped (also robots-blocked), which resolves Q5.
+- **Normalization:** salary currency is expected to be USD, so FX is a safety net only; geocoding can use a US-only gazetteer (all US cities >15k + states) instead of worldwide GeoNames in Phase 4; filters drop the country selector in favor of US state / metro.
+- Not US-only for *crawling*: we can't know a board's countries before fetching it, so boards are still fetched whole.
+
+## 0.1 Principles
 
 1. **Employer-sourced only.** Every listing comes from an employer's own careers page or the employer's own ATS board. No LinkedIn, Indeed, Glassdoor, Wellfound, BuiltIn, or any other aggregator, either as a source or for "enrichment".
 2. **Public, polite, and identifiable.** Only publicly posted listings. Respect robots.txt (RFC 9309). Use conservative per-host rate limits and an identifiable User-Agent. Never get around logins, CAPTCHAs, or bot walls. If a host blocks us, the source is marked `blocked` and left alone.
