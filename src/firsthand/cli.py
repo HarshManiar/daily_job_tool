@@ -99,3 +99,74 @@ def fx_fetch() -> None:
     except (CrawlError, ValueError) as exc:
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from exc
+
+
+async def _latest_fx_rates() -> dict[str, float]:
+    from sqlalchemy import text
+
+    from firsthand.db.session import get_conn
+
+    async with get_conn() as conn:
+        rows = (
+            await conn.execute(
+                text(
+                    "SELECT currency, usd_per_unit FROM fx_rates "
+                    "WHERE day = (SELECT max(day) FROM fx_rates)"
+                )
+            )
+        ).all()
+    return {r.currency: float(r.usd_per_unit) for r in rows}
+
+
+@app.command()
+def renormalize(
+    all_jobs: Annotated[
+        bool, typer.Option("--all", help="Also jobs already at current version")
+    ] = False,
+) -> None:
+    """Re-run the normalizer over stored payloads of open jobs (no HTTP)."""
+    from firsthand.db.session import get_engine
+    from firsthand.normalize import NormContext
+    from firsthand.pipeline.renormalize import renormalize as run_renormalize
+
+    async def run() -> int:
+        ctx = NormContext.load(await _latest_fx_rates())
+        return await run_renormalize(get_engine(), ctx, only_outdated=not all_jobs)
+
+    typer.echo(f"renormalized {asyncio.run(run())} jobs")
+
+
+@app.command()
+def ingest(
+    source: Annotated[int, typer.Option("--source", help="sources.id to crawl once")],
+    include_non_us: Annotated[bool, typer.Option("--include-non-us")] = False,
+) -> None:
+    """Run ONE crawl of one source end-to-end (manual run)."""
+    from dataclasses import asdict
+
+    from firsthand.adapters.registry import get_adapter
+    from firsthand.db.session import get_engine
+    from firsthand.normalize import NormContext
+    from firsthand.pipeline.ingest import ingest_source
+
+    async def run() -> dict[str, Any]:
+        from sqlalchemy import text
+
+        engine = get_engine()
+        async with engine.connect() as conn:
+            name = (
+                await conn.execute(text("SELECT adapter FROM sources WHERE id = :i"), {"i": source})
+            ).scalar_one_or_none()
+        if name is None:
+            raise typer.BadParameter(f"no such source {source}")
+        ctx = NormContext.load(await _latest_fx_rates())
+        async with CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA)) as c:
+            res = await ingest_source(
+                engine, source, get_adapter(name), c, ctx, us_only=not include_non_us
+            )
+        await engine.dispose()
+        return asdict(res)
+
+    out = asyncio.run(run())
+    for k, v in out.items():
+        typer.echo(f"{k}: {v}")
