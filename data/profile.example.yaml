@@ -1,0 +1,68 @@
+# Template. Copy to data/profile.yaml and edit.
+# data/profile.example.yaml is the committed template.
+target_titles:
+  tier1:   # highest odds
+    - Senior Associate, Commercial Analytics
+    - Consultant / Senior Consultant, Commercial Analytics
+    - Commercial Analytics Analyst / Senior Analyst
+    - Brand Analytics Analyst
+    - Patient Analytics Analyst
+    - Real-World Evidence (RWE) Analyst
+    - Market Access Analytics Analyst
+    - Trade & Channel Analytics Analyst
+    - Senior Analyst, Healthcare Analytics
+    - Pharmacy / Claims Data Analyst
+  tier2:   # good odds
+    - Analytics Engineer (healthcare)
+    - Data Engineer (Databricks / AWS)
+    - Senior Data Analyst
+    - Business Insights Analyst
+    - Commercial Data Analyst
+    - Field Analytics / Sales Operations Analyst
+    - Client Solutions / Data Solutions Consultant
+    - Forward Deployed Analyst / Data Analyst
+  tier3:   # stretch, only if the description strongly matches skills
+    - Associate Manager, Commercial Analytics
+    - Product Analyst / Product Analytics
+    - Forward Deployed Engineer
+    - GenAI / AI Analytics Product Owner
+hard_filters:
+  employment: full_time_only        # exclude contract, C2C, W2-contract, temp
+  max_age_days: 14                  # posted within; posting must still be open
+  years_required: {min: 2, max: 6}  # exclude roles whose MINIMUM required years >= 7
+  exclude_companies: [YourCurrentEmployer]       # current employer
+  exclude_staffing_reposts: true
+  visa:
+    status: h1b_transfer_needed
+    exclude_if_phrases:             # case-insensitive regex
+      - no\s+(visa\s+)?sponsorship
+      - (will\s+)?not\s+(be\s+able\s+to\s+)?(provide\s+|offer\s+)?(visa\s+)?sponsor
+      - sponsorship\s+(is\s+)?not\s+(available|offered|provided)
+      - visa\s+sponsorship\s*:\s*(not\s+available|no)
+      - without\s+(the\s+need\s+for\s+)?(visa\s+)?sponsorship
+      - must\s+be\s+(legally\s+)?authorized\s+to\s+work.{0,60}without\s+(visa\s+)?sponsorship
+      - (u\.?s\.?\s+citizens?|green\s*card)\s+(only|required)
+      - citizens?\s+or\s+(permanent\s+residents?|green\s*card)\s+only
+    flag_if_phrases:
+      - (we\s+)?(will\s+)?(provide|offer)s?\s+(visa\s+)?sponsorship
+      - sponsorship\s+(is\s+)?(available|offered|provided)
+      - h-?1b\s+(transfer|sponsorship)\s+(is\s+)?(available|supported|accepted)
+      - (open|able)\s+to\s+sponsor
+location_priority:   # order of preference; everything else still shown, ranked lower
+  - {name: nj,        states: [NJ]}
+  - {name: nyc,       cities: [New York, Brooklyn, Queens, Bronx, Manhattan, Jersey City, Hoboken]}
+  - {name: us_remote, remote_regions: [US, NA, AMER, WORLD]}
+industry_priority:
+  - pharma/biotech
+  - pharma consulting      # ZS, IQVIA, Beghou, KMK, PharmaACE, Trinity Life Sciences, Indegene, Syneos, EVERSANA, Axtria peers
+  - health tech
+  - pbm/health plan
+  - specialty pharmacy
+  - healthcare data        # Komodo, Definitive, etc.
+profile:
+  summary: your one-line summary
+  data: [iqvia, xpo, laad, ddd, px/rx claims, sp data, edi 867, edi 852, 340b, payer mix]
+  strong_skills: [sql, python, pyspark, databricks, power bi, git, aws, llm, text-to-sql, genai, forecasting, cohort, anova, decision tree]
+  gap_skills: [tableau, snowflake, dbt, airflow, gcp, azure, veeva, salesforce, a/b testing]   # penalize, never exclude
+  treat_as_match: [aws]
+  min_base_usd: 120000   # roles with stated max below this are flagged "low pay"; unknown pay is kept

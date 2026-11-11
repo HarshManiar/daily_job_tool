@@ -22,6 +22,17 @@ Tasks below are adjusted: 1.7 adds the US-eligibility filter; 2.5/2.6 drop Perso
 
 ---
 
+## Personal match profile (see ARCHITECTURE §0.2) — adjusts the plan
+
+The product is now a **personal job-matching tool for pharma/health commercial-analytics roles**, not a general tech job feed. Changes:
+- **Registry scope shrinks:** seed ~300–600 pharma, biotech, pharma-consulting, health-tech, PBM/payer, specialty-pharmacy and healthcare-data companies (not 2,000 tech companies). Phase 1 seeds (1.9) become this list. Large pharma often sits on Workday or custom/enterprise career sites, so **Workday moves up to Phase 1.5 (right after 1.11 report) and iCIMS/SuccessFactors come off Deferred if detection shows many pharma on them.**
+- **New task 1.7b** `[sonnet/builder]` (after 1.7; **architect review of the migration**): migration `0002_match` (columns in ARCH §0.2 + `companies.industry/is_staffing`), `normalize` v2 extractors (`years_min/max`, `visa_status`, `employment` hardening), `match/` package (`match(job, company, profile)`, profile loader, title-tier matcher using the profile's titles with slash-alternation expansion and seniority/synonym handling, fit score), wired into ingest + `renormalize`, golden tests: ≥60 titles → tier, ≥60 years phrases, ≥50 visa phrases (both exclude and flag, including near-miss phrases that must NOT exclude, e.g. "we do not discriminate based on visa status"), location rank, staffing, 14-day rule.
+- **1.9 (seeds)** `[haiku/grunt]` now: compile ~250 US pharma/health-analytics companies (the owner's named peers + others), find their ATS via the detector once available; Axtria excluded; `industry` and `is_staffing` set. **Staffing agencies** (e.g. Randstad, Kforce, Robert Half-style firms) are tagged `is_staffing`, not crawled for matches.
+- **Phase 3 changes:** default page = “My matches” (ARCH §0.2 ordering) with a visible “Filtered out (n)” audit tab showing reasons; alerts only for new matches (tier 1–2 immediately, tier 3 in the daily digest); drop hidden-gem/high-salary badges (3.2) except a simple “pay ≥ $120K stated” flag; company pages stay minimal.
+- **Salary:** target base $120K+ → `pay:below_min` flag only when a stated max < $120K; unstated pay is kept.
+
+---
+
 ## Phase 0 — Plan ✅
 
 - ☑ **0.1** `[opus/main]` Create `.claude/agents/{architect,builder,grunt}.md`. — done by: opus

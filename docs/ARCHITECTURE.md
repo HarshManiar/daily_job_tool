@@ -15,6 +15,22 @@ Config `US_ONLY=true` (default). Effects:
 - **Normalization:** salary currency is expected to be USD, so FX is a safety net only; geocoding can use a US-only gazetteer (all US cities >15k + states) instead of worldwide GeoNames in Phase 4; filters drop the country selector in favor of US state / metro.
 - Not US-only for *crawling*: we can't know a board's countries before fetching it, so boards are still fetched whole.
 
+## 0.2 Personal match profile (owner decision)
+
+This is a personal job-hunt tool. `data/profile.yaml` (gitignored; template `data/profile.example.yaml`) holds target titles in 3 tiers, hard filters, location/industry priority and the owner's skills. A pure `match(job, company, profile) -> MatchResult` runs at ingest (and on `renormalize`) and stores results on `jobs`:
+
+| Column | Meaning |
+|---|---|
+| `match_tier` smallint null | 1/2/3 from title match (`target_titles`), null = not a target title ("still open to other roles": kept, ranked last) |
+| `match_status` text | `include` / `excluded` / `flagged` |
+| `match_reasons` text[] | machine-readable, e.g. `visa:no_sponsorship`, `years:min_7`, `employment:contract`, `company:excluded`, `staffing`, `stale`, `pay:below_min` |
+| `visa_status` text | `offered` / `not_available` / `not_stated` (regex phrases in profile) |
+| `years_min`, `years_max` smallint null | parsed from description ("3+ years", "2-5 years of experience"); null = not stated (kept) |
+| `location_rank` smallint | 0 NJ, 1 NYC, 2 US-remote, 3 other US |
+| `fit_score` smallint | skills overlap − gap-skill penalty; ranks within a tier; never excludes |
+
+Hard exclusions set `match_status='excluded'` with reasons rather than dropping rows, so a **“Filtered out” view lets the owner audit mistakes** (a wrongly excluded visa phrase is the costly failure). Employment type unknown stays included, flagged. Company columns added: `industry text`, `is_staffing bool`. Default feed = `match_status<>'excluded' AND freshness_at > now()-14d AND closed_at IS NULL`, ordered tier, location_rank, fit_score, freshness. “Still accepting applications” = job still open in the source (closing rules §7). Posted-within-14-days uses `freshness_at` (source `posted_at` when given; otherwise first seen, so a newly added board's undated jobs look new on day one: shown, flagged `date:first_crawl`).
+
 ## 0.1 Principles
 
 1. **Employer-sourced only.** Every listing comes from an employer's own careers page or the employer's own ATS board. No LinkedIn, Indeed, Glassdoor, Wellfound, BuiltIn, or any other aggregator, either as a source or for "enrichment".

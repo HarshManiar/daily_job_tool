@@ -7,3 +7,4 @@ data/geonames/
 .ruff_cache/
 *.egg-info/
 dist/
+data/profile.yaml
