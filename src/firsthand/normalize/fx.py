@@ -2,6 +2,7 @@
 
 from datetime import date
 from typing import TYPE_CHECKING
+from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree as ET
 
@@ -48,7 +49,7 @@ FALLBACK_USD_PER_UNIT: dict[str, float] = {
 }
 
 
-def _cubes(xml_text: str) -> list[ET.Element]:
+def _cubes(xml_text: str) -> list[Element]:
     root = ET.fromstring(xml_text)
     return [el for el in root.iter() if el.tag.rsplit("}", 1)[-1] == "Cube"]
 
