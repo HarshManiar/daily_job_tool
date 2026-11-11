@@ -151,7 +151,7 @@ CREATE TABLE sources (                                -- one crawlable board
   created_at            timestamptz NOT NULL DEFAULT now(),
   UNIQUE (adapter, token)
 );
-CREATE INDEX sources_due ON sources (next_crawl_at, priority) WHERE status = 'active';
+CREATE INDEX sources_due ON sources (priority, next_crawl_at) WHERE status = 'active';
 
 CREATE TABLE blocked_domains (                        -- removal requests + never-crawl list
   domain      citext PRIMARY KEY,
@@ -426,7 +426,7 @@ Dedupe runs **only within a company** (cross-company duplicates are not a real c
 3. **Explicit links beat fuzzy keys.** If a generic/custom posting's URL or apply link contains an ATS id we already know (`gh_jid=`, `lever.co/{site}/{uuid}`, `ashbyhq.com/{x}/{uuid}`, Workday `externalPath`), attach it to that ATS posting's job directly.
 4. **Multiple open postings with the same key in the *same* source** (e.g. 5 identical "Software Engineer, Remote US" reqs) are **not** merged. Real duplicate reqs mean more headcount. Their keys get suffixed `#n` by external-id order.
 5. **Primary posting** selection: the ATS adapter with structured data > Tier 2 > generic. Ties go to the oldest `first_seen_at`.
-6. A job is **closed** when all its postings are closed. If a posting reappears within 14 days, the posting and job reopen, keeping `first_seen_at`.
+6. A job is **closed** when all its postings are closed. `UNIQUE (company_id, dedupe_key)` spans closed jobs too, so a new posting whose key matches a *closed* job always **revives that job** (clears `closed_at`, keeps `first_seen_at`); the 14-day window below applies to postings only. If a posting reappears within 14 days, the posting and job reopen, keeping `first_seen_at`.
 7. Fuzzy tuning (Phase 4): sample 200 candidate pairs with trigram title similarity > 0.8 and the same location, then hand-label them to set thresholds.
 
 ### Closing rules (pipeline/closing.py)
