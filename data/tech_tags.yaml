@@ -1,0 +1,553 @@
+# Canonical tech tag dictionary for ARCHITECTURE.md section 6 (rule 10).
+#
+# tag: canonical name (lowercase).
+# aliases: lowercase strings matched on word boundaries against title + description text.
+#   Aliases are unique across tags (a collision would make the match ambiguous).
+# requires_context: optional regex. When present, the tag (any alias) only counts if the
+#   regex also matches the same text. Used for tokens that are common English or other
+#   words: go, r, c, swift, rust, spark, elixir, dart, ruby, julia, scala (ARCH 6.10).
+#   The regexes are Python re patterns, run against lowercased text.
+
+- tag: "python"
+  aliases: ["python", "python3", "cpython"]
+- tag: "javascript"
+  aliases: ["javascript", "ecmascript", "es6", "es2015", "js"]
+- tag: "typescript"
+  aliases: ["typescript"]
+- tag: "java"
+  aliases: ["java"]
+- tag: "kotlin"
+  aliases: ["kotlin"]
+- tag: "c#"
+  aliases: ["c#", "csharp", "c-sharp"]
+- tag: "c++"
+  aliases: ["c++", "cpp"]
+- tag: "c"
+  aliases: ["c"]
+  requires_context: "\\bc\\s+(?:programming|language|developer|engineer)\\b|\\bc\\s*/\\s*c\\+\\+|\\bc\\s*,\\s*(?:c\\+\\+|java|python|rust|go|assembly)\\b|\\b(?:c\\+\\+|java|python|rust|go|embedded|assembly)\\s*,\\s*c\\b|\\bembedded c\\b|\\bansi c\\b"
+- tag: "go"
+  aliases: ["go", "golang"]
+  requires_context: "\\bgolang\\b|\\bgo\\s+(?:programming|language|developer|engineer|backend)\\b|\\bgo\\b\\s*,\\s*(?:python|java|rust|c\\+\\+|typescript|kotlin)\\b|\\b(?:python|java|rust|c\\+\\+|typescript|kotlin|javascript)\\s*,\\s*go\\b"
+- tag: "rust"
+  aliases: ["rust"]
+  requires_context: "\\brust\\s*(?:programming|language|developer|engineer)\\b|\\brust\\s*,\\s*(?:go|c\\+\\+|python|typescript|java|c)\\b|\\b(?:go|c\\+\\+|python|typescript|java|c)\\s*,\\s*rust\\b|\\bcargo\\b|\\btokio\\b|\\bwebassembly\\b|\\bwasm\\b"
+- tag: "swift"
+  aliases: ["swift"]
+  requires_context: "\\bswift\\s*(?:ui|\\+\\+|programming|language|developer|engineer)\\b|\\bswiftui\\b|\\bxcode\\b|\\bobjective-?c\\b|\\bswift\\s*,\\s*(?:kotlin|objective|java|ios)\\b|\\b(?:kotlin|objective-?c|objc|ios|java)\\s*,\\s*swift\\b"
+- tag: "scala"
+  aliases: ["scala"]
+  requires_context: "\\bscala\\s*(?:programming|language|developer|engineer)\\b|\\bakka\\b|\\bsbt\\b|\\bscala\\s*,\\s*(?:java|python|kotlin|go|rust)\\b|\\b(?:java|python|kotlin|go|rust)\\s*,\\s*scala\\b|\\bspark\\b"
+- tag: "ruby"
+  aliases: ["ruby", "ruby on rails", "rails"]
+  requires_context: "\\bruby\\s*(?:on rails|programming|language|developer|engineer)\\b|\\brails\\b|\\bruby\\s*,\\s*(?:python|javascript|go|java|php)\\b|\\b(?:python|javascript|go|java|php|elixir)\\s*,\\s*ruby\\b"
+- tag: "php"
+  aliases: ["php"]
+- tag: "perl"
+  aliases: ["perl"]
+- tag: "r"
+  aliases: ["r"]
+  requires_context: "\\br\\s+(?:programming|language|studio|shiny|package|script)\\b|\\bggplot2?\\b|\\btidyverse\\b|\\bcran\\b|\\b(?:python|sql|matlab|julia|stata|sas)\\s*,\\s*r\\b|\\br\\s*,\\s*(?:python|sql|matlab|julia|stata|sas)\\b"
+- tag: "julia"
+  aliases: ["julia"]
+  requires_context: "\\bjulia\\s*(?:programming|language|developer|engineer)\\b|\\bjulialang\\b|\\bjulia\\s*,\\s*(?:python|r|matlab|c\\+\\+)\\b|\\b(?:python|r|matlab|c\\+\\+)\\s*,\\s*julia\\b"
+- tag: "elixir"
+  aliases: ["elixir"]
+  requires_context: "\\berlang\\b|\\bliveview\\b|\\bphoenix framework\\b|\\belixir\\s*(?:programming|language|developer|engineer)\\b|\\belixir\\s*,|,\\s*elixir\\b"
+- tag: "erlang"
+  aliases: ["erlang"]
+- tag: "haskell"
+  aliases: ["haskell"]
+- tag: "ocaml"
+  aliases: ["ocaml"]
+- tag: "clojure"
+  aliases: ["clojure"]
+- tag: "dart"
+  aliases: ["dart"]
+  requires_context: "\\bdart\\s*(?:programming|language|developer|engineer)\\b|\\bflutter\\b|\\bdart\\s*,\\s*(?:kotlin|swift|javascript|typescript|java)\\b|\\b(?:kotlin|swift|javascript|typescript|java)\\s*,\\s*dart\\b"
+- tag: "objective-c"
+  aliases: ["objective-c", "objective c", "objc"]
+- tag: "lua"
+  aliases: ["lua"]
+- tag: "matlab"
+  aliases: ["matlab"]
+- tag: "sql"
+  aliases: ["sql"]
+- tag: "groovy"
+  aliases: ["groovy"]
+- tag: "f#"
+  aliases: ["f#", "fsharp"]
+- tag: "fortran"
+  aliases: ["fortran"]
+- tag: "cobol"
+  aliases: ["cobol"]
+- tag: "bash"
+  aliases: ["bash", "shell scripting"]
+- tag: "powershell"
+  aliases: ["powershell"]
+- tag: "solidity"
+  aliases: ["solidity"]
+- tag: "zig"
+  aliases: ["zig"]
+- tag: "nim"
+  aliases: ["nim"]
+- tag: "elm"
+  aliases: ["elm"]
+- tag: "coffeescript"
+  aliases: ["coffeescript"]
+- tag: "vba"
+  aliases: ["vba"]
+- tag: "visual basic"
+  aliases: ["visual basic", "vb.net", "vb net"]
+- tag: "common lisp"
+  aliases: ["common lisp"]
+- tag: "webassembly"
+  aliases: ["webassembly", "wasm"]
+- tag: "react"
+  aliases: ["react", "react.js", "reactjs"]
+- tag: "next.js"
+  aliases: ["next.js", "nextjs"]
+- tag: "vue"
+  aliases: ["vue", "vue.js", "vuejs"]
+- tag: "nuxt"
+  aliases: ["nuxt", "nuxt.js", "nuxtjs"]
+- tag: "angular"
+  aliases: ["angular", "angularjs"]
+- tag: "svelte"
+  aliases: ["svelte"]
+- tag: "sveltekit"
+  aliases: ["sveltekit"]
+- tag: "ember.js"
+  aliases: ["ember", "ember.js"]
+- tag: "jquery"
+  aliases: ["jquery"]
+- tag: "html"
+  aliases: ["html", "html5"]
+- tag: "css"
+  aliases: ["css", "css3"]
+- tag: "tailwind css"
+  aliases: ["tailwind", "tailwind css", "tailwindcss"]
+- tag: "sass"
+  aliases: ["sass", "scss"]
+- tag: "webpack"
+  aliases: ["webpack"]
+- tag: "vite"
+  aliases: ["vite"]
+- tag: "redux"
+  aliases: ["redux"]
+- tag: "graphql"
+  aliases: ["graphql"]
+- tag: "storybook"
+  aliases: ["storybook"]
+- tag: "astro"
+  aliases: ["astro"]
+- tag: "gatsby"
+  aliases: ["gatsby"]
+- tag: "d3.js"
+  aliases: ["d3.js", "d3js"]
+- tag: "electron.js"
+  aliases: ["electron"]
+- tag: "webgl"
+  aliases: ["webgl"]
+- tag: "websocket"
+  aliases: ["websocket", "websockets"]
+- tag: "pwa"
+  aliases: ["progressive web app", "pwa"]
+- tag: "node.js"
+  aliases: ["node.js", "nodejs"]
+- tag: "express.js"
+  aliases: ["express.js", "expressjs"]
+- tag: "nestjs"
+  aliases: ["nestjs", "nest.js"]
+- tag: "deno"
+  aliases: ["deno"]
+- tag: "django"
+  aliases: ["django"]
+- tag: "flask"
+  aliases: ["flask"]
+- tag: "fastapi"
+  aliases: ["fastapi"]
+- tag: "spring boot"
+  aliases: ["spring boot", "springboot"]
+- tag: "quarkus"
+  aliases: ["quarkus"]
+- tag: "laravel"
+  aliases: ["laravel"]
+- tag: "symfony"
+  aliases: ["symfony"]
+- tag: "asp.net"
+  aliases: ["asp.net", "asp.net core"]
+- tag: ".net"
+  aliases: [".net", "dotnet", ".net core", "dotnet core"]
+- tag: "grpc"
+  aliases: ["grpc"]
+- tag: "celery"
+  aliases: ["celery"]
+- tag: "sidekiq"
+  aliases: ["sidekiq"]
+- tag: "hibernate"
+  aliases: ["hibernate"]
+- tag: "rabbitmq"
+  aliases: ["rabbitmq", "rabbit mq"]
+- tag: "tornado"
+  aliases: ["tornado"]
+- tag: "pydantic"
+  aliases: ["pydantic"]
+- tag: "protobuf"
+  aliases: ["protobuf", "protocol buffers"]
+- tag: "oauth"
+  aliases: ["oauth", "oauth2", "oauth 2.0"]
+- tag: "saml"
+  aliases: ["saml"]
+- tag: "openid connect"
+  aliases: ["openid connect", "oidc"]
+- tag: "ios"
+  aliases: ["ios", "iphone"]
+- tag: "android"
+  aliases: ["android"]
+- tag: "react native"
+  aliases: ["react native", "react-native"]
+- tag: "flutter"
+  aliases: ["flutter"]
+- tag: "swiftui"
+  aliases: ["swiftui"]
+- tag: "jetpack compose"
+  aliases: ["jetpack compose", "compose multiplatform"]
+- tag: "xamarin"
+  aliases: ["xamarin"]
+- tag: "ionic"
+  aliases: ["ionic"]
+- tag: "postgresql"
+  aliases: ["postgresql", "postgres", "psql"]
+- tag: "mysql"
+  aliases: ["mysql"]
+- tag: "mariadb"
+  aliases: ["mariadb"]
+- tag: "sqlite"
+  aliases: ["sqlite"]
+- tag: "oracle database"
+  aliases: ["oracle database", "oracle db"]
+- tag: "sql server"
+  aliases: ["sql server", "mssql", "microsoft sql server"]
+- tag: "mongodb"
+  aliases: ["mongodb", "mongo"]
+- tag: "redis"
+  aliases: ["redis"]
+- tag: "memcached"
+  aliases: ["memcached"]
+- tag: "cassandra"
+  aliases: ["cassandra", "apache cassandra"]
+- tag: "dynamodb"
+  aliases: ["dynamodb"]
+- tag: "elasticsearch"
+  aliases: ["elasticsearch", "elastic search"]
+- tag: "opensearch"
+  aliases: ["opensearch"]
+- tag: "cockroachdb"
+  aliases: ["cockroachdb", "cockroach"]
+- tag: "clickhouse"
+  aliases: ["clickhouse"]
+- tag: "neo4j"
+  aliases: ["neo4j"]
+- tag: "couchdb"
+  aliases: ["couchdb"]
+- tag: "snowflake"
+  aliases: ["snowflake"]
+- tag: "bigquery"
+  aliases: ["bigquery", "big query"]
+- tag: "redshift"
+  aliases: ["redshift", "amazon redshift"]
+- tag: "supabase"
+  aliases: ["supabase"]
+- tag: "firebase"
+  aliases: ["firebase"]
+- tag: "duckdb"
+  aliases: ["duckdb"]
+- tag: "influxdb"
+  aliases: ["influxdb"]
+- tag: "etcd"
+  aliases: ["etcd"]
+- tag: "pinecone"
+  aliases: ["pinecone"]
+- tag: "weaviate"
+  aliases: ["weaviate"]
+- tag: "pgvector"
+  aliases: ["pgvector"]
+- tag: "faiss"
+  aliases: ["faiss"]
+- tag: "timescaledb"
+  aliases: ["timescaledb"]
+- tag: "tidb"
+  aliases: ["tidb"]
+- tag: "vitess"
+  aliases: ["vitess"]
+- tag: "aws"
+  aliases: ["aws", "amazon web services"]
+- tag: "gcp"
+  aliases: ["gcp", "google cloud", "google cloud platform"]
+- tag: "azure"
+  aliases: ["azure", "microsoft azure"]
+- tag: "aws lambda"
+  aliases: ["aws lambda", "lambda functions"]
+- tag: "s3"
+  aliases: ["s3", "amazon s3"]
+- tag: "ec2"
+  aliases: ["ec2", "amazon ec2"]
+- tag: "eks"
+  aliases: ["eks", "amazon eks"]
+- tag: "ecs"
+  aliases: ["ecs", "amazon ecs"]
+- tag: "cloudformation"
+  aliases: ["cloudformation", "aws cloudformation"]
+- tag: "cloud run"
+  aliases: ["cloud run"]
+- tag: "kubernetes"
+  aliases: ["kubernetes", "k8s"]
+- tag: "docker"
+  aliases: ["docker", "dockerfile", "docker compose", "docker-compose"]
+- tag: "terraform"
+  aliases: ["terraform", "opentofu"]
+- tag: "pulumi"
+  aliases: ["pulumi"]
+- tag: "ansible"
+  aliases: ["ansible"]
+- tag: "puppet"
+  aliases: ["puppet"]
+- tag: "helm"
+  aliases: ["helm"]
+- tag: "argo cd"
+  aliases: ["argo cd", "argocd"]
+- tag: "jenkins"
+  aliases: ["jenkins"]
+- tag: "github actions"
+  aliases: ["github actions"]
+- tag: "gitlab ci"
+  aliases: ["gitlab ci", "gitlab ci/cd"]
+- tag: "circleci"
+  aliases: ["circleci", "circle ci"]
+- tag: "buildkite"
+  aliases: ["buildkite"]
+- tag: "prometheus"
+  aliases: ["prometheus"]
+- tag: "grafana"
+  aliases: ["grafana"]
+- tag: "datadog"
+  aliases: ["datadog"]
+- tag: "new relic"
+  aliases: ["new relic", "newrelic"]
+- tag: "pagerduty"
+  aliases: ["pagerduty"]
+- tag: "opentelemetry"
+  aliases: ["opentelemetry", "otel"]
+- tag: "splunk"
+  aliases: ["splunk"]
+- tag: "sentry"
+  aliases: ["sentry"]
+- tag: "linux"
+  aliases: ["linux"]
+- tag: "nginx"
+  aliases: ["nginx"]
+- tag: "istio"
+  aliases: ["istio"]
+- tag: "envoy proxy"
+  aliases: ["envoy"]
+- tag: "hashicorp vault"
+  aliases: ["hashicorp vault"]
+- tag: "hashicorp consul"
+  aliases: ["hashicorp consul", "consul"]
+- tag: "hashicorp nomad"
+  aliases: ["hashicorp nomad", "nomad"]
+- tag: "kafka"
+  aliases: ["kafka", "apache kafka"]
+- tag: "airflow"
+  aliases: ["airflow", "apache airflow"]
+- tag: "flink"
+  aliases: ["flink", "apache flink"]
+- tag: "hadoop"
+  aliases: ["hadoop", "apache hadoop"]
+- tag: "trino"
+  aliases: ["trino", "presto"]
+- tag: "cloudflare"
+  aliases: ["cloudflare"]
+- tag: "vercel"
+  aliases: ["vercel"]
+- tag: "netlify"
+  aliases: ["netlify"]
+- tag: "heroku"
+  aliases: ["heroku"]
+- tag: "digitalocean"
+  aliases: ["digitalocean", "digital ocean"]
+- tag: "git"
+  aliases: ["git"]
+- tag: "github"
+  aliases: ["github"]
+- tag: "gitlab"
+  aliases: ["gitlab"]
+- tag: "bitbucket"
+  aliases: ["bitbucket"]
+- tag: "jira"
+  aliases: ["jira"]
+- tag: "confluence"
+  aliases: ["confluence"]
+- tag: "postman"
+  aliases: ["postman"]
+- tag: "serverless framework"
+  aliases: ["serverless framework"]
+- tag: "cilium"
+  aliases: ["cilium"]
+- tag: "calico"
+  aliases: ["calico"]
+- tag: "ceph"
+  aliases: ["ceph"]
+- tag: "pandas"
+  aliases: ["pandas"]
+- tag: "numpy"
+  aliases: ["numpy"]
+- tag: "scipy"
+  aliases: ["scipy"]
+- tag: "scikit-learn"
+  aliases: ["scikit-learn", "sklearn", "scikit learn"]
+- tag: "pytorch"
+  aliases: ["pytorch"]
+- tag: "tensorflow"
+  aliases: ["tensorflow"]
+- tag: "keras"
+  aliases: ["keras"]
+- tag: "jax"
+  aliases: ["jax"]
+- tag: "hugging face"
+  aliases: ["hugging face", "huggingface", "hugging face transformers"]
+- tag: "langchain"
+  aliases: ["langchain"]
+- tag: "llamaindex"
+  aliases: ["llamaindex", "llama index"]
+- tag: "mlflow"
+  aliases: ["mlflow"]
+- tag: "kubeflow"
+  aliases: ["kubeflow"]
+- tag: "dbt"
+  aliases: ["dbt", "dbt core", "dbt cloud"]
+- tag: "databricks"
+  aliases: ["databricks"]
+- tag: "looker"
+  aliases: ["looker"]
+- tag: "tableau"
+  aliases: ["tableau"]
+- tag: "power bi"
+  aliases: ["power bi", "powerbi"]
+- tag: "metabase"
+  aliases: ["metabase"]
+- tag: "airbyte"
+  aliases: ["airbyte"]
+- tag: "fivetran"
+  aliases: ["fivetran"]
+- tag: "dagster"
+  aliases: ["dagster"]
+- tag: "prefect"
+  aliases: ["prefect"]
+- tag: "xgboost"
+  aliases: ["xgboost"]
+- tag: "lightgbm"
+  aliases: ["lightgbm"]
+- tag: "spacy"
+  aliases: ["spacy"]
+- tag: "nltk"
+  aliases: ["nltk"]
+- tag: "opencv"
+  aliases: ["opencv"]
+- tag: "cuda"
+  aliases: ["cuda"]
+- tag: "vllm"
+  aliases: ["vllm"]
+- tag: "weights & biases"
+  aliases: ["weights & biases", "wandb"]
+- tag: "matplotlib"
+  aliases: ["matplotlib"]
+- tag: "plotly"
+  aliases: ["plotly"]
+- tag: "streamlit"
+  aliases: ["streamlit"]
+- tag: "jupyter"
+  aliases: ["jupyter", "jupyter notebook", "jupyterlab"]
+- tag: "apache beam"
+  aliases: ["apache beam"]
+- tag: "polars"
+  aliases: ["polars"]
+- tag: "dask"
+  aliases: ["dask"]
+- tag: "parquet"
+  aliases: ["parquet"]
+- tag: "apache iceberg"
+  aliases: ["apache iceberg", "iceberg"]
+- tag: "delta lake"
+  aliases: ["delta lake"]
+- tag: "apache hive"
+  aliases: ["apache hive", "hive"]
+- tag: "apache superset"
+  aliases: ["apache superset", "superset"]
+- tag: "amazon sagemaker"
+  aliases: ["sagemaker", "amazon sagemaker"]
+- tag: "vertex ai"
+  aliases: ["vertex ai"]
+- tag: "spark"
+  aliases: ["spark", "apache spark", "pyspark"]
+  requires_context: "\\bapache spark\\b|\\bpyspark\\b|\\bspark\\s*(?:sql|streaming|jobs?|clusters?|applications?)\\b|\\bspark\\s*,\\s*(?:hadoop|kafka|hive|scala|databricks|airflow)\\b|\\b(?:hadoop|kafka|hive|databricks|airflow|scala)\\s*,\\s*spark\\b|\\bdatabricks\\b"
+- tag: "nvidia triton"
+  aliases: ["triton inference server"]
+- tag: "onnx"
+  aliases: ["onnx"]
+- tag: "rag"
+  aliases: ["retrieval augmented generation"]
+- tag: "burp suite"
+  aliases: ["burp suite", "burp"]
+- tag: "metasploit"
+  aliases: ["metasploit"]
+- tag: "nmap"
+  aliases: ["nmap"]
+- tag: "wireshark"
+  aliases: ["wireshark"]
+- tag: "crowdstrike"
+  aliases: ["crowdstrike"]
+- tag: "okta"
+  aliases: ["okta"]
+- tag: "auth0"
+  aliases: ["auth0"]
+- tag: "snyk"
+  aliases: ["snyk"]
+- tag: "sonarqube"
+  aliases: ["sonarqube"]
+- tag: "semgrep"
+  aliases: ["semgrep"]
+- tag: "tenable"
+  aliases: ["tenable", "nessus"]
+- tag: "qualys"
+  aliases: ["qualys"]
+- tag: "kali linux"
+  aliases: ["kali linux"]
+- tag: "zeek"
+  aliases: ["zeek"]
+- tag: "suricata"
+  aliases: ["suricata"]
+- tag: "yubikey"
+  aliases: ["yubikey"]
+- tag: "selenium"
+  aliases: ["selenium"]
+- tag: "cypress"
+  aliases: ["cypress"]
+- tag: "playwright"
+  aliases: ["playwright"]
+- tag: "jest"
+  aliases: ["jest"]
+- tag: "pytest"
+  aliases: ["pytest"]
+- tag: "junit"
+  aliases: ["junit"]
+- tag: "mocha"
+  aliases: ["mocha"]
+- tag: "rspec"
+  aliases: ["rspec"]
+- tag: "appium"
+  aliases: ["appium"]
+- tag: "k6"
+  aliases: ["k6"]
+- tag: "locust"
+  aliases: ["locust"]

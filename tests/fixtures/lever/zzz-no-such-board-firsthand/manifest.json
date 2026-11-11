@@ -1,0 +1,16 @@
+{
+  "adapter": "lever",
+  "token": "zzz-no-such-board-firsthand",
+  "config": {},
+  "recorded_at": "2026-11-11T19:23:11.792443+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://api.lever.co/v0/postings/zzz-no-such-board-firsthand?mode=json",
+      "json": null,
+      "status": 404,
+      "content_type": "application/json; charset=utf-8",
+      "file": "000.json"
+    }
+  ]
+}

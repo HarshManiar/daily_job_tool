@@ -1,0 +1,699 @@
+# Phase-1 location table for ARCHITECTURE.md section 6 (rule 5). Built-in only;
+# Phase 4 replaces it with GeoNames.
+#
+# countries: ISO 3166-1 alpha-2 code (uppercase, quoted so YAML does not read 'NO'/'ON' as
+#   booleans), lowercase name, and lowercase aliases. Aliases include common short forms
+#   and historical names. 'us' is not an alias: it reads as the pronoun.
+#   Covers the 193 UN member states plus Taiwan and Palestine (195 entries).
+# regions: lowercase token -> {kind, countries}. kind 'region' lists ISO codes; kind 'world'
+#   has an empty list meaning all countries. EU is the 27 current members.
+#   Europe is geographic (includes GB, TR, RU, UA); EMEA = Europe + Middle East + Africa;
+#   APAC = Asia + Oceania (excluding the Middle East).
+# us_states / ca_provinces / au_states: code -> lowercase name. DC is included as a
+#   US admin1 because Washington, DC is matched through it.
+# cities: name (lowercase), admin1 (state/province code for US, CA, AU; null elsewhere),
+#   country (ISO code), aliases. Ambiguous names (portland, london, cambridge, newcastle,
+#   san jose, victoria, columbia) appear once per place; matching ranks by admin1/country.
+
+countries:
+  - {code: "AF", name: "afghanistan", aliases: []}
+  - {code: "AL", name: "albania", aliases: []}
+  - {code: "DZ", name: "algeria", aliases: []}
+  - {code: "AD", name: "andorra", aliases: []}
+  - {code: "AO", name: "angola", aliases: []}
+  - {code: "AG", name: "antigua and barbuda", aliases: []}
+  - {code: "AR", name: "argentina", aliases: []}
+  - {code: "AM", name: "armenia", aliases: []}
+  - {code: "AU", name: "australia", aliases: []}
+  - {code: "AT", name: "austria", aliases: []}
+  - {code: "AZ", name: "azerbaijan", aliases: []}
+  - {code: "BS", name: "bahamas", aliases: ["the bahamas"]}
+  - {code: "BH", name: "bahrain", aliases: []}
+  - {code: "BD", name: "bangladesh", aliases: []}
+  - {code: "BB", name: "barbados", aliases: []}
+  - {code: "BY", name: "belarus", aliases: []}
+  - {code: "BE", name: "belgium", aliases: []}
+  - {code: "BZ", name: "belize", aliases: []}
+  - {code: "BJ", name: "benin", aliases: []}
+  - {code: "BT", name: "bhutan", aliases: []}
+  - {code: "BO", name: "bolivia", aliases: ["plurinational state of bolivia"]}
+  - {code: "BA", name: "bosnia and herzegovina", aliases: ["bosnia", "bosnia-herzegovina"]}
+  - {code: "BW", name: "botswana", aliases: []}
+  - {code: "BR", name: "brazil", aliases: ["brasil"]}
+  - {code: "BN", name: "brunei", aliases: ["brunei darussalam"]}
+  - {code: "BG", name: "bulgaria", aliases: []}
+  - {code: "BF", name: "burkina faso", aliases: []}
+  - {code: "BI", name: "burundi", aliases: []}
+  - {code: "CV", name: "cabo verde", aliases: ["cape verde"]}
+  - {code: "KH", name: "cambodia", aliases: []}
+  - {code: "CM", name: "cameroon", aliases: []}
+  - {code: "CA", name: "canada", aliases: []}
+  - {code: "CF", name: "central african republic", aliases: ["car"]}
+  - {code: "TD", name: "chad", aliases: []}
+  - {code: "CL", name: "chile", aliases: []}
+  - {code: "CN", name: "china", aliases: ["prc", "people's republic of china", "mainland china"]}
+  - {code: "CO", name: "colombia", aliases: []}
+  - {code: "KM", name: "comoros", aliases: []}
+  - {code: "CG", name: "republic of the congo", aliases: ["congo", "congo-brazzaville"]}
+  - {code: "CD", name: "dr congo", aliases: ["drc", "democratic republic of the congo", "congo-kinshasa"]}
+  - {code: "CR", name: "costa rica", aliases: []}
+  - {code: "CI", name: "cote d'ivoire", aliases: ["côte d'ivoire", "ivory coast"]}
+  - {code: "HR", name: "croatia", aliases: ["hrvatska"]}
+  - {code: "CU", name: "cuba", aliases: []}
+  - {code: "CY", name: "cyprus", aliases: []}
+  - {code: "CZ", name: "czechia", aliases: ["czech republic", "czech"]}
+  - {code: "DK", name: "denmark", aliases: ["danmark"]}
+  - {code: "DJ", name: "djibouti", aliases: []}
+  - {code: "DM", name: "dominica", aliases: []}
+  - {code: "DO", name: "dominican republic", aliases: []}
+  - {code: "EC", name: "ecuador", aliases: []}
+  - {code: "EG", name: "egypt", aliases: []}
+  - {code: "SV", name: "el salvador", aliases: []}
+  - {code: "GQ", name: "equatorial guinea", aliases: []}
+  - {code: "ER", name: "eritrea", aliases: []}
+  - {code: "EE", name: "estonia", aliases: []}
+  - {code: "SZ", name: "eswatini", aliases: ["swaziland"]}
+  - {code: "ET", name: "ethiopia", aliases: []}
+  - {code: "FJ", name: "fiji", aliases: []}
+  - {code: "FI", name: "finland", aliases: ["suomi"]}
+  - {code: "FR", name: "france", aliases: []}
+  - {code: "GA", name: "gabon", aliases: []}
+  - {code: "GM", name: "gambia", aliases: ["the gambia"]}
+  - {code: "GE", name: "georgia", aliases: []}
+  - {code: "DE", name: "germany", aliases: ["deutschland"]}
+  - {code: "GH", name: "ghana", aliases: []}
+  - {code: "GR", name: "greece", aliases: ["hellas"]}
+  - {code: "GD", name: "grenada", aliases: []}
+  - {code: "GT", name: "guatemala", aliases: []}
+  - {code: "GN", name: "guinea", aliases: []}
+  - {code: "GW", name: "guinea-bissau", aliases: ["guinea bissau"]}
+  - {code: "GY", name: "guyana", aliases: []}
+  - {code: "HT", name: "haiti", aliases: []}
+  - {code: "HN", name: "honduras", aliases: []}
+  - {code: "HU", name: "hungary", aliases: []}
+  - {code: "IS", name: "iceland", aliases: []}
+  - {code: "IN", name: "india", aliases: ["bharat"]}
+  - {code: "ID", name: "indonesia", aliases: []}
+  - {code: "IR", name: "iran", aliases: ["islamic republic of iran"]}
+  - {code: "IQ", name: "iraq", aliases: []}
+  - {code: "IE", name: "ireland", aliases: ["republic of ireland", "eire"]}
+  - {code: "IL", name: "israel", aliases: []}
+  - {code: "IT", name: "italy", aliases: ["italia"]}
+  - {code: "JM", name: "jamaica", aliases: []}
+  - {code: "JP", name: "japan", aliases: ["nippon"]}
+  - {code: "JO", name: "jordan", aliases: []}
+  - {code: "KZ", name: "kazakhstan", aliases: []}
+  - {code: "KE", name: "kenya", aliases: []}
+  - {code: "KI", name: "kiribati", aliases: []}
+  - {code: "KP", name: "north korea", aliases: ["dprk", "democratic people's republic of korea"]}
+  - {code: "KR", name: "south korea", aliases: ["korea", "republic of korea"]}
+  - {code: "KW", name: "kuwait", aliases: []}
+  - {code: "KG", name: "kyrgyzstan", aliases: ["kyrgyz republic"]}
+  - {code: "LA", name: "laos", aliases: ["lao pdr"]}
+  - {code: "LV", name: "latvia", aliases: []}
+  - {code: "LB", name: "lebanon", aliases: []}
+  - {code: "LS", name: "lesotho", aliases: []}
+  - {code: "LR", name: "liberia", aliases: []}
+  - {code: "LY", name: "libya", aliases: []}
+  - {code: "LI", name: "liechtenstein", aliases: []}
+  - {code: "LT", name: "lithuania", aliases: []}
+  - {code: "LU", name: "luxembourg", aliases: []}
+  - {code: "MG", name: "madagascar", aliases: []}
+  - {code: "MW", name: "malawi", aliases: []}
+  - {code: "MY", name: "malaysia", aliases: []}
+  - {code: "MV", name: "maldives", aliases: []}
+  - {code: "ML", name: "mali", aliases: []}
+  - {code: "MT", name: "malta", aliases: []}
+  - {code: "MH", name: "marshall islands", aliases: []}
+  - {code: "MR", name: "mauritania", aliases: []}
+  - {code: "MU", name: "mauritius", aliases: []}
+  - {code: "MX", name: "mexico", aliases: ["méxico", "estados unidos mexicanos"]}
+  - {code: "FM", name: "micronesia", aliases: ["federated states of micronesia"]}
+  - {code: "MD", name: "moldova", aliases: ["republic of moldova"]}
+  - {code: "MC", name: "monaco", aliases: []}
+  - {code: "MN", name: "mongolia", aliases: []}
+  - {code: "ME", name: "montenegro", aliases: []}
+  - {code: "MA", name: "morocco", aliases: []}
+  - {code: "MZ", name: "mozambique", aliases: []}
+  - {code: "MM", name: "myanmar", aliases: ["burma"]}
+  - {code: "NA", name: "namibia", aliases: []}
+  - {code: "NR", name: "nauru", aliases: []}
+  - {code: "NP", name: "nepal", aliases: []}
+  - {code: "NL", name: "netherlands", aliases: ["holland", "the netherlands", "nederland"]}
+  - {code: "NZ", name: "new zealand", aliases: ["aotearoa"]}
+  - {code: "NI", name: "nicaragua", aliases: []}
+  - {code: "NE", name: "niger", aliases: []}
+  - {code: "NG", name: "nigeria", aliases: []}
+  - {code: "MK", name: "north macedonia", aliases: ["macedonia"]}
+  - {code: "NO", name: "norway", aliases: ["norge"]}
+  - {code: "OM", name: "oman", aliases: []}
+  - {code: "PK", name: "pakistan", aliases: []}
+  - {code: "PW", name: "palau", aliases: []}
+  - {code: "PA", name: "panama", aliases: []}
+  - {code: "PG", name: "papua new guinea", aliases: ["png"]}
+  - {code: "PY", name: "paraguay", aliases: []}
+  - {code: "PE", name: "peru", aliases: ["perú"]}
+  - {code: "PH", name: "philippines", aliases: ["the philippines"]}
+  - {code: "PL", name: "poland", aliases: ["polska"]}
+  - {code: "PT", name: "portugal", aliases: []}
+  - {code: "QA", name: "qatar", aliases: []}
+  - {code: "RO", name: "romania", aliases: ["românia"]}
+  - {code: "RU", name: "russia", aliases: ["russian federation", "russian"]}
+  - {code: "RW", name: "rwanda", aliases: []}
+  - {code: "KN", name: "saint kitts and nevis", aliases: ["st kitts and nevis"]}
+  - {code: "LC", name: "saint lucia", aliases: ["st lucia"]}
+  - {code: "VC", name: "saint vincent and the grenadines", aliases: ["st vincent"]}
+  - {code: "WS", name: "samoa", aliases: []}
+  - {code: "SM", name: "san marino", aliases: []}
+  - {code: "ST", name: "sao tome and principe", aliases: ["são tomé and príncipe"]}
+  - {code: "SA", name: "saudi arabia", aliases: ["ksa"]}
+  - {code: "SN", name: "senegal", aliases: []}
+  - {code: "RS", name: "serbia", aliases: []}
+  - {code: "SC", name: "seychelles", aliases: []}
+  - {code: "SL", name: "sierra leone", aliases: []}
+  - {code: "SG", name: "singapore", aliases: []}
+  - {code: "SK", name: "slovakia", aliases: ["slovak republic"]}
+  - {code: "SI", name: "slovenia", aliases: []}
+  - {code: "SB", name: "solomon islands", aliases: []}
+  - {code: "SO", name: "somalia", aliases: []}
+  - {code: "ZA", name: "south africa", aliases: ["rsa"]}
+  - {code: "SS", name: "south sudan", aliases: []}
+  - {code: "ES", name: "spain", aliases: ["españa", "espana"]}
+  - {code: "LK", name: "sri lanka", aliases: ["ceylon"]}
+  - {code: "SD", name: "sudan", aliases: []}
+  - {code: "SR", name: "suriname", aliases: []}
+  - {code: "SE", name: "sweden", aliases: ["sverige"]}
+  - {code: "CH", name: "switzerland", aliases: ["schweiz", "suisse", "svizzera"]}
+  - {code: "SY", name: "syria", aliases: ["syrian arab republic"]}
+  - {code: "TJ", name: "tajikistan", aliases: []}
+  - {code: "TZ", name: "tanzania", aliases: ["united republic of tanzania"]}
+  - {code: "TH", name: "thailand", aliases: []}
+  - {code: "TL", name: "timor-leste", aliases: ["east timor"]}
+  - {code: "TG", name: "togo", aliases: []}
+  - {code: "TO", name: "tonga", aliases: []}
+  - {code: "TT", name: "trinidad and tobago", aliases: ["trinidad", "tobago"]}
+  - {code: "TN", name: "tunisia", aliases: []}
+  - {code: "TR", name: "turkey", aliases: ["türkiye", "turkiye"]}
+  - {code: "TM", name: "turkmenistan", aliases: []}
+  - {code: "TV", name: "tuvalu", aliases: []}
+  - {code: "UG", name: "uganda", aliases: []}
+  - {code: "UA", name: "ukraine", aliases: []}
+  - {code: "AE", name: "united arab emirates", aliases: ["uae", "u.a.e.", "emirates"]}
+  - {code: "GB", name: "united kingdom", aliases: ["uk", "u.k.", "great britain", "britain", "england", "scotland", "wales", "northern ireland"]}
+  - {code: "US", name: "united states", aliases: ["usa", "u.s.", "u.s.a.", "united states of america"]}
+  - {code: "UY", name: "uruguay", aliases: []}
+  - {code: "UZ", name: "uzbekistan", aliases: []}
+  - {code: "VU", name: "vanuatu", aliases: []}
+  - {code: "VE", name: "venezuela", aliases: ["bolivarian republic of venezuela"]}
+  - {code: "VN", name: "vietnam", aliases: ["viet nam"]}
+  - {code: "YE", name: "yemen", aliases: []}
+  - {code: "ZM", name: "zambia", aliases: []}
+  - {code: "ZW", name: "zimbabwe", aliases: []}
+  - {code: "TW", name: "taiwan", aliases: ["republic of china", "roc"]}
+  - {code: "PS", name: "palestine", aliases: ["state of palestine", "palestinian territories"]}
+
+regions:
+  "emea": {kind: "region", countries: ["AD", "AE", "AL", "AM", "AO", "AT", "AZ", "BA", "BE", "BF", "BG", "BH", "BI", "BJ", "BW", "BY", "CD", "CF", "CG", "CH", "CI", "CM", "CV", "CY", "CZ", "DE", "DJ", "DK", "DZ", "EE", "EG", "ER", "ES", "ET", "FI", "FR", "GA", "GB", "GE", "GH", "GM", "GN", "GQ", "GR", "GW", "HR", "HU", "IE", "IL", "IQ", "IR", "IS", "IT", "JO", "KE", "KM", "KW", "LB", "LI", "LR", "LS", "LT", "LU", "LV", "LY", "MA", "MC", "MD", "ME", "MG", "MK", "ML", "MR", "MT", "MU", "MW", "MZ", "NA", "NE", "NG", "NL", "NO", "OM", "PL", "PS", "PT", "QA", "RO", "RS", "RU", "RW", "SA", "SC", "SD", "SE", "SI", "SK", "SL", "SM", "SN", "SO", "SS", "ST", "SY", "SZ", "TD", "TG", "TN", "TR", "TZ", "UA", "UG", "YE", "ZA", "ZM", "ZW"]}
+  "eu": {kind: "region", countries: ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"]}
+  "europe": {kind: "region", countries: ["AD", "AL", "AM", "AT", "AZ", "BA", "BE", "BG", "BY", "CH", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GE", "GR", "HR", "HU", "IE", "IS", "IT", "LI", "LT", "LU", "LV", "MC", "MD", "ME", "MK", "MT", "NL", "NO", "PL", "PT", "RO", "RS", "RU", "SE", "SI", "SK", "SM", "TR", "UA"]}
+  "latam": {kind: "region", countries: ["AG", "AR", "BB", "BO", "BR", "BS", "BZ", "CL", "CO", "CR", "CU", "DM", "DO", "EC", "GD", "GT", "GY", "HN", "HT", "JM", "KN", "LC", "MX", "NI", "PA", "PE", "PY", "SR", "SV", "TT", "UY", "VC", "VE"]}
+  "apac": {kind: "region", countries: ["AU", "BD", "BN", "BT", "CN", "FJ", "FM", "ID", "IN", "JP", "KH", "KI", "KP", "KR", "LA", "LK", "MH", "MM", "MN", "MV", "MY", "NP", "NR", "NZ", "PG", "PH", "PK", "PW", "SB", "SG", "TH", "TL", "TO", "TV", "TW", "VN", "VU", "WS"]}
+  "north america": {kind: "region", countries: ["CA", "MX", "US"]}
+  "americas": {kind: "region", countries: ["AG", "AR", "BB", "BO", "BR", "BS", "BZ", "CA", "CL", "CO", "CR", "CU", "DM", "DO", "EC", "GD", "GT", "GY", "HN", "HT", "JM", "KN", "LC", "MX", "NI", "PA", "PE", "PY", "SR", "SV", "TT", "US", "UY", "VC", "VE"]}
+  "middle east": {kind: "region", countries: ["AE", "BH", "IL", "IQ", "IR", "JO", "KW", "LB", "OM", "PS", "QA", "SA", "SY", "YE"]}
+  "africa": {kind: "region", countries: ["AO", "BF", "BI", "BJ", "BW", "CD", "CF", "CG", "CI", "CM", "CV", "DJ", "DZ", "EG", "ER", "ET", "GA", "GH", "GM", "GN", "GQ", "GW", "KE", "KM", "LR", "LS", "LY", "MA", "MG", "ML", "MR", "MU", "MW", "MZ", "NA", "NE", "NG", "RW", "SC", "SD", "SL", "SN", "SO", "SS", "ST", "SZ", "TD", "TG", "TN", "TZ", "UG", "ZA", "ZM", "ZW"]}
+  "worldwide": {kind: "world", countries: []}
+  "anywhere": {kind: "world", countries: []}
+  "global": {kind: "world", countries: []}
+
+us_states:
+  "AL": "alabama"
+  "AK": "alaska"
+  "AZ": "arizona"
+  "AR": "arkansas"
+  "CA": "california"
+  "CO": "colorado"
+  "CT": "connecticut"
+  "DE": "delaware"
+  "DC": "district of columbia"
+  "FL": "florida"
+  "GA": "georgia"
+  "HI": "hawaii"
+  "ID": "idaho"
+  "IL": "illinois"
+  "IN": "indiana"
+  "IA": "iowa"
+  "KS": "kansas"
+  "KY": "kentucky"
+  "LA": "louisiana"
+  "ME": "maine"
+  "MD": "maryland"
+  "MA": "massachusetts"
+  "MI": "michigan"
+  "MN": "minnesota"
+  "MS": "mississippi"
+  "MO": "missouri"
+  "MT": "montana"
+  "NE": "nebraska"
+  "NV": "nevada"
+  "NH": "new hampshire"
+  "NJ": "new jersey"
+  "NM": "new mexico"
+  "NY": "new york"
+  "NC": "north carolina"
+  "ND": "north dakota"
+  "OH": "ohio"
+  "OK": "oklahoma"
+  "OR": "oregon"
+  "PA": "pennsylvania"
+  "RI": "rhode island"
+  "SC": "south carolina"
+  "SD": "south dakota"
+  "TN": "tennessee"
+  "TX": "texas"
+  "UT": "utah"
+  "VT": "vermont"
+  "VA": "virginia"
+  "WA": "washington"
+  "WV": "west virginia"
+  "WI": "wisconsin"
+  "WY": "wyoming"
+
+ca_provinces:
+  "AB": "alberta"
+  "BC": "british columbia"
+  "MB": "manitoba"
+  "NB": "new brunswick"
+  "NL": "newfoundland and labrador"
+  "NS": "nova scotia"
+  "NT": "northwest territories"
+  "NU": "nunavut"
+  "ON": "ontario"
+  "PE": "prince edward island"
+  "QC": "quebec"
+  "SK": "saskatchewan"
+  "YT": "yukon"
+
+au_states:
+  "NSW": "new south wales"
+  "VIC": "victoria"
+  "QLD": "queensland"
+  "SA": "south australia"
+  "WA": "western australia"
+  "TAS": "tasmania"
+  "ACT": "australian capital territory"
+  "NT": "northern territory"
+
+cities:
+  - {name: "san francisco", admin1: "CA", country: "US", aliases: ["sf", "san francisco bay area"]}
+  - {name: "oakland", admin1: "CA", country: "US", aliases: []}
+  - {name: "san jose", admin1: "CA", country: "US", aliases: []}
+  - {name: "palo alto", admin1: "CA", country: "US", aliases: []}
+  - {name: "mountain view", admin1: "CA", country: "US", aliases: []}
+  - {name: "sunnyvale", admin1: "CA", country: "US", aliases: []}
+  - {name: "santa clara", admin1: "CA", country: "US", aliases: []}
+  - {name: "cupertino", admin1: "CA", country: "US", aliases: []}
+  - {name: "menlo park", admin1: "CA", country: "US", aliases: []}
+  - {name: "redwood city", admin1: "CA", country: "US", aliases: []}
+  - {name: "san mateo", admin1: "CA", country: "US", aliases: []}
+  - {name: "fremont", admin1: "CA", country: "US", aliases: []}
+  - {name: "berkeley", admin1: "CA", country: "US", aliases: []}
+  - {name: "emeryville", admin1: "CA", country: "US", aliases: []}
+  - {name: "san ramon", admin1: "CA", country: "US", aliases: []}
+  - {name: "santa cruz", admin1: "CA", country: "US", aliases: []}
+  - {name: "santa barbara", admin1: "CA", country: "US", aliases: []}
+  - {name: "los angeles", admin1: "CA", country: "US", aliases: ["la", "l.a."]}
+  - {name: "santa monica", admin1: "CA", country: "US", aliases: []}
+  - {name: "irvine", admin1: "CA", country: "US", aliases: []}
+  - {name: "san diego", admin1: "CA", country: "US", aliases: []}
+  - {name: "pasadena", admin1: "CA", country: "US", aliases: []}
+  - {name: "sacramento", admin1: "CA", country: "US", aliases: []}
+  - {name: "new york", admin1: "NY", country: "US", aliases: ["nyc", "new york city", "manhattan"]}
+  - {name: "brooklyn", admin1: "NY", country: "US", aliases: []}
+  - {name: "buffalo", admin1: "NY", country: "US", aliases: []}
+  - {name: "rochester", admin1: "NY", country: "US", aliases: []}
+  - {name: "seattle", admin1: "WA", country: "US", aliases: []}
+  - {name: "bellevue", admin1: "WA", country: "US", aliases: []}
+  - {name: "redmond", admin1: "WA", country: "US", aliases: []}
+  - {name: "tacoma", admin1: "WA", country: "US", aliases: []}
+  - {name: "spokane", admin1: "WA", country: "US", aliases: []}
+  - {name: "portland", admin1: "OR", country: "US", aliases: []}
+  - {name: "austin", admin1: "TX", country: "US", aliases: []}
+  - {name: "dallas", admin1: "TX", country: "US", aliases: []}
+  - {name: "houston", admin1: "TX", country: "US", aliases: []}
+  - {name: "san antonio", admin1: "TX", country: "US", aliases: []}
+  - {name: "plano", admin1: "TX", country: "US", aliases: []}
+  - {name: "el paso", admin1: "TX", country: "US", aliases: []}
+  - {name: "fort worth", admin1: "TX", country: "US", aliases: []}
+  - {name: "boulder", admin1: "CO", country: "US", aliases: []}
+  - {name: "denver", admin1: "CO", country: "US", aliases: []}
+  - {name: "colorado springs", admin1: "CO", country: "US", aliases: []}
+  - {name: "chicago", admin1: "IL", country: "US", aliases: []}
+  - {name: "boston", admin1: "MA", country: "US", aliases: []}
+  - {name: "cambridge", admin1: "MA", country: "US", aliases: []}
+  - {name: "somerville", admin1: "MA", country: "US", aliases: []}
+  - {name: "atlanta", admin1: "GA", country: "US", aliases: []}
+  - {name: "miami", admin1: "FL", country: "US", aliases: []}
+  - {name: "tampa", admin1: "FL", country: "US", aliases: []}
+  - {name: "orlando", admin1: "FL", country: "US", aliases: []}
+  - {name: "fort lauderdale", admin1: "FL", country: "US", aliases: []}
+  - {name: "west palm beach", admin1: "FL", country: "US", aliases: []}
+  - {name: "gainesville", admin1: "FL", country: "US", aliases: []}
+  - {name: "raleigh", admin1: "NC", country: "US", aliases: []}
+  - {name: "durham", admin1: "NC", country: "US", aliases: []}
+  - {name: "charlotte", admin1: "NC", country: "US", aliases: []}
+  - {name: "washington", admin1: "DC", country: "US", aliases: ["dc", "washington dc", "washington d.c.", "washington, d.c.", "d.c."]}
+  - {name: "arlington", admin1: "VA", country: "US", aliases: []}
+  - {name: "reston", admin1: "VA", country: "US", aliases: []}
+  - {name: "richmond", admin1: "VA", country: "US", aliases: []}
+  - {name: "philadelphia", admin1: "PA", country: "US", aliases: ["philly"]}
+  - {name: "pittsburgh", admin1: "PA", country: "US", aliases: []}
+  - {name: "minneapolis", admin1: "MN", country: "US", aliases: []}
+  - {name: "st. louis", admin1: "MO", country: "US", aliases: ["saint louis"]}
+  - {name: "kansas city", admin1: "MO", country: "US", aliases: []}
+  - {name: "salt lake city", admin1: "UT", country: "US", aliases: ["slc"]}
+  - {name: "phoenix", admin1: "AZ", country: "US", aliases: []}
+  - {name: "tempe", admin1: "AZ", country: "US", aliases: []}
+  - {name: "scottsdale", admin1: "AZ", country: "US", aliases: []}
+  - {name: "tucson", admin1: "AZ", country: "US", aliases: []}
+  - {name: "las vegas", admin1: "NV", country: "US", aliases: []}
+  - {name: "reno", admin1: "NV", country: "US", aliases: []}
+  - {name: "detroit", admin1: "MI", country: "US", aliases: []}
+  - {name: "ann arbor", admin1: "MI", country: "US", aliases: []}
+  - {name: "columbus", admin1: "OH", country: "US", aliases: []}
+  - {name: "cleveland", admin1: "OH", country: "US", aliases: []}
+  - {name: "cincinnati", admin1: "OH", country: "US", aliases: []}
+  - {name: "indianapolis", admin1: "IN", country: "US", aliases: []}
+  - {name: "nashville", admin1: "TN", country: "US", aliases: []}
+  - {name: "memphis", admin1: "TN", country: "US", aliases: []}
+  - {name: "knoxville", admin1: "TN", country: "US", aliases: []}
+  - {name: "louisville", admin1: "KY", country: "US", aliases: []}
+  - {name: "lexington", admin1: "KY", country: "US", aliases: []}
+  - {name: "new orleans", admin1: "LA", country: "US", aliases: []}
+  - {name: "baton rouge", admin1: "LA", country: "US", aliases: []}
+  - {name: "oklahoma city", admin1: "OK", country: "US", aliases: []}
+  - {name: "tulsa", admin1: "OK", country: "US", aliases: []}
+  - {name: "omaha", admin1: "NE", country: "US", aliases: []}
+  - {name: "milwaukee", admin1: "WI", country: "US", aliases: []}
+  - {name: "madison", admin1: "WI", country: "US", aliases: []}
+  - {name: "des moines", admin1: "IA", country: "US", aliases: []}
+  - {name: "wichita", admin1: "KS", country: "US", aliases: []}
+  - {name: "boise", admin1: "ID", country: "US", aliases: []}
+  - {name: "albuquerque", admin1: "NM", country: "US", aliases: []}
+  - {name: "santa fe", admin1: "NM", country: "US", aliases: []}
+  - {name: "honolulu", admin1: "HI", country: "US", aliases: []}
+  - {name: "anchorage", admin1: "AK", country: "US", aliases: []}
+  - {name: "hartford", admin1: "CT", country: "US", aliases: []}
+  - {name: "new haven", admin1: "CT", country: "US", aliases: []}
+  - {name: "providence", admin1: "RI", country: "US", aliases: []}
+  - {name: "burlington", admin1: "VT", country: "US", aliases: []}
+  - {name: "portland", admin1: "ME", country: "US", aliases: []}
+  - {name: "manchester", admin1: "NH", country: "US", aliases: []}
+  - {name: "baltimore", admin1: "MD", country: "US", aliases: []}
+  - {name: "rockville", admin1: "MD", country: "US", aliases: []}
+  - {name: "bethesda", admin1: "MD", country: "US", aliases: []}
+  - {name: "wilmington", admin1: "DE", country: "US", aliases: []}
+  - {name: "newark", admin1: "NJ", country: "US", aliases: []}
+  - {name: "jersey city", admin1: "NJ", country: "US", aliases: []}
+  - {name: "hoboken", admin1: "NJ", country: "US", aliases: []}
+  - {name: "princeton", admin1: "NJ", country: "US", aliases: []}
+  - {name: "columbia", admin1: "SC", country: "US", aliases: []}
+  - {name: "charleston", admin1: "SC", country: "US", aliases: []}
+  - {name: "greenville", admin1: "SC", country: "US", aliases: []}
+  - {name: "birmingham", admin1: "AL", country: "US", aliases: []}
+  - {name: "huntsville", admin1: "AL", country: "US", aliases: []}
+  - {name: "jackson", admin1: "MS", country: "US", aliases: []}
+  - {name: "little rock", admin1: "AR", country: "US", aliases: []}
+  - {name: "savannah", admin1: "GA", country: "US", aliases: []}
+  - {name: "toronto", admin1: "ON", country: "CA", aliases: []}
+  - {name: "ottawa", admin1: "ON", country: "CA", aliases: []}
+  - {name: "waterloo", admin1: "ON", country: "CA", aliases: ["kitchener-waterloo", "kw"]}
+  - {name: "kitchener", admin1: "ON", country: "CA", aliases: []}
+  - {name: "mississauga", admin1: "ON", country: "CA", aliases: []}
+  - {name: "markham", admin1: "ON", country: "CA", aliases: []}
+  - {name: "hamilton", admin1: "ON", country: "CA", aliases: []}
+  - {name: "london", admin1: "ON", country: "CA", aliases: []}
+  - {name: "montreal", admin1: "QC", country: "CA", aliases: ["montréal"]}
+  - {name: "quebec city", admin1: "QC", country: "CA", aliases: []}
+  - {name: "gatineau", admin1: "QC", country: "CA", aliases: []}
+  - {name: "laval", admin1: "QC", country: "CA", aliases: []}
+  - {name: "vancouver", admin1: "BC", country: "CA", aliases: []}
+  - {name: "burnaby", admin1: "BC", country: "CA", aliases: []}
+  - {name: "surrey", admin1: "BC", country: "CA", aliases: []}
+  - {name: "victoria", admin1: "BC", country: "CA", aliases: []}
+  - {name: "calgary", admin1: "AB", country: "CA", aliases: []}
+  - {name: "edmonton", admin1: "AB", country: "CA", aliases: []}
+  - {name: "winnipeg", admin1: "MB", country: "CA", aliases: []}
+  - {name: "halifax", admin1: "NS", country: "CA", aliases: []}
+  - {name: "saskatoon", admin1: "SK", country: "CA", aliases: []}
+  - {name: "regina", admin1: "SK", country: "CA", aliases: []}
+  - {name: "fredericton", admin1: "NB", country: "CA", aliases: []}
+  - {name: "moncton", admin1: "NB", country: "CA", aliases: []}
+  - {name: "st. john's", admin1: "NL", country: "CA", aliases: []}
+  - {name: "charlottetown", admin1: "PE", country: "CA", aliases: []}
+  - {name: "sydney", admin1: "NSW", country: "AU", aliases: []}
+  - {name: "melbourne", admin1: "VIC", country: "AU", aliases: []}
+  - {name: "brisbane", admin1: "QLD", country: "AU", aliases: []}
+  - {name: "gold coast", admin1: "QLD", country: "AU", aliases: []}
+  - {name: "perth", admin1: "WA", country: "AU", aliases: []}
+  - {name: "adelaide", admin1: "SA", country: "AU", aliases: []}
+  - {name: "canberra", admin1: "ACT", country: "AU", aliases: []}
+  - {name: "hobart", admin1: "TAS", country: "AU", aliases: []}
+  - {name: "newcastle", admin1: "NSW", country: "AU", aliases: []}
+  - {name: "darwin", admin1: "NT", country: "AU", aliases: []}
+  - {name: "auckland", admin1: null, country: "NZ", aliases: []}
+  - {name: "wellington", admin1: null, country: "NZ", aliases: []}
+  - {name: "christchurch", admin1: null, country: "NZ", aliases: []}
+  - {name: "london", admin1: null, country: "GB", aliases: ["greater london", "london, uk"]}
+  - {name: "manchester", admin1: null, country: "GB", aliases: []}
+  - {name: "birmingham", admin1: null, country: "GB", aliases: []}
+  - {name: "edinburgh", admin1: null, country: "GB", aliases: []}
+  - {name: "glasgow", admin1: null, country: "GB", aliases: []}
+  - {name: "bristol", admin1: null, country: "GB", aliases: []}
+  - {name: "leeds", admin1: null, country: "GB", aliases: []}
+  - {name: "cambridge", admin1: null, country: "GB", aliases: []}
+  - {name: "oxford", admin1: null, country: "GB", aliases: []}
+  - {name: "brighton", admin1: null, country: "GB", aliases: []}
+  - {name: "sheffield", admin1: null, country: "GB", aliases: []}
+  - {name: "liverpool", admin1: null, country: "GB", aliases: []}
+  - {name: "belfast", admin1: null, country: "GB", aliases: []}
+  - {name: "cardiff", admin1: null, country: "GB", aliases: []}
+  - {name: "newcastle upon tyne", admin1: null, country: "GB", aliases: ["newcastle"]}
+  - {name: "reading", admin1: null, country: "GB", aliases: []}
+  - {name: "southampton", admin1: null, country: "GB", aliases: []}
+  - {name: "nottingham", admin1: null, country: "GB", aliases: []}
+  - {name: "dublin", admin1: null, country: "IE", aliases: []}
+  - {name: "cork", admin1: null, country: "IE", aliases: []}
+  - {name: "galway", admin1: null, country: "IE", aliases: []}
+  - {name: "limerick", admin1: null, country: "IE", aliases: []}
+  - {name: "berlin", admin1: null, country: "DE", aliases: []}
+  - {name: "munich", admin1: null, country: "DE", aliases: ["münchen", "munchen"]}
+  - {name: "hamburg", admin1: null, country: "DE", aliases: []}
+  - {name: "frankfurt", admin1: null, country: "DE", aliases: ["frankfurt am main"]}
+  - {name: "cologne", admin1: null, country: "DE", aliases: ["köln", "koln"]}
+  - {name: "stuttgart", admin1: null, country: "DE", aliases: []}
+  - {name: "dusseldorf", admin1: null, country: "DE", aliases: ["düsseldorf"]}
+  - {name: "leipzig", admin1: null, country: "DE", aliases: []}
+  - {name: "dresden", admin1: null, country: "DE", aliases: []}
+  - {name: "nuremberg", admin1: null, country: "DE", aliases: ["nürnberg", "nurnberg"]}
+  - {name: "hannover", admin1: null, country: "DE", aliases: ["hanover"]}
+  - {name: "karlsruhe", admin1: null, country: "DE", aliases: []}
+  - {name: "darmstadt", admin1: null, country: "DE", aliases: []}
+  - {name: "bonn", admin1: null, country: "DE", aliases: []}
+  - {name: "aachen", admin1: null, country: "DE", aliases: []}
+  - {name: "paris", admin1: null, country: "FR", aliases: []}
+  - {name: "lyon", admin1: null, country: "FR", aliases: []}
+  - {name: "toulouse", admin1: null, country: "FR", aliases: []}
+  - {name: "marseille", admin1: null, country: "FR", aliases: []}
+  - {name: "nice", admin1: null, country: "FR", aliases: []}
+  - {name: "bordeaux", admin1: null, country: "FR", aliases: []}
+  - {name: "nantes", admin1: null, country: "FR", aliases: []}
+  - {name: "lille", admin1: null, country: "FR", aliases: []}
+  - {name: "grenoble", admin1: null, country: "FR", aliases: []}
+  - {name: "montpellier", admin1: null, country: "FR", aliases: []}
+  - {name: "strasbourg", admin1: null, country: "FR", aliases: []}
+  - {name: "rennes", admin1: null, country: "FR", aliases: []}
+  - {name: "amsterdam", admin1: null, country: "NL", aliases: []}
+  - {name: "rotterdam", admin1: null, country: "NL", aliases: []}
+  - {name: "the hague", admin1: null, country: "NL", aliases: ["den haag"]}
+  - {name: "utrecht", admin1: null, country: "NL", aliases: []}
+  - {name: "eindhoven", admin1: null, country: "NL", aliases: []}
+  - {name: "delft", admin1: null, country: "NL", aliases: []}
+  - {name: "madrid", admin1: null, country: "ES", aliases: []}
+  - {name: "barcelona", admin1: null, country: "ES", aliases: []}
+  - {name: "valencia", admin1: null, country: "ES", aliases: []}
+  - {name: "bilbao", admin1: null, country: "ES", aliases: []}
+  - {name: "malaga", admin1: null, country: "ES", aliases: ["málaga"]}
+  - {name: "seville", admin1: null, country: "ES", aliases: ["sevilla"]}
+  - {name: "zaragoza", admin1: null, country: "ES", aliases: []}
+  - {name: "lisbon", admin1: null, country: "PT", aliases: ["lisboa"]}
+  - {name: "porto", admin1: null, country: "PT", aliases: []}
+  - {name: "braga", admin1: null, country: "PT", aliases: []}
+  - {name: "milan", admin1: null, country: "IT", aliases: ["milano"]}
+  - {name: "rome", admin1: null, country: "IT", aliases: ["roma"]}
+  - {name: "turin", admin1: null, country: "IT", aliases: ["torino"]}
+  - {name: "bologna", admin1: null, country: "IT", aliases: []}
+  - {name: "florence", admin1: null, country: "IT", aliases: ["firenze"]}
+  - {name: "stockholm", admin1: null, country: "SE", aliases: []}
+  - {name: "gothenburg", admin1: null, country: "SE", aliases: ["göteborg", "goteborg"]}
+  - {name: "malmo", admin1: null, country: "SE", aliases: ["malmö"]}
+  - {name: "uppsala", admin1: null, country: "SE", aliases: []}
+  - {name: "lund", admin1: null, country: "SE", aliases: []}
+  - {name: "copenhagen", admin1: null, country: "DK", aliases: ["københavn", "kobenhavn"]}
+  - {name: "aarhus", admin1: null, country: "DK", aliases: []}
+  - {name: "odense", admin1: null, country: "DK", aliases: []}
+  - {name: "oslo", admin1: null, country: "NO", aliases: []}
+  - {name: "bergen", admin1: null, country: "NO", aliases: []}
+  - {name: "trondheim", admin1: null, country: "NO", aliases: []}
+  - {name: "stavanger", admin1: null, country: "NO", aliases: []}
+  - {name: "helsinki", admin1: null, country: "FI", aliases: []}
+  - {name: "espoo", admin1: null, country: "FI", aliases: []}
+  - {name: "tampere", admin1: null, country: "FI", aliases: []}
+  - {name: "oulu", admin1: null, country: "FI", aliases: []}
+  - {name: "warsaw", admin1: null, country: "PL", aliases: ["warszawa"]}
+  - {name: "krakow", admin1: null, country: "PL", aliases: ["kraków", "cracow"]}
+  - {name: "wroclaw", admin1: null, country: "PL", aliases: ["wrocław"]}
+  - {name: "gdansk", admin1: null, country: "PL", aliases: ["gdańsk"]}
+  - {name: "poznan", admin1: null, country: "PL", aliases: ["poznań"]}
+  - {name: "zurich", admin1: null, country: "CH", aliases: ["zürich"]}
+  - {name: "geneva", admin1: null, country: "CH", aliases: ["genève", "geneve"]}
+  - {name: "lausanne", admin1: null, country: "CH", aliases: []}
+  - {name: "basel", admin1: null, country: "CH", aliases: []}
+  - {name: "bern", admin1: null, country: "CH", aliases: ["berne"]}
+  - {name: "zug", admin1: null, country: "CH", aliases: []}
+  - {name: "vienna", admin1: null, country: "AT", aliases: ["wien"]}
+  - {name: "graz", admin1: null, country: "AT", aliases: []}
+  - {name: "linz", admin1: null, country: "AT", aliases: []}
+  - {name: "salzburg", admin1: null, country: "AT", aliases: []}
+  - {name: "innsbruck", admin1: null, country: "AT", aliases: []}
+  - {name: "brussels", admin1: null, country: "BE", aliases: ["bruxelles"]}
+  - {name: "antwerp", admin1: null, country: "BE", aliases: ["antwerpen"]}
+  - {name: "ghent", admin1: null, country: "BE", aliases: ["gent"]}
+  - {name: "leuven", admin1: null, country: "BE", aliases: []}
+  - {name: "prague", admin1: null, country: "CZ", aliases: ["praha"]}
+  - {name: "brno", admin1: null, country: "CZ", aliases: []}
+  - {name: "budapest", admin1: null, country: "HU", aliases: []}
+  - {name: "bucharest", admin1: null, country: "RO", aliases: ["bucuresti", "bucurești"]}
+  - {name: "cluj-napoca", admin1: null, country: "RO", aliases: ["cluj"]}
+  - {name: "iasi", admin1: null, country: "RO", aliases: ["iași"]}
+  - {name: "timisoara", admin1: null, country: "RO", aliases: ["timișoara"]}
+  - {name: "athens", admin1: null, country: "GR", aliases: []}
+  - {name: "belgrade", admin1: null, country: "RS", aliases: ["beograd"]}
+  - {name: "zagreb", admin1: null, country: "HR", aliases: []}
+  - {name: "sofia", admin1: null, country: "BG", aliases: []}
+  - {name: "tallinn", admin1: null, country: "EE", aliases: []}
+  - {name: "vilnius", admin1: null, country: "LT", aliases: []}
+  - {name: "riga", admin1: null, country: "LV", aliases: ["riga", "riga, latvia"]}
+  - {name: "kyiv", admin1: null, country: "UA", aliases: ["kiev", "kyiv city"]}
+  - {name: "lviv", admin1: null, country: "UA", aliases: []}
+  - {name: "kharkiv", admin1: null, country: "UA", aliases: []}
+  - {name: "moscow", admin1: null, country: "RU", aliases: ["moskva"]}
+  - {name: "saint petersburg", admin1: null, country: "RU", aliases: ["st. petersburg", "st petersburg"]}
+  - {name: "istanbul", admin1: null, country: "TR", aliases: ["constantinople"]}
+  - {name: "ankara", admin1: null, country: "TR", aliases: []}
+  - {name: "izmir", admin1: null, country: "TR", aliases: []}
+  - {name: "tel aviv", admin1: null, country: "IL", aliases: ["tel aviv-yafo", "tel-aviv"]}
+  - {name: "jerusalem", admin1: null, country: "IL", aliases: []}
+  - {name: "haifa", admin1: null, country: "IL", aliases: []}
+  - {name: "herzliya", admin1: null, country: "IL", aliases: ["herzlia"]}
+  - {name: "petah tikva", admin1: null, country: "IL", aliases: ["petach tikva"]}
+  - {name: "dubai", admin1: null, country: "AE", aliases: []}
+  - {name: "abu dhabi", admin1: null, country: "AE", aliases: []}
+  - {name: "riyadh", admin1: null, country: "SA", aliases: []}
+  - {name: "jeddah", admin1: null, country: "SA", aliases: []}
+  - {name: "doha", admin1: null, country: "QA", aliases: []}
+  - {name: "cairo", admin1: null, country: "EG", aliases: ["al qahirah"]}
+  - {name: "casablanca", admin1: null, country: "MA", aliases: []}
+  - {name: "rabat", admin1: null, country: "MA", aliases: []}
+  - {name: "tunis", admin1: null, country: "TN", aliases: []}
+  - {name: "bengaluru", admin1: null, country: "IN", aliases: ["bangalore"]}
+  - {name: "hyderabad", admin1: null, country: "IN", aliases: []}
+  - {name: "chennai", admin1: null, country: "IN", aliases: ["madras"]}
+  - {name: "mumbai", admin1: null, country: "IN", aliases: ["bombay"]}
+  - {name: "pune", admin1: null, country: "IN", aliases: ["poona"]}
+  - {name: "delhi", admin1: null, country: "IN", aliases: ["new delhi", "delhi ncr"]}
+  - {name: "gurugram", admin1: null, country: "IN", aliases: ["gurgaon"]}
+  - {name: "noida", admin1: null, country: "IN", aliases: []}
+  - {name: "kolkata", admin1: null, country: "IN", aliases: ["calcutta"]}
+  - {name: "ahmedabad", admin1: null, country: "IN", aliases: []}
+  - {name: "kochi", admin1: null, country: "IN", aliases: ["cochin"]}
+  - {name: "thiruvananthapuram", admin1: null, country: "IN", aliases: ["trivandrum"]}
+  - {name: "chandigarh", admin1: null, country: "IN", aliases: []}
+  - {name: "jaipur", admin1: null, country: "IN", aliases: []}
+  - {name: "indore", admin1: null, country: "IN", aliases: []}
+  - {name: "coimbatore", admin1: null, country: "IN", aliases: []}
+  - {name: "karachi", admin1: null, country: "PK", aliases: []}
+  - {name: "lahore", admin1: null, country: "PK", aliases: []}
+  - {name: "islamabad", admin1: null, country: "PK", aliases: []}
+  - {name: "dhaka", admin1: null, country: "BD", aliases: []}
+  - {name: "colombo", admin1: null, country: "LK", aliases: []}
+  - {name: "kathmandu", admin1: null, country: "NP", aliases: []}
+  - {name: "singapore", admin1: null, country: "SG", aliases: []}
+  - {name: "kuala lumpur", admin1: null, country: "MY", aliases: ["kl"]}
+  - {name: "penang", admin1: null, country: "MY", aliases: ["george town"]}
+  - {name: "jakarta", admin1: null, country: "ID", aliases: []}
+  - {name: "manila", admin1: null, country: "PH", aliases: []}
+  - {name: "makati", admin1: null, country: "PH", aliases: []}
+  - {name: "cebu city", admin1: null, country: "PH", aliases: []}
+  - {name: "ho chi minh city", admin1: null, country: "VN", aliases: ["hcmc", "saigon"]}
+  - {name: "hanoi", admin1: null, country: "VN", aliases: ["ha noi"]}
+  - {name: "da nang", admin1: null, country: "VN", aliases: ["danang"]}
+  - {name: "bangkok", admin1: null, country: "TH", aliases: []}
+  - {name: "tokyo", admin1: null, country: "JP", aliases: []}
+  - {name: "osaka", admin1: null, country: "JP", aliases: []}
+  - {name: "yokohama", admin1: null, country: "JP", aliases: []}
+  - {name: "fukuoka", admin1: null, country: "JP", aliases: []}
+  - {name: "kyoto", admin1: null, country: "JP", aliases: []}
+  - {name: "seoul", admin1: null, country: "KR", aliases: []}
+  - {name: "busan", admin1: null, country: "KR", aliases: []}
+  - {name: "taipei", admin1: null, country: "TW", aliases: []}
+  - {name: "hsinchu", admin1: null, country: "TW", aliases: []}
+  - {name: "taichung", admin1: null, country: "TW", aliases: []}
+  - {name: "beijing", admin1: null, country: "CN", aliases: ["peking"]}
+  - {name: "shanghai", admin1: null, country: "CN", aliases: []}
+  - {name: "shenzhen", admin1: null, country: "CN", aliases: []}
+  - {name: "hangzhou", admin1: null, country: "CN", aliases: []}
+  - {name: "guangzhou", admin1: null, country: "CN", aliases: ["canton"]}
+  - {name: "chengdu", admin1: null, country: "CN", aliases: []}
+  - {name: "nanjing", admin1: null, country: "CN", aliases: []}
+  - {name: "wuhan", admin1: null, country: "CN", aliases: []}
+  - {name: "xi'an", admin1: null, country: "CN", aliases: ["xian"]}
+  - {name: "sao paulo", admin1: null, country: "BR", aliases: ["são paulo"]}
+  - {name: "rio de janeiro", admin1: null, country: "BR", aliases: ["rio"]}
+  - {name: "belo horizonte", admin1: null, country: "BR", aliases: []}
+  - {name: "porto alegre", admin1: null, country: "BR", aliases: []}
+  - {name: "florianopolis", admin1: null, country: "BR", aliases: ["florianópolis", "floripa"]}
+  - {name: "recife", admin1: null, country: "BR", aliases: []}
+  - {name: "brasilia", admin1: null, country: "BR", aliases: ["brasília"]}
+  - {name: "curitiba", admin1: null, country: "BR", aliases: []}
+  - {name: "mexico city", admin1: null, country: "MX", aliases: ["cdmx", "ciudad de mexico", "ciudad de méxico", "df"]}
+  - {name: "guadalajara", admin1: null, country: "MX", aliases: []}
+  - {name: "monterrey", admin1: null, country: "MX", aliases: []}
+  - {name: "queretaro", admin1: null, country: "MX", aliases: ["querétaro"]}
+  - {name: "buenos aires", admin1: null, country: "AR", aliases: ["caba", "capital federal"]}
+  - {name: "cordoba", admin1: null, country: "AR", aliases: ["córdoba"]}
+  - {name: "rosario", admin1: null, country: "AR", aliases: []}
+  - {name: "bogota", admin1: null, country: "CO", aliases: ["bogotá"]}
+  - {name: "medellin", admin1: null, country: "CO", aliases: ["medellín"]}
+  - {name: "cali", admin1: null, country: "CO", aliases: []}
+  - {name: "santiago", admin1: null, country: "CL", aliases: []}
+  - {name: "valparaiso", admin1: null, country: "CL", aliases: ["valparaíso"]}
+  - {name: "lima", admin1: null, country: "PE", aliases: []}
+  - {name: "montevideo", admin1: null, country: "UY", aliases: []}
+  - {name: "san jose", admin1: null, country: "CR", aliases: []}
+  - {name: "panama city", admin1: null, country: "PA", aliases: ["ciudad de panama"]}
+  - {name: "cape town", admin1: null, country: "ZA", aliases: ["kaapstad"]}
+  - {name: "johannesburg", admin1: null, country: "ZA", aliases: ["joburg", "jhb"]}
+  - {name: "pretoria", admin1: null, country: "ZA", aliases: []}
+  - {name: "durban", admin1: null, country: "ZA", aliases: []}
+  - {name: "lagos", admin1: null, country: "NG", aliases: []}
+  - {name: "abuja", admin1: null, country: "NG", aliases: []}
+  - {name: "nairobi", admin1: null, country: "KE", aliases: []}
+  - {name: "mombasa", admin1: null, country: "KE", aliases: []}
+  - {name: "accra", admin1: null, country: "GH", aliases: []}
+  - {name: "addis ababa", admin1: null, country: "ET", aliases: []}
+  - {name: "kampala", admin1: null, country: "UG", aliases: []}
+  - {name: "kigali", admin1: null, country: "RW", aliases: []}
+  - {name: "dakar", admin1: null, country: "SN", aliases: []}
+  - {name: "dar es salaam", admin1: null, country: "TZ", aliases: []}
+  - {name: "yaounde", admin1: null, country: "CM", aliases: ["yaoundé"]}

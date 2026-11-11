@@ -1,0 +1,73 @@
+# Controlled function vocabulary for ARCHITECTURE.md section 6 (rule 4).
+#
+# Ordered: the first function whose title_keywords match wins. Title keywords are matched
+# as whole words or phrases against the normalized title (ARCH 6 rule 4: title first, then
+# the ATS department hint in department_keywords, then 'other'). The order is deliberate:
+#   ml_ai before data before engineering (ml engineer, data engineer)
+#   security, devrel, sales, support, it before engineering (security engineer,
+#     developer advocate, sales engineer, support engineer, network engineer)
+#   design before product and marketing (product designer, product marketing)
+#   product before operations (product operations) and before engineering (only specific
+#     product phrases are listed, so 'product engineer' falls through to engineering)
+#   research before design (ux researcher) but 'research engineer' falls to engineering
+#   'other' is the explicit fallback.
+#
+# department_keywords are matched against the ATS department/team name, lowercased.
+
+- function: ml_ai
+  title_keywords: ["machine learning", "ml", "ai", "artificial intelligence", "deep learning", "nlp", "llm", "computer vision", "applied scientist", "applied ai", "genai", "reinforcement learning", "ml research"]
+  department_keywords: ["machine learning", "ml", "ai", "applied ai"]
+- function: data
+  title_keywords: ["data scientist", "data engineer", "data analyst", "data science", "data platform", "data architect", "data infrastructure", "data governance", "analytics", "analytics engineer", "business intelligence", "bi analyst", "bi engineer", "etl"]
+  department_keywords: ["data", "data science", "data engineering", "analytics", "business intelligence"]
+- function: security
+  title_keywords: ["security", "infosec", "appsec", "cybersecurity", "penetration tester", "threat", "soc analyst", "detection engineer"]
+  department_keywords: ["security", "infosec"]
+- function: devrel
+  title_keywords: ["developer advocate", "developer relations", "devrel", "developer evangelist", "developer experience", "technical writer", "technical writing", "developer community"]
+  department_keywords: ["developer relations", "devrel", "developer advocacy", "developer experience"]
+- function: research
+  title_keywords: ["researcher", "research scientist", "research associate", "user research", "ux research", "research lead"]
+  department_keywords: ["research", "r&d"]
+- function: design
+  title_keywords: ["designer", "design", "ux", "ui", "user experience", "user interface", "visual design", "interaction design", "product design"]
+  department_keywords: ["design", "ux", "creative"]
+- function: sales
+  title_keywords: ["sales", "account executive", "account manager", "business development", "sdr", "bdr", "sales development", "solutions engineer", "sales engineer", "solutions architect", "pre-sales", "presales", "partnerships", "partner manager"]
+  department_keywords: ["sales", "business development", "partnerships", "revenue"]
+- function: marketing
+  title_keywords: ["marketing", "growth marketing", "brand marketing", "brand manager", "content marketing", "content strategist", "copywriter", "seo", "demand generation", "communications", "social media", "product marketing", "field marketing", "lifecycle marketing"]
+  department_keywords: ["marketing", "brand", "communications"]
+- function: recruiting
+  title_keywords: ["recruiter", "recruiting", "recruitment", "talent acquisition", "sourcer", "sourcing", "talent partner"]
+  department_keywords: ["recruiting", "recruitment", "talent acquisition"]
+- function: people
+  title_keywords: ["people", "hr", "human resources", "people operations", "people partner", "compensation", "benefits", "learning and development", "people business partner"]
+  department_keywords: ["people", "people operations", "hr", "human resources"]
+- function: legal
+  title_keywords: ["legal", "counsel", "attorney", "paralegal", "compliance", "privacy", "regulatory", "general counsel"]
+  department_keywords: ["legal", "compliance", "privacy"]
+- function: finance
+  title_keywords: ["finance", "financial", "accounting", "accountant", "controller", "fp&a", "treasury", "tax", "bookkeeper", "payroll"]
+  department_keywords: ["finance", "accounting", "tax"]
+- function: customer_success
+  title_keywords: ["customer success", "client success"]
+  department_keywords: ["customer success"]
+- function: support
+  title_keywords: ["support", "customer support", "technical support", "help desk", "customer service", "customer experience", "support engineer"]
+  department_keywords: ["support", "customer support", "customer service", "help desk"]
+- function: it
+  title_keywords: ["it administrator", "it manager", "it specialist", "it operations", "systems administrator", "system administrator", "sysadmin", "network engineer", "network administrator", "desktop engineer"]
+  department_keywords: ["it", "information technology", "corporate it"]
+- function: product
+  title_keywords: ["product manager", "product management", "product owner", "product lead", "product director", "product strategy", "product analyst", "product operations", "head of product"]
+  department_keywords: ["product", "product management"]
+- function: operations
+  title_keywords: ["operations", "program manager", "project manager", "business operations", "revenue operations", "revops", "supply chain", "logistics", "facilities", "office manager", "chief of staff", "strategy and operations"]
+  department_keywords: ["operations", "business operations", "program management", "project management", "logistics", "facilities", "revops"]
+- function: engineering
+  title_keywords: ["engineer", "engineering", "developer", "programmer", "software", "swe", "sde", "sre", "site reliability", "devops", "qa", "quality assurance", "sdet", "test automation", "platform", "infrastructure", "firmware", "embedded", "mobile", "frontend", "front-end", "backend", "back-end", "full stack", "fullstack", "web", "ios", "android", "tech lead", "technical lead", "architect", "technology", "cto"]
+  department_keywords: ["engineering", "software engineering", "platform", "infrastructure"]
+- function: other
+  title_keywords: []
+  department_keywords: []

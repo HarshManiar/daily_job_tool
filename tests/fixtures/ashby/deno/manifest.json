@@ -1,0 +1,16 @@
+{
+  "adapter": "ashby",
+  "token": "deno",
+  "config": {},
+  "recorded_at": "2026-11-11T19:23:21.402734+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/deno?includeCompensation=true",
+      "json": null,
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8",
+      "file": "000.txt"
+    }
+  ]
+}

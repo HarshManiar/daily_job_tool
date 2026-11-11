@@ -1,0 +1,16 @@
+{
+  "adapter": "ashby",
+  "token": "railway",
+  "config": {},
+  "recorded_at": "2026-11-11T19:23:16.631404+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://api.ashbyhq.com/posting-api/job-board/railway?includeCompensation=true",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "file": "000.json"
+    }
+  ]
+}

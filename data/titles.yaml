@@ -1,0 +1,126 @@
+# Title normalization tables for ARCHITECTURE.md section 6 (rules 2 and 3).
+#
+# abbreviations: whole-word token -> expansion. Applied to the lowercased title before
+#   seniority/function matching. Not included on purpose: pm (ambiguous: product/project/program
+#   manager), cs, de, ds, ux, ui, qa, sre, devops, ai, vp (these already read correctly).
+#
+# strip_patterns: Python regexes removed from the title (after lowercasing). Applied in order.
+#   Each has a comment in the list below. Patterns are compiled with re.IGNORECASE off because
+#   the title is already lowercased.
+#
+# seniority: ordered list; FIRST match wins. Each entry is {level, patterns}. Patterns are
+#   Python regexes run with re.search on the normalized (lowercased, abbreviation-expanded)
+#   title. 'mid' and 'unknown' are not listed here: code returns 'mid' for recognized IC titles
+#   and 'unknown' otherwise. 'head of' is exec here; code maps it to director for companies
+#   with <= 200 employees (ARCH 6.3, judgment call).
+#
+# level_suffixes: trailing token (after normalization) -> seniority. Used when no pattern
+#   matches. Keys are quoted so YAML does not read them as numbers.
+
+abbreviations:
+  "sr": "senior"
+  "jr": "junior"
+  "swe": "software engineer"
+  "sde": "software engineer"
+  "eng": "engineer"
+  "engr": "engineer"
+  "mgr": "manager"
+  "dev": "developer"
+  "ml": "machine learning"
+  "fe": "frontend"
+  "be": "backend"
+  "fs": "full stack"
+  "mts": "member of technical staff"
+  "sw": "software"
+  "ops": "operations"
+  "mkt": "marketing"
+  "bd": "business development"
+  "tl": "tech lead"
+  "asst": "assistant"
+  "assoc": "associate"
+  "dir": "director"
+  "intl": "international"
+  "hr": "human resources"
+
+strip_patterns:
+  # requisition code in parens, e.g. (R-12345)
+  - '\(\s*r-?\d+\s*\)'
+  # requisition id, e.g. 'Req 4567' or '(Req #4567)'
+  - '\(?\breq(?:uisition)?\.?\s*#?\s*\d+\)?'
+  # hash-prefixed requisition number, e.g. '#123'
+  - '#\s*\d{3,}'
+  # gender markers, e.g. (m/w/d), (f/m/x)
+  - '\((?:m|f|w|d|x)(?:/(?:m|f|w|d|x))+\)'
+  # remote marker in parens, e.g. '(Remote)', '(Remote - US)'
+  - '\(\s*remote[^)]*\)'
+  # work-mode marker in parens, e.g. '(Hybrid)'
+  - '\(\s*(?:hybrid|onsite|on-site|in[- ]office)[^)]*\)'
+  # trailing remote suffix, e.g. '- Remote, US'
+  - '\s[-–—|/]\s*remote\b.*$'
+  # trailing work-mode suffix, e.g. '- Hybrid'
+  - '\s[-–—|/]\s*(?:hybrid|onsite|on-site)\b.*$'
+  # trailing region in parens, e.g. '(US)'
+  - '\s*\((?:us|usa|u\.s\.|uk|eu|emea|apac|canada|india)\)\s*$'
+  # emoji (removed from title)
+  - '[\U0001F300-\U0001FAFF☀-➿️]'
+
+seniority:
+  - level: intern
+    patterns:
+      - '\bintern\b'
+      - '\binternship\b'
+      - '\bco-?op\b'
+      - '\bworking student\b'
+      - '\bwerkstudent\b'
+  - level: vp
+    patterns:
+      - '\bvp\b'
+      - '\bvice president\b'
+  - level: exec
+    patterns:
+      - '\bchief\b'
+      - '\b(?:cto|ceo|cfo|coo|cio|cmo|cpo|ciso)\b'
+      - '\bhead of\b'
+  - level: director
+    patterns:
+      - '\bdirector\b'
+  - level: principal
+    patterns:
+      - '\bprincipal\b'
+      - '\bdistinguished\b'
+      - '\bfellow\b'
+  - level: staff
+    patterns:
+      - '\bstaff\b'
+  - level: lead
+    patterns:
+      - '\blead\b(?! (?:generation|gen|qualification|magnet))'
+  - level: manager
+    patterns:
+      - '^(?!.*\b(?:product|program|account|project)\s+manager\b).*\bmanager\b'
+  - level: senior
+    patterns:
+      - '\bsenior\b'
+      - '\bsr\b'
+      - '\biii\b'
+      - '\blevel 3\b'
+  - level: entry
+    patterns:
+      - '\bjunior\b'
+      - '\bjr\b'
+      - '\bgraduate\b'
+      - '\bnew grad\b'
+      - '\bentry\b'
+      - '\bassociate\b.*\bengineer\b|\bengineer\b.*\bassociate\b'
+      - '\bi\b'
+      - '\blevel 1\b'
+
+level_suffixes:
+  "i": entry
+  "1": entry
+  "ii": mid
+  "2": mid
+  "iii": senior
+  "3": senior
+  "iv": staff
+  "4": staff
