@@ -1,0 +1,58 @@
+"""Tech tag goldens: (title, description_text, expected tags in first-occurrence order)."""
+
+TECH: list[tuple] = [
+    ("Backend Engineer", "We use Python and PostgreSQL.", ["python", "postgresql"]),
+    ("Backend Engineer", "PostgreSQL then Python.", ["postgresql", "python"]),
+    ("Python Developer", "Django REST APIs on AWS.", ["python", "django", "aws"]),
+    ("Frontend Engineer", "React and TypeScript.", ["react", "typescript"]),
+    ("Frontend Engineer", "React Native apps.", ["react native"]),
+    ("Engineer", "Node.js services with Express.", ["node.js"]),
+    ("Engineer", "JavaScript, HTML and CSS.", ["javascript", "html", "css"]),
+    ("Engineer", "Kubernetes and Docker in production.", ["kubernetes", "docker"]),
+    ("Engineer", "Terraform on AWS and GCP.", ["terraform", "aws", "gcp"]),
+    ("Engineer", "We are hiring a Java developer.", ["java"]),
+    ("Engineer", "Kotlin on Android.", ["kotlin", "android"]),
+    ("Engineer", "C# and .NET Core.", ["c#", ".net"]),
+    # Go / Golang
+    ("Go Engineer", "Build services in Golang.", ["go"]),
+    ("Backend Engineer", "Experience with Golang required.", ["go"]),
+    ("Backend Engineer", "Go programming language experience.", ["go"]),
+    ("Backend Engineer", "Python, Java, Go and Rust experience.", ["python", "java", "go", "rust"]),
+    ("Backend Engineer", "Let's go build things. A go-to-market team.", []),
+    ("Sales Rep", "Our go-to-market motion is strong. You will go above and beyond.", []),
+    # R
+    ("Data Scientist", "Python, SQL, R", ["python", "sql", "r"]),
+    ("Data Scientist", "Experience with R programming and ggplot2.", ["r"]),
+    ("Analyst", "R&D team and R/O support.", []),
+    ("Analyst", "Reports to Director R. Smith.", []),
+    # C and C++
+    ("Systems Engineer", "Modern C++ and Python.", ["c++", "python"]),
+    ("Systems Engineer", "C/C++ and embedded systems.", ["c", "c++"]),
+    ("Systems Engineer", "Rust, C++, and Python.", ["rust", "c++", "python"]),
+    ("Engineer", "Vitamin C and a cpp codebase.", ["c++"]),
+    ("Engineer", "Embedded C on microcontrollers.", ["c"]),
+    ("Engineer", "Section C of the handbook applies.", []),
+    # Rust
+    ("Rust Engineer", "Rust programming for infrastructure.", ["rust"]),
+    ("Engineer", "Rust prevention for steel structures.", []),
+    ("Engineer", "Protect machinery against rust and corrosion.", []),
+    ("Engineer", "We use Rust with tokio and cargo.", ["rust"]),
+    # Swift, Spark, Scala, Ruby, Dart, Elixir, Julia
+    ("iOS Developer", "Swift and SwiftUI.", ["ios", "swift", "swiftui"]),
+    ("Engineer", "Taylor Swift is not required. Swift response times matter.", []),
+    ("Data Engineer", "Apache Spark and Kafka.", ["spark", "kafka"]),
+    ("Engineer", "A spark of creativity.", []),
+    ("Engineer", "Ruby on Rails monolith.", ["ruby"]),
+    ("Engineer", "A ruby red logo.", []),
+    ("Mobile Engineer", "Flutter and Dart.", ["flutter", "dart"]),
+    ("Engineer", "Dart games at lunch.", []),
+    ("Engineer", "Elixir and Phoenix framework.", ["elixir"]),
+    ("Researcher", "Julia, Python, MATLAB.", ["julia", "python", "matlab"]),
+    # aliases and case
+    ("Engineer", "PYTHON, Postgres, K8s.", ["python", "postgresql", "kubernetes"]),
+    ("Engineer", "Experience with ReactJS and Next.js.", ["react", "next.js"]),
+    ("Engineer", "GraphQL APIs.", ["graphql"]),
+    ("Engineer", "We love bread and butter.", []),
+    ("Engineer", "", []),
+    ("Senior Python Engineer", None, ["python"]),
+]
