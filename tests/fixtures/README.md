@@ -21,11 +21,16 @@ Repeat the command to append more URLs to the same token. Keep each token dir <=
       "recorded_at": "2026-11-11T12:00:00+00:00",
       "exchanges": [
         {"method": "GET", "url": "<full url incl. query>", "json": null,
-         "status": 200, "content_type": "application/json", "file": "000.json"}
+         "status": 200, "content_type": "application/json",
+         "headers": {"link": "<...>; rel=\"next\"", "x-total-count": "42"}, "file": "000.json"}
       ]
     }
 
 `json` is the request JSON body (or null). 404 responses are recorded too.
+`headers` holds an allowlist of response headers (link, x-total-count, x-next-page,
+x-total-pages, location, retry-after) and is replayed with the response; manifests without
+it still load. Redirects are followed by the client, and the exchange is recorded under the
+original URL. A request body that is not JSON never matches a recorded exchange.
 
 ## Replay in tests
 

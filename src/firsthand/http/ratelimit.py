@@ -36,6 +36,13 @@ class TokenBucket:
         self._tokens = float(burst)
         self._last = clock()
         self._lock = asyncio.Lock()
+        self._pause_until = 0.0
+
+    def pause(self, seconds: float) -> None:
+        """Keep the bucket closed for `seconds` (server asked us to back off)."""
+        self._pause_until = max(self._pause_until, self._clock() + seconds)
+        self._tokens = 0.0
+        self._last = self._clock()
 
     def set_rate(self, rate: float, burst: int | None = None) -> None:
         self._refill()
@@ -52,6 +59,10 @@ class TokenBucket:
     async def acquire(self) -> None:
         async with self._lock:
             while True:
+                wait = self._pause_until - self._clock()
+                if wait > 0:
+                    await self._sleep(wait)
+                    continue
                 self._refill()
                 if self._tokens >= 1.0:
                     self._tokens -= 1.0
@@ -111,6 +122,9 @@ class HostLimiter:
             )
             self._buckets[host] = bucket
         return bucket
+
+    def pause(self, host: str, seconds: float) -> None:
+        self._bucket(host).pause(seconds)
 
     async def acquire(self, host: str) -> None:
         await self._bucket(host).acquire()

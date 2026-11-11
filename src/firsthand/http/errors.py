@@ -11,6 +11,23 @@ class RobotsDisallowed(CrawlError):
         self.url = url
 
 
+class DomainBlocked(CrawlError):
+    """Host is on the aggregator blocklist; never fetched (ARCHITECTURE.md section 0)."""
+
+    def __init__(self, host: str) -> None:
+        super().__init__(f"domain {host} is blocklisted")
+        self.host = host
+
+
+class CrawlDelayTooLong(CrawlError):
+    """robots.txt Crawl-delay exceeds what we are willing to wait; host is skipped."""
+
+    def __init__(self, host: str, delay: float) -> None:
+        super().__init__(f"{host} requests Crawl-delay {delay:g}s; skipping host")
+        self.host = host
+        self.delay = delay
+
+
 class HostCircuitOpen(CrawlError):
     def __init__(self, host: str) -> None:
         super().__init__(f"circuit open for host {host}")
@@ -26,8 +43,8 @@ class FetchError(CrawlError):
 
 
 class NotFound(FetchError):
-    def __init__(self, url: str) -> None:
-        super().__init__(url, 404, "not found")
+    def __init__(self, url: str, status: int = 404) -> None:
+        super().__init__(url, status, "not found" if status == 404 else "gone")
 
 
 class Blocked(FetchError):

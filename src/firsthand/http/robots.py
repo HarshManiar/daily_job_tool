@@ -39,7 +39,7 @@ class InMemoryRobotsCache:
         return status, body
 
     async def put(self, host: str, status: int, body: str) -> None:
-        ttl = ERROR_TTL if (status < 200 or status >= 500) else OK_TTL
+        ttl = ERROR_TTL if (status < 200 or status >= 500 or status == 429) else OK_TTL
         self._data[host] = (self._clock() + ttl, status, body)
 
 
@@ -85,9 +85,9 @@ class RobotsPolicy:
             if delay:
                 self._delays[host] = float(delay)
             return bool(rules.can_fetch(url, token))
-        if 400 <= status < 500:
+        if 400 <= status < 500 and status != 429:
             return True
-        return False  # 5xx, timeout, network error, unresolved redirect: disallow
+        return False  # 429, 5xx, timeout, network error, unresolved redirect: disallow
 
     def crawl_delay(self, host: str) -> float | None:
         return self._delays.get(host.lower())

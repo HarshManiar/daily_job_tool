@@ -11,6 +11,8 @@ import httpx
 
 MAX_FIXTURE_BYTES = 500 * 1024
 MANIFEST = "manifest.json"
+# response headers adapters may rely on (pagination etc.); everything else is dropped
+SAVED_HEADERS = ("link", "x-total-count", "x-next-page", "x-total-pages", "location", "retry-after")
 
 
 class FixtureTooLarge(Exception):
@@ -111,6 +113,7 @@ class FixtureRecorder:
             "json": request_json,
             "status": status,
             "content_type": ctype,
+            "headers": {h: headers[h] for h in SAVED_HEADERS if h in headers},
             "file": fname,
         }
         if old:
@@ -141,13 +144,18 @@ class FixtureTransport(httpx.AsyncBaseTransport):
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
-        body_json = json.loads(request.content) if request.content else None
+        body_json: Any = None
+        if request.content:
+            try:
+                body_json = json.loads(request.content)
+            except ValueError:  # not JSON (or not UTF-8): compare raw bytes, never match JSON
+                body_json = request.content
         key = _norm_url(str(request.url))
         for method, nurl, ejson, ex, base in self._exchanges:
             if method == request.method.upper() and nurl == key and ejson == body_json:
                 return httpx.Response(
                     ex["status"],
-                    headers={"content-type": ex["content_type"]},
+                    headers={**ex.get("headers", {}), "content-type": ex["content_type"]},
                     content=(base / ex["file"]).read_bytes(),
                     request=request,
                 )
