@@ -2,12 +2,12 @@ import pytest
 import yaml
 
 from firsthand.normalize import NORMALIZER_VERSION
-from firsthand.normalize.employment import infer_employment_type
+from firsthand.normalize.employment import infer_employment_detail, infer_employment_type
 from firsthand.normalize.visa import VisaPhrases, classify_visa
-from firsthand.normalize.years import extract_years
-from tests.normalize.golden_employment import EMPLOYMENT
-from tests.normalize.golden_visa import VISA
-from tests.normalize.golden_years import YEARS
+from firsthand.normalize.years import extract_years, extract_years_detail
+from tests.normalize.golden_employment import CONFLICTS, EMPLOYMENT, NO_CONFLICT
+from tests.normalize.golden_visa import FLAGS, VISA
+from tests.normalize.golden_years import POOLS, YEARS
 
 with open("data/profile.example.yaml", encoding="utf-8") as _f:
     _v = yaml.safe_load(_f)["hard_filters"]["visa"]
@@ -35,3 +35,29 @@ def test_visa(text, expected):
 @pytest.mark.parametrize("raw,title,desc,expected", EMPLOYMENT)
 def test_employment_v2(raw, title, desc, expected):
     assert infer_employment_type(raw, title, desc) == expected
+
+
+@pytest.mark.parametrize("raw,title,desc", CONFLICTS)
+def test_employment_conflict_flagged(raw, title, desc):
+    t, flags = infer_employment_detail(raw, title, desc)
+    assert t == "full_time" and "employment:conflict" in flags
+
+
+@pytest.mark.parametrize("raw,title,desc", NO_CONFLICT)
+def test_employment_no_conflict(raw, title, desc):
+    assert "employment:conflict" not in infer_employment_detail(raw, title, desc)[1]
+
+
+@pytest.mark.parametrize("text,status,flag", FLAGS)
+def test_visa_flags(text, status, flag):
+    got = classify_visa(text, PHRASES)
+    assert got == status
+    assert (flag in got.flags) if flag else not got.flags
+    if flag == "visa:export_control":
+        assert got.evidence
+
+
+@pytest.mark.parametrize("text,pool,flags", POOLS)
+def test_years_pool(text, pool, flags):
+    r = extract_years_detail(text)
+    assert (r.pool, r.flags) == (pool, flags)

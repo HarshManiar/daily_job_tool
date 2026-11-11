@@ -33,48 +33,37 @@ def test_clean_include(profile):
 @pytest.mark.parametrize(
     "kw,reason",
     [
-        ({"employment_type": "contract"}, "employment:contract"),
-        ({"employment_type": "temporary"}, "employment:contract"),
-        ({"visa_status": "not_available"}, "visa:not_available"),
-        ({"years_min": 7}, "years:min_7+"),
-        ({"years_min": 12}, "years:min_7+"),
+        ({"employment_type": "unknown"}, "employment:unknown"),
+        ({"salary_max_usd": 90000}, "pay:below_min"),
+        ({"posted_at": None}, "date:undated"),
+        ({"norm_flags": ["visa:export_control"]}, "visa:export_control"),
+        ({"norm_flags": ["visa:opt_only"]}, "visa:opt_only"),
+        ({"norm_flags": ["employment:conflict"]}, "employment:conflict"),
+        ({"years_min": 9, "norm_flags": ["years:nonreq", "years:maybe_7+"]}, "years:maybe_7+"),
     ],
 )
-def test_job_exclusions(profile, kw, reason):
+def test_attention_flags(profile, kw, reason):
     r = match(J(**kw), C(), profile)
-    assert r.status == "excluded" and reason in r.reasons
-
-
-def test_company_exclusions(profile):
-    p = Profile.model_validate({**profile.model_dump(), "hard_filters": {
-        **profile.hard_filters.model_dump(), "exclude_companies": ["Current Employer"]}})  # fmt: skip
-    assert match(J(), C(name="Current Employer, Inc."), p).reasons == ["company:excluded"]
-    assert match(J(), C(exclude_reason="x"), profile).status == "excluded"
-    r = match(J(), C(is_staffing=True), profile)
-    assert r.status == "excluded" and r.reasons == ["company:staffing"]
-
-
-def test_years_not_excluded_in_range(profile):
-    for y in (None, 2, 3, 6):
-        assert match(J(years_min=y), C(), profile).status == "include"
-    r = match(J(years_min=0, years_max=1), C(), profile)
-    assert r.status == "flagged" and r.reasons == ["years:below_range"]
+    assert r.status == "flagged" and r.reasons == [reason]
 
 
 @pytest.mark.parametrize(
     "kw,reason",
     [
         ({"visa_status": "offered"}, "visa:offered"),
-        ({"employment_type": "unknown"}, "employment:unknown"),
-        ({"salary_max_usd": 90000}, "pay:below_min"),
-        ({"posted_at": None}, "date:undated"),
         ({"title_norm": "brand manager"}, "title:not_target"),
         ({"title_norm": "staff data engineer"}, "title:level_out_of_range"),
     ],
 )
-def test_flags(profile, kw, reason):
+def test_informational_reasons_stay_include(profile, kw, reason):
     r = match(J(**kw), C(), profile)
-    assert r.status == "flagged" and r.reasons == [reason]
+    assert r.status == "include" and r.reasons == [reason]
+
+
+def test_years_required_pool_excludes_nonrequired_does_not(profile):
+    assert match(J(years_min=8), C(), profile).status == "excluded"
+    r = match(J(years_min=8, norm_flags=["years:nonreq"]), C(), profile)
+    assert r.status == "flagged" and "years:min_7+" not in r.reasons
 
 
 def test_pay_ok_and_unknown(profile):

@@ -219,20 +219,19 @@ class _Entry:
 def _job_values(
     n: NormalizedJob,
     raw: RawJob,
-    company: CompanyInfo | None = None,
+    company: CompanyInfo,
     profile: Profile | None = None,
 ) -> dict[str, Any]:
     v = n.model_dump()
-    if company is not None:
-        m = run_match(n, company, profile or get_profile())
-        v.update(
-            match_tier=m.tier,
-            match_status=m.status,
-            match_reasons=m.reasons,
-            industry_rank=m.industry_rank,
-            location_rank=m.location_rank,
-            fit_score=m.fit_score,
-        )
+    m = run_match(n, company, profile or get_profile())
+    v.update(
+        match_tier=m.tier,
+        match_status=m.status,
+        match_reasons=m.reasons,
+        industry_rank=m.industry_rank,
+        location_rank=m.location_rank,
+        fit_score=m.fit_score,
+    )
     v["apply_url"] = n.apply_url or raw.apply_url or raw.url
     v["normalizer_version"] = NORMALIZER_VERSION
     return v

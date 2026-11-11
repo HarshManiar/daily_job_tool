@@ -74,3 +74,48 @@ async def test_renormalize_populates_match_columns_on_old_rows(db_clean):
         await conn.execute(text("UPDATE jobs SET match_status = 'include', match_reasons = '{}'"))
     assert await rescore(eng, PROFILE) == 1
     assert (await rows(eng, "SELECT match_status FROM jobs"))[0].match_status == "excluded"
+
+
+async def test_rescore_recomputes_text_signals_and_company(db_clean):
+    eng = db_clean
+    sid = await seed(eng)
+    desc = (
+        "<p>We do not currently sponsor, but H-1B transfers are accepted.</p>"
+        "<p>Requirements</p><p>3+ years of experience with SQL</p>"
+    )
+    ad = FakeAdapter().push([job("1", "Data Analyst", "Edison, NJ", desc=desc)])
+    await crawl(eng, sid, ad, 0, profile=PROFILE)
+    async with eng.begin() as conn:  # simulate rows stored by an older rule set
+        await conn.execute(
+            text(
+                "UPDATE jobs SET visa_status = 'not_available', years_min = 9, "
+                "employment_type = 'contract', match_status = 'excluded', norm_flags = '{}'"
+            )
+        )
+    assert await rescore(eng, PROFILE) == 1
+    r = (await rows(eng, "SELECT * FROM jobs"))[0]
+    assert r.visa_status == "offered" and r.years_min == 3
+    assert r.employment_type != "contract" and r.match_status != "excluded"
+    async with eng.begin() as conn:
+        await conn.execute(text("UPDATE companies SET exclude_reason = 'x'"))
+    assert await rescore(eng, PROFILE, company_id=999999) == 0
+    assert (await rows(eng, "SELECT match_status FROM jobs"))[0].match_status != "excluded"
+    cid = await scalar(eng, "SELECT id FROM companies")
+    assert await rescore(eng, PROFILE, company_id=cid) == 1
+    assert (await rows(eng, "SELECT match_status FROM jobs"))[0].match_status == "excluded"
+
+
+async def test_range_checks_reject(db_clean):
+    import pytest
+    from sqlalchemy.exc import IntegrityError
+
+    eng = db_clean
+    sid = await seed(eng)
+    await crawl(eng, sid, FakeAdapter().push([job("1", "Data Analyst", "Edison, NJ")]), 0)
+    for col, val in [
+        ("years_min", -1), ("years_max", -2), ("location_rank", 4), ("industry_rank", 2),
+        ("match_tier", 0), ("match_tier", 4),
+    ]:  # fmt: skip
+        with pytest.raises(IntegrityError):
+            async with eng.begin() as conn:
+                await conn.execute(text(f"UPDATE jobs SET {col} = {val}"))  # noqa: S608

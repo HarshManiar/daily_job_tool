@@ -362,7 +362,12 @@ def match_stats() -> None:
 
 @match_app.command("rescore")
 def match_rescore() -> None:
-    """Recompute match columns for all open jobs from stored data (no HTTP)."""
+    """Recompute visa/years/employment and match columns for all open jobs from stored data.
+
+    No HTTP. Run this once after upgrading (`alembic upgrade head` never re-scores existing
+    jobs) and after editing data/profile.yaml (visa phrases, titles, hard filters) or
+    company flags.
+    """
     from firsthand.db.session import get_engine
     from firsthand.pipeline.renormalize import rescore
 

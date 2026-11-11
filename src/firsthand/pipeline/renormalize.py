@@ -4,7 +4,7 @@ import logging
 from datetime import UTC, datetime
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from firsthand.adapters import registry
 from firsthand.adapters.base import Adapter
@@ -142,55 +142,88 @@ async def renormalize(
     return updated
 
 
-__all__ = ["raw_from_payload", "renormalize"]
+async def rescore(
+    engine: AsyncEngine, profile: Profile | None = None, *, company_id: int | None = None
+) -> int:
+    """Recompute match columns for open jobs (all, or one company's) without HTTP or re-parsing.
+
+    The description-derived columns (visa, years, employment, norm_flags) are re-run on the stored
+    description first, so edits to the profile's visa phrases and rule changes take effect, and
+    the company row is re-read so company edits (exclude_reason, is_staffing, industry, name)
+    apply. Employment: a stored 'full_time' is kept as the ATS value (the raw ATS string is not
+    stored); contract/temporary/unknown are re-inferred from title and description.
+    Run `firsthand match rescore` after upgrading (alembic never does it).
+    """
+    async with engine.begin() as conn:
+        return await rescore_conn(conn, profile, company_id=company_id)
 
 
-async def rescore(engine: AsyncEngine, profile: Profile | None = None) -> int:
-    """Recompute match columns for all open jobs from stored columns (no HTTP, no re-parse)."""
+async def rescore_conn(
+    conn: AsyncConnection, profile: Profile | None = None, *, company_id: int | None = None
+) -> int:
     from firsthand.match.engine import match as run_match
+    from firsthand.normalize import text_signals
     from firsthand.normalize.models import NormalizedJob
+    from firsthand.normalize.text import html_to_lines
 
     profile = profile or get_profile()
     fields = [f for f in NormalizedJob.model_fields if f not in {"normalizer_version"}]
     cols = ", ".join(f"j.{f}" for f in fields)
-    async with engine.begin() as conn:
-        rows = (
-            (
-                await conn.execute(
-                    text(
-                        f"SELECT j.id AS job_id, {cols}, c.name AS c_name, "
-                        "c.industry AS c_industry, "
-                        "c.is_staffing AS c_staffing, c.exclude_reason AS c_excl "
-                        "FROM jobs j JOIN companies c ON c.id = j.company_id "
-                        "WHERE j.closed_at IS NULL"
-                    )
-                )
-            )
-            .mappings()
-            .all()
-        )
-        for r in rows:
-            n = NormalizedJob(**{f: r[f] for f in fields})
-            co = CompanyInfo(
-                name=r["c_name"],
-                industry=r["c_industry"],
-                is_staffing=r["c_staffing"],
-                exclude_reason=r["c_excl"],
-            )
-            m = run_match(n, co, profile)
+    rows = (
+        (
             await conn.execute(
-                jobs.update()
-                .where(jobs.c.id == r["job_id"])
-                .values(
-                    match_tier=m.tier,
-                    match_status=m.status,
-                    match_reasons=m.reasons,
-                    industry_rank=m.industry_rank,
-                    location_rank=m.location_rank,
-                    fit_score=m.fit_score,
-                )
+                text(
+                    f"SELECT j.id AS job_id, {cols}, c.name AS c_name, "  # noqa: S608
+                    "c.industry AS c_industry, "
+                    "c.is_staffing AS c_staffing, c.exclude_reason AS c_excl "
+                    "FROM jobs j JOIN companies c ON c.id = j.company_id "
+                    "WHERE j.closed_at IS NULL AND (CAST(:cid AS bigint) IS NULL "
+                    "OR j.company_id = CAST(:cid AS bigint))"
+                ),
+                {"cid": company_id},
             )
+        )
+        .mappings()
+        .all()
+    )
+    phrases = profile.visa_phrases()
+    for r in rows:
+        data = {f: r[f] for f in fields}
+        lines = html_to_lines(data["description_html"]) if data["description_html"] else None
+        dtext = data["description_text"]
+        stored_ft = data["employment_type"] == "full_time"
+        data.update(
+            text_signals(
+                data["title"], "full_time" if stored_ft else None, lines or dtext, dtext, phrases
+            )
+        )
+        n = NormalizedJob(**data)
+        co = CompanyInfo(
+            name=r["c_name"],
+            industry=r["c_industry"],
+            is_staffing=r["c_staffing"],
+            exclude_reason=r["c_excl"],
+        )
+        m = run_match(n, co, profile)
+        await conn.execute(
+            jobs.update()
+            .where(jobs.c.id == r["job_id"])
+            .values(
+                employment_type=n.employment_type,
+                years_min=n.years_min,
+                years_max=n.years_max,
+                visa_status=n.visa_status,
+                visa_evidence=n.visa_evidence,
+                norm_flags=n.norm_flags,
+                match_tier=m.tier,
+                match_status=m.status,
+                match_reasons=m.reasons,
+                industry_rank=m.industry_rank,
+                location_rank=m.location_rank,
+                fit_score=m.fit_score,
+            )
+        )
     return len(rows)
 
 
-__all__ = ["raw_from_payload", "renormalize", "rescore"]
+__all__ = ["raw_from_payload", "renormalize", "rescore", "rescore_conn"]

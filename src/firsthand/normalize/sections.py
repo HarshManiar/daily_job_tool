@@ -24,7 +24,7 @@ _HEADINGS: list[tuple[str, str]] = [
         REQUIRED,
         r"(?:(?:minimum|basic|required|key|core|mandatory|essential)\s+"
         r"(?:qualifications?|requirements?|skills?|experience)|"
-        r"requirements?|qualifications?|must[- ]haves?|"
+        r"requirements?|qualifications?|must[- ]haves?|required|must\s+have|"
         r"what you(?:['’]ll)?\s+(?:bring|need|have)|what we(?:['’]re)? (?:are )?looking for|"
         r"who you are|about you|you have|your background|"
         r"skills (?:and|&) (?:experience|qualifications)|experience (?:and|&) skills|"
@@ -63,6 +63,27 @@ PREFERRED_CUE = re.compile(
     r"\bhelpful\b|\bwill be considered an? (?:asset|advantage)\b|\ban? (?:asset|advantage)\b",
     re.I,
 )
+
+
+_PAREN = re.compile(r"\(([^()]*)\)")
+_CUE_WORDS = re.compile(
+    r"prefer\w*|nice|to|have|a|plus|bonus|desired?|desirable|ideally|helpful|optional|is|an|big|huge",
+    re.I,
+)
+
+
+def _strip_qual(s: str) -> str:
+    """Drop parentheticals that qualify a degree/field and carry a preferred cue
+    ("(Business or Management Consulting preferred)"): the cue is not about the number."""
+
+    def repl(m: re.Match[str]) -> str:
+        body = m.group(1)
+        if not PREFERRED_CUE.search(body) or re.search(r"\d", body):
+            return m.group(0)
+        rest = [w for w in re.findall(r"[A-Za-z]{3,}", body) if not _CUE_WORDS.fullmatch(w)]
+        return " " if rest else m.group(0)
+
+    return _PAREN.sub(repl, s)
 
 
 @dataclass(frozen=True)
@@ -123,5 +144,7 @@ def segments(text: str) -> list[Segment]:
         s = chunk.strip(" \n\t•·▪●;")
         if not s:
             continue
-        out.append(Segment(s, state, state == PREFERRED or bool(PREFERRED_CUE.search(s))))
+        out.append(
+            Segment(s, state, state == PREFERRED or bool(PREFERRED_CUE.search(_strip_qual(s))))
+        )
     return out

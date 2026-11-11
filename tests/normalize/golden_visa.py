@@ -79,4 +79,70 @@ VISA: list[tuple[str, str]] = [
     # --- offer negated is not offer
     ("We don't offer visa sponsorship.", NA),
     ("We will not provide sponsorship.", NA),
+    # --- review round 1 (B1): transfer welcome overrides refusals, never split on ';'
+    ("We do not currently sponsor, but H-1B transfers are accepted.", OF),
+    ("We cannot sponsor new H-1B petitions; H-1B transfers welcome.", OF),
+    ("No visa sponsorship for this role (H-1B transfers considered).", OF),
+    (
+        "This role is open to candidates requiring a new H-1B petition (cap subject). "
+        "We will consider H-1B transfers.",
+        OF,
+    ),
+    ("Visa sponsorship is not available for this position, except for H-1B transfers.", OF),
+    (
+        "We are not able to sponsor at this time, however H-1B transfer candidates will be considered.",
+        OF,
+    ),
+    ("For this role, we will not sponsor a new H-1B but can support an H-1B transfer.", OF),
+    ("Candidates on F-1 OPT are not eligible; we sponsor H-1B transfers.", OF),
+    ("We are unable to sponsor CPT/OPT students for this role.", NS),
+    ("Note: We are not able to sponsor candidates on OPT/STEM OPT.", NS),
+    ("Employer will not sponsor or transfer H-1B visas.", NA),
+    # --- S1 misses
+    ("Candidates must be authorized to work in the U.S. without requiring sponsorship.", NA),
+    ("Must be eligible to work in the US without employer sponsorship.", NA),
+    (
+        "You must be legally authorized to work in the United States without the need for "
+        "employment-based visa sponsorship now or in the future.",
+        NA,
+    ),
+    (
+        "Must be authorized to work in the US without the need for current or future visa sponsorship.",
+        NA,
+    ),
+    ("Applicants must be able to work in the US without current or future sponsorship.", NA),
+    ("This role does not support visa sponsorship.", NA),
+    ("Candidates requiring sponsorship will not be considered.", NA),
+    ("This position is not open to candidates requiring sponsorship.", NA),
+    ("Not open to sponsorship.", NA),
+    ("We're not able to offer relocation or visa sponsorship.", NA),
+    ("Must not now, or at any time in the future, require sponsorship.", NA),
+    ("We are not sponsoring visas for this position.", NA),
+    ("We will not be sponsoring visas for this role.", NA),
+    ("We offer H-1B visa sponsorship for this role.", OF),
+    ("We sponsor visas for the right candidate.", OF),
+    ("This role is eligible for visa sponsorship.", OF),
+    # --- S2 non-visa sponsor
+    ("This job posting is not sponsored content.", NS),
+    ("Our hackathon is not sponsored by any vendor.", NS),
+    ("Tuition sponsorship is not available.", NS),
+    ("No sponsorship budget is provided.", NS),
+    ("Citizenship required: no.", NS),
+    ("Dual citizenship is required? No - any work authorization accepted.", NS),
+    ("Note: we do not require sponsorship letters from previous employers.", NS),
+    ("We do not sponsor events. We do sponsor visas.", OF),
+    # --- S3 export control stays not_stated (flag only)
+    ("Applicants must be U.S. persons as defined by ITAR.", NS),
+    ("Active Secret clearance required.", NS),
+]
+
+
+FLAGS: list[tuple[str, str, str | None]] = [
+    ("We are unable to sponsor CPT/OPT students for this role.", NS, "visa:opt_only"),
+    ("We cannot sponsor new H-1B petitions.", NS, "visa:opt_only"),
+    ("Applicants must be U.S. persons as defined by ITAR.", NS, "visa:export_control"),
+    ("Active Secret clearance required.", NS, "visa:export_control"),
+    ("A security clearance is required for this role.", NS, "visa:export_control"),
+    ("We do not sponsor visas.", NA, None),
+    ("Data analyst role in Edison.", NS, None),
 ]

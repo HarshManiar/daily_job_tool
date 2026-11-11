@@ -106,7 +106,7 @@ YEARS: list[tuple[str, tuple[int | None, int | None]]] = [
     # --- misc tricky positives
     (
         "Bachelor's degree and 3+ years of experience, or Master's degree and 1+ year of experience",
-        (3, None),
+        (1, None),  # review round 1: degree alternatives take the minimum
     ),
     ("Proven track record (5+ years) in commercial analytics", (5, None)),
     ("Strong SQL skills (3+ years)", (3, None)),
@@ -116,4 +116,70 @@ YEARS: list[tuple[str, tuple[int | None, int | None]]] = [
     ("Entry level: 0-1 years of experience", (0, 1)),
     ("six years of experience in analytics", (6, None)),
     ("experience: 3 to 5 years", (3, 5)),
+    # --- review round 1 (B3): degree alternatives -> minimum
+    (
+        "Bachelor's degree and 7 years of experience; or Master's degree and 5 years of experience",
+        (5, None),
+    ),
+    (
+        "Bachelor's degree with 8+ years of experience, or Master's degree with 6+ years, "
+        "or PhD with 3+ years.",
+        (3, None),
+    ),
+    ("8+ years with BS, 6+ with MS, 3+ with PhD", (3, None)),
+    ("7+ years of experience (or MS + 5)", (5, None)),
+    (
+        "7+ years of experience with a Bachelor's degree, or 5+ years with a Master's degree",
+        (5, None),
+    ),
+    ("Bachelor's plus 2 years of experience or Master's with 0 years", (0, None)),
+    # --- tiered / hedged
+    ("Senior level: 7-10 years of experience in data engineering; mid level: 3-5 years.", (3, 5)),
+    ("Experience: 5-8 years (Senior) or 2-4 years (Analyst)", (2, 4)),
+    ("Candidates with 7+ years of experience may be considered for a senior title.", (7, None)),
+    ("Ideally 7+ years of experience in commercial analytics.", (7, None)),
+    # --- headings
+    ("Preferred: 7+ years of experience. Required: 4+ years of experience.", (4, None)),
+    ("Preferred Qualifications\n- 8+ years\nRequired\n- 3+ years of experience", (3, None)),
+    ("Must have 4+ years of experience", (4, None)),
+    # --- company blurbs are not candidate requirements
+    ("Acme brings 20+ years of experience in life sciences consulting to our clients.", N),
+    ("With a 15-year track record of excellence, Acme is a leader in pharma analytics.", N),
+    ("Access to 12+ years of longitudinal patient data.", N),
+    ("Our analysts have an average of 8 years of experience.", N),
+    ("This role reports to a leader with 15 years of experience in commercial analytics.", N),
+    ("Acme has 10+ years of experience working with top 20 pharma.", N),
+    ("Join our 8-year-old startup.", N),
+    ("Join a company with 30 years of industry leadership.", N),
+    ("5 years of data engineering experience", (5, None)),
+    # --- N4: a parenthetical qualifying the field is not a preferred cue for the years
+    (
+        "Requirements: 8+ years in Life Sciences Consulting (Business or Management Consulting preferred)",
+        (8, None),
+    ),
+]
+
+# (text, pool, flags): only the REQUIRED pool may exclude; others with >= 7 are flagged
+POOLS: list[tuple[str, str | None, tuple[str, ...]]] = [
+    (
+        "Requirements: 8+ years in Life Sciences Consulting (Business or Management Consulting preferred)",
+        "R",
+        (),
+    ),
+    ("Minimum of 8 years of experience", "R", ()),
+    ("Ideally 7+ years of experience in commercial analytics.", "P", ("years:maybe_7+",)),
+    (
+        "Candidates with 7+ years of experience may be considered for a senior title.",
+        "P",
+        ("years:maybe_7+",),
+    ),
+    (
+        "Overview: 8 years of experience in pharma analytics are valuable here.",
+        "N",
+        ("years:maybe_7+",),
+    ),
+    ("2+ years of SQL; 3+ years of experience required. 8+ years is a plus.", "R", ()),
+    ("Nice to have: 10 years of experience", "P", ("years:maybe_7+",)),
+    ("Nice to have: 3 years of experience", "P", ()),
+    ("Required: 7+ years of experience in analytics", "R", ()),
 ]

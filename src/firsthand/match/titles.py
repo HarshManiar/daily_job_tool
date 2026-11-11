@@ -58,7 +58,10 @@ def expand_target(title: str) -> list[list[str]]:
         else:
             variants = [" ".join(at + bt[len(at) :]), b]
         variants += parts[2:]
-    return [_tokens(f"{v} {shared}") for v in variants]
+    out = [_tokens(f"{v} {shared}") for v in variants]
+    if shared.strip():  # "X, Y" targets also match in "Y X" order
+        out += [_tokens(f"{shared} {v}") for v in variants]
+    return out
 
 
 @lru_cache(maxsize=1024)
@@ -92,12 +95,38 @@ def _span_match(job: list[str], tgt: tuple[str, ...]) -> bool:
     return rec(0, 0, None)
 
 
+_SPLIT = re.compile(r"\s[-–—]\s|,")
+
+
+def _segments(title_norm: str) -> list[str]:
+    return [x.strip() for x in _SPLIT.split(title_norm) if x.strip()]
+
+
 def _job_variants(title_norm: str) -> list[list[str]]:
-    vs = [_tokens(title_norm)]
-    if "," in title_norm:
-        segs = [s for s in title_norm.split(",") if s.strip()]
-        vs.append(_tokens(" ".join(reversed(segs))))
+    segs = _segments(title_norm)
+    orders = [title_norm]
+    if len(segs) > 1:
+        orders.append(" ".join(reversed(segs)))
+    vs: list[list[str]] = []
+    for o in orders:
+        toks = _tokens(o)
+        vs.append(toks)
+        if "associate" in toks:  # "Commercial Analytics Associate" ~ "... Analyst"
+            vs.append(["analyst" if t == "associate" else t for t in toks])
     return vs
+
+
+def _raw_variants(title_norm: str) -> list[str]:
+    """Plain-text orderings (level words dropped) for the generic title regexes."""
+    segs = _segments(title_norm)
+    orders = [title_norm] + ([" ".join(reversed(segs))] if len(segs) > 1 else [])
+    orders.append(re.sub(r"[()]", " ", title_norm))  # "research (heor) analyst" -> "heor analyst"
+    drop = re.compile(r"\b(?:senior|sr\.?|junior|jr\.?|associate|i{1,3}|iv)\b", re.I)
+    out = []
+    for o in orders:
+        out.append(o)
+        out.append(re.sub(r"\s+", " ", drop.sub(" ", o)).strip())
+    return out
 
 
 @dataclass(frozen=True)
@@ -128,7 +157,10 @@ def classify_title(title_norm: str, profile: Profile) -> TitleMatch:
             break
     if best in (1, 2):
         return TitleMatch(best)
-    generic = any(compile_rx(r).search(title_norm) for r in profile.generic_data_roles.title_regex)
+    raws = _raw_variants(title_norm)
+    generic = any(
+        compile_rx(r).search(v) for r in profile.generic_data_roles.title_regex for v in raws
+    )
     if generic:
         if any(rx.search(title_norm) for rx in _exclude_rx(profile)):
             return (

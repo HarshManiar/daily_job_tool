@@ -50,4 +50,7 @@ class NormalizedJob(BaseModel):
     years_max: int | None = None
     visa_status: str = "not_stated"
     visa_evidence: str | None = None
+    # attention flags from the pure normalizers: visa:opt_only, visa:export_control,
+    # employment:conflict, years:maybe_7+
+    norm_flags: list[str] = Field(default_factory=list)
     normalizer_version: int = NORMALIZER_VERSION

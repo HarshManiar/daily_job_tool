@@ -61,6 +61,7 @@ class ImportReport:
     sources_updated: int = 0
     sources_unchanged: int = 0
     rejected: list[tuple[int, str, str]] = field(default_factory=list)  # (line, name, reason)
+    rescored_companies: set[int] = field(default_factory=set)  # match-relevant company edits
 
     def render(self) -> str:
         lines = [
@@ -102,6 +103,12 @@ async def import_seeds(engine: AsyncEngine, csv_path: str | Path) -> ImportRepor
                 await _import_row(conn, row, report, db_blocked)
             except ValueError as exc:
                 report.rejected.append((line, row.get("name", ""), str(exc)))
+        if report.rescored_companies:
+            # company fields feed the match engine: refresh that company's open jobs now
+            from firsthand.pipeline.renormalize import rescore_conn
+
+            for cid in sorted(report.rescored_companies):
+                await rescore_conn(conn, company_id=cid)
     return report
 
 
@@ -214,6 +221,8 @@ async def _import_row(
                 {**want, "id": cid},
             )
             report.companies_updated += 1
+            if {"name", "industry", "is_staffing", "exclude_reason"} & set(changed):
+                report.rescored_companies.add(cid)
         else:
             report.companies_unchanged += 1
 

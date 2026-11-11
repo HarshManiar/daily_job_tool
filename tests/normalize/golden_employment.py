@@ -19,7 +19,8 @@ EMPLOYMENT: list[tuple[str | None, str, str | None, str]] = [
     (None, "Data Analyst", "Employment type: Contract", "contract"),
     (None, "Data Analyst", "Temp-to-hire opportunity in Newark.", "temporary"),
     (None, "Data Analyst", "1099 independent contractor", "contract"),
-    ("Full-time", "Data Analyst", "This is a contract position.", "contract"),
+    # expectation changed in review round 1: ATS full-time is never downgraded (flagged conflict)
+    ("Full-time", "Data Analyst", "This is a contract position.", "full_time"),
     (None, "Data Analyst", "This is a full-time position in Edison, NJ.", "full_time"),
     (None, "Data Analyst", "Permanent role with benefits.", "full_time"),
     (None, "Data Analyst", "Full-time or part-time options.", "unknown"),
@@ -36,4 +37,36 @@ EMPLOYMENT: list[tuple[str | None, str, str | None, str]] = [
     (None, "Data Analyst", None, "unknown"),
     (None, "Data Analyst", "Own the contract analytics dashboard.", "unknown"),
     (None, "Data Analyst", "x" * 4000 + " this is a contract position", "unknown"),
+    # --- review round 1 (B2): 'contract' as part of the job's subject is not a contract role
+    (None, "Contract Pricing Analyst", None, "unknown"),
+    (None, "Data Analyst - Contract Pricing", None, "unknown"),
+    (None, "Analyst, Contract Strategy", None, "unknown"),
+    (None, "Senior Analyst, Contract Analytics", None, "unknown"),
+    (None, "Contract Operations Data Analyst", None, "unknown"),
+    ("Full-time", "Contract Pricing Analyst", None, "full_time"),
+    ("Full-time", "Contract Operations Data Analyst", "Permanent role.", "full_time"),
+    (None, "Data Analyst", "Own the payer contract engagement analytics.", "unknown"),
+    (None, "Data Analyst", "Support the government contract assignment process.", "unknown"),
+    (None, "Data Analyst", "1099 tax forms experience a plus.", "unknown"),
+    ("Full-time", "Data Analyst", "Own the payer contract engagement analytics.", "full_time"),
+    ("Full-time", "Data Analyst", "1099 tax forms experience a plus.", "full_time"),
+    (None, "Data Analyst - Contract", None, "contract"),
+    (None, "Data Analyst (Contract)", None, "contract"),
+    (None, "Data Analyst, Contract", None, "contract"),
+    (None, "Data Analyst (W2)", None, "contract"),
+    (None, "Data Analyst", "This role is a 1099 position.", "contract"),
+    (None, "Data Analyst", "Hiring on a contract basis for 12 months.", "contract"),
+]
+
+# (raw, title, description) -> ATS full-time contradicted by an explicit contract signal
+CONFLICTS = [
+    ("Full-time", "Data Analyst", "This is a contract position."),
+    ("Full-time", "Data Analyst (Contract)", None),
+    ("Full-time", "Data Analyst", "Position type: C2C or W2 only."),
+]
+NO_CONFLICT = [
+    ("Full-time", "Contract Pricing Analyst", None),
+    ("Full-time", "Data Analyst", "Own the payer contract engagement analytics."),
+    ("Full-time", "Data Analyst", "1099 tax forms experience a plus."),
+    (None, "Data Analyst", "This is a contract position."),
 ]

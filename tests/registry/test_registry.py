@@ -129,3 +129,23 @@ async def test_verify_marks_not_found_broken(db_clean, tmp_path, monkeypatch):
     # already-verified / broken sources are not re-verified
     async with client_for(None) as c:
         assert await verify_sources(db_clean, c) == []
+
+
+async def test_company_edit_rescores_open_jobs(db_clean, tmp_path):
+    from tests.pipeline.helpers import crawl
+
+    head = "Acme Bio,acmebio.com,,fake_t1,acmebio,US,,,{ind},{stf},{exc},\n"
+    await import_seeds(db_clean, write(tmp_path, head.format(ind="", stf="", exc="")))
+    sid = (await rows(db_clean, "SELECT id FROM sources"))[0].id
+    await crawl(db_clean, sid, FakeAdapter().push([job("1", "Data Analyst", "Edison, NJ")]), 0)
+    assert (await rows(db_clean, "SELECT match_status FROM jobs"))[0].match_status != "excluded"
+    rep = await import_seeds(
+        db_clean, write(tmp_path, head.format(ind="", stf="", exc="competitor"))
+    )
+    assert rep.companies_updated == 1
+    assert (await rows(db_clean, "SELECT match_status FROM jobs"))[0].match_status == "excluded"
+    # an unrelated edit (tags) does not need a rescore, and an unchanged re-import is a no-op
+    rep = await import_seeds(
+        db_clean, write(tmp_path, head.format(ind="", stf="", exc="competitor"))
+    )
+    assert rep.rescored_companies == set()

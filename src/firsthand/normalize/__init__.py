@@ -2,7 +2,7 @@
 
 from firsthand.adapters.base import RawJob
 from firsthand.normalize.context import NormContext
-from firsthand.normalize.employment import infer_employment_type
+from firsthand.normalize.employment import infer_employment_detail
 from firsthand.normalize.function import classify_function
 from firsthand.normalize.location import parse_locations
 from firsthand.normalize.models import (
@@ -19,7 +19,7 @@ from firsthand.normalize.text import clean_title, html_to_lines, html_to_text, s
 from firsthand.normalize.title import normalize_title
 from firsthand.normalize.url import canonical_apply_url
 from firsthand.normalize.visa import classify_visa
-from firsthand.normalize.years import extract_years
+from firsthand.normalize.years import extract_years_detail
 
 __all__ = [
     "NORMALIZER_VERSION",
@@ -29,6 +29,33 @@ __all__ = [
     "SourceInfo",
     "normalize",
 ]
+
+
+def text_signals(
+    title: str,
+    employment_type_raw: str | None,
+    desc_lines: str | None,
+    desc_text: str | None,
+    visa_phrases,
+) -> dict:
+    """The description-derived columns (visa, years, employment, norm_flags). Pure; shared by
+    `normalize` and by `match rescore` (which recomputes them from stored descriptions)."""
+    yr = extract_years_detail(desc_lines)
+    emp, emp_flags = infer_employment_detail(employment_type_raw, title, desc_text)
+    visa = classify_visa(desc_lines, visa_phrases)
+    return {
+        "employment_type": emp,
+        "years_min": yr.min,
+        "years_max": yr.max,
+        "visa_status": str(visa),
+        "visa_evidence": visa.evidence,
+        "norm_flags": [
+            *visa.flags,
+            *emp_flags,
+            *yr.flags,
+            *(["years:nonreq"] if yr.pool in ("N", "P") else []),
+        ],
+    }
 
 
 def normalize(
@@ -50,8 +77,7 @@ def normalize(
     regions = derive_remote_regions(remote_type, locs.fragments, desc_text)
 
     sal = extract_salary(raw.salary, desc_text, ctx)
-    years_min, years_max = extract_years(desc_lines)
-    visa = classify_visa(desc_lines, ctx.visa_phrases)
+    sig = text_signals(title, raw.employment_type_raw, desc_lines, desc_text, ctx.visa_phrases)
 
     return NormalizedJob(
         title=title,
@@ -59,7 +85,6 @@ def normalize(
         seniority=seniority,
         function=function,
         department_raw=raw.department_raw,
-        employment_type=infer_employment_type(raw.employment_type_raw, title, desc_text),
         remote_type=remote_type,
         remote_regions=regions,
         locations=locs.locations,
@@ -76,9 +101,6 @@ def normalize(
         description_text=desc_text,
         posted_at=raw.posted_at,
         apply_url=canonical_apply_url([raw.apply_url, raw.url], company.domain),
-        years_min=years_min,
-        years_max=years_max,
-        visa_status=str(visa),
-        visa_evidence=visa.evidence,
+        **sig,
         normalizer_version=NORMALIZER_VERSION,
     )
