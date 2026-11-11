@@ -57,7 +57,7 @@ Hard exclusions set `match_status='excluded'` with reasons rather than dropping 
 | Queue / scheduler | **Postgres only** (`SELECT … FOR UPDATE SKIP LOCKED` on `sources.next_crawl_at`) | **Change:** no Redis/arq. The crawl unit is a row with a due time, so a separate queue would just duplicate state. |
 | API + UI | **FastAPI + Jinja2 + HTMX**, Tailwind via the standalone CLI (no Node) | **Change (needs your OK):** server-rendered instead of Next.js. One deploy, no Node toolchain (Node isn't installed here), SEO-friendly company pages, and plenty for a feed-plus-filters product. The JSON API (`/api/v1`) still exists, so a Next.js frontend can be added later. |
 | CLI | `typer` | `firsthand crawl/detect/registry/report/fixtures …` |
-| Alerts | macOS notification (`osascript`) + local inbox page; optional SMTP email | No auth, no email provider needed. |
+| Alerts | none (removed; daily use) | “New since last visit” marker instead. |
 | Geocoding | **GeoNames** offline dumps (`cities15000`, `admin1`, `countryInfo`, alt names), CC-BY | No external API calls at runtime. |
 | FX | ECB daily reference rates (free XML), cached in `fx_rates` | |
 | LLM (**deferred**) | Anthropic API, `claude-haiku-5-5`, results cached by page hash | Last-resort extraction for custom career pages only, with a hard monthly cost cap. Cut from the lean plan along with Playwright and the iCIMS/SuccessFactors/Jobvite adapters (see PLAN "Deferred"). The interfaces still allow them. |
@@ -72,19 +72,18 @@ Hard exclusions set `match_status='excluded'` with reasons rather than dropping 
              ┌────────────────────────────────────────────────────────────┐
              │                        Postgres                            │
              │ companies · sources · postings · jobs · crawl_runs        │
-             │ saved_searches · alert_deliveries · fx_rates · robots_cache│
+             │ saved_searches · app_state · fx_rates · robots_cache│
              └───▲─────────────▲──────────────▲───────────────▲───────────┘
                  │             │              │               │
  seeds.csv ─► Registry     Crawl worker ──► Ingest ──►   Web (FastAPI)
  yc-oss     (import,      (claims due     (diff,        feed · search · company
  lists       ATS detect)   sources, rate   normalize,    pages · saved searches
-                           limit, robots,  dedupe,       RSS · admin · removal
+                           limit, robots,  dedupe,       admin · removal
                            adapters)       close)        requests
                                                               │
-                                                    Alerts worker (digest/instant)
 ```
 
-Processes in prod: `web` (uvicorn), `worker` (crawl loop), `alerts` (cron-style loop), plus `postgres` and `caddy`. Worker and alerts can share one process at first.
+Processes in prod: `web` (uvicorn), `worker` (crawl loop), plus `postgres`. (Local laptop run; no alerts process.)
 
 ### Repo layout
 ```
@@ -105,8 +104,7 @@ firsthand/
     pipeline/      ingest.py, dedupe.py, closing.py
     scheduler/     worker.py, priority.py, breaker.py
     registry/      importer.py, sources_yc.py, sources_lists.py
-    web/           app.py, routes/, templates/, static/, queries.py, rss.py
-    alerts/        matcher.py, digest.py, email.py
+    web/           app.py, routes/, templates/, static/, queries.py
     cli.py
   data/            seeds.csv, blocked_domains.csv, tech_tags.yaml, titles.yaml,
                    functions.yaml, geonames/ (downloaded, gitignored)
@@ -296,17 +294,9 @@ CREATE TABLE llm_extractions (page_hash bytea PRIMARY KEY, model text, result js
 CREATE TABLE saved_searches (
   id bigserial PRIMARY KEY,
   name text NOT NULL, query jsonb NOT NULL,           -- serialized SearchFilters (same model as the UI)
-  alert_frequency text NOT NULL DEFAULT 'daily' CHECK (alert_frequency IN ('off','daily','instant')),
-  rss_token text UNIQUE NOT NULL,                      -- unguessable; RSS URL is the only "auth"
-  last_alert_cursor timestamptz,                       -- jobs.first_seen_at high-water mark
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE TABLE alert_deliveries (
-  saved_search_id bigint REFERENCES saved_searches(id) ON DELETE CASCADE,
-  job_id bigint REFERENCES jobs(id) ON DELETE CASCADE,
-  sent_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY (saved_search_id, job_id)
-);
+CREATE TABLE app_state (key text PRIMARY KEY, value text NOT NULL);   -- e.g. last_visit_at for the "new since last visit" marker
 ```
 
 Notes:
@@ -477,15 +467,14 @@ Dedupe runs **only within a company** (cross-company duplicates are not a real c
 
 ## 10. Web product
 
-- Routes: `/` feed · `/jobs/{id}-{slug}` job detail (summary + "Apply on employer site") · `/companies` · `/companies/{slug}` (open roles + 90-day trend sparkline from `company_daily_stats`) · `/search?…` (same as the feed with filters) · `/saved` · `/rss/{rss_token}.xml` · `/rss?<filters>` (anonymous filter feeds) · `/remove` (removal request) · `/bot` (crawler info page the UA links to) · `/admin` · `/api/v1/jobs|companies`.
-- **One `SearchFilters` Pydantic model** is the single source of truth for querystring ↔ SQL ↔ saved-search JSON ↔ RSS ↔ alert matching. Fields: `q, title, company, countries[], remote (any|remote|hybrid|onsite), salary_min_usd, seniority[], function[], tech[], posted_within_days, has_salary, hidden_gems, high_salary`.
+- Routes: `/` feed · `/jobs/{id}-{slug}` job detail (summary + "Apply on employer site") · `/companies` · `/companies/{slug}` (open roles + 90-day trend sparkline from `company_daily_stats`) · `/search?…` (same as the feed with filters) · `/saved` · `/remove` (removal request) · `/bot` (crawler info page the UA links to) · `/admin` · `/api/v1/jobs|companies`.
+- **One `SearchFilters` Pydantic model** is the single source of truth for querystring ↔ SQL ↔ saved-search JSON. Fields: `q, title, company, countries[], remote (any|remote|hybrid|onsite), salary_min_usd, seniority[], function[], tech[], posted_within_days, has_salary, hidden_gems, high_salary`.
 - Pagination: keyset on `(freshness_at, id)`.
 - Search ranking: when `q` is present, sort by `ts_rank_cd(search_tsv, websearch_to_tsquery(q)) * freshness_decay`. Otherwise sort by freshness.
-- **Personal site, single owner: no accounts, sign-up, or login.** Browsing is open. **Runs only on the owner's laptop**: the web app binds to `127.0.0.1`, so no auth or token is needed (never bind `0.0.0.0`). Alerts: macOS desktop notification + local `/alerts` page; optional SMTP email. If this is ever hosted publicly, add auth first (a `users`/`plans` layer won't touch the crawl/jobs tables).
+- **Personal site, single owner: no accounts, sign-up, or login.** Browsing is open. **Runs only on the owner's laptop**: the web app binds to `127.0.0.1`, so no auth or token is needed (never bind `0.0.0.0`). If this is ever hosted publicly, add auth first (a `users`/`plans` layer won't touch the crawl/jobs tables).
 
-### Alerts
-- **Daily digest** (one per user at about 08:00 in their timezone, default UTC): for each saved search, jobs with `first_seen_at > last_alert_cursor` that match the filters, top 50, then advance the cursor. `alert_deliveries` makes sends idempotent.
-- **Instant**: a batch every 15 minutes (not per job), sent to the single `ALERT_EMAIL`.
+### No alerts
+The owner uses the tool daily, so there are no email/desktop alerts and no RSS. The feed highlights jobs first seen since `app_state.last_visit_at`.
 
 ---
 
@@ -512,7 +501,6 @@ Dedupe runs **only within a company** (cross-company duplicates are not a real c
 | Normalization changes break history | Re-crawl cost | Raw payloads stored; `NORMALIZER_VERSION` + offline renormalize. |
 | DB growth on a small VM | Disk pressure | Latest payload only; closed jobs' `description_html` purged after 180 days; ~1–3 GB expected at 3k companies. |
 | Subagent model routing doesn't work as configured | Cost | Explicit `model` param on every delegation; verified after the first delegation (task 1.1); fallback is manual `/model` switching. |
-| Email deliverability for alerts | Alerts in spam | Transactional provider with SPF/DKIM/DMARC on the product domain. |
 
 ---
 
@@ -521,5 +509,5 @@ Dedupe runs **only within a company** (cross-company duplicates are not a real c
 - **Q1 Frontend:** HTMX server-rendered (default) vs. Next.js.
 - **Q2 Hosting/budget:** one ~$5–10/mo VM (default) vs. Fly/Render + managed Postgres (~$25–40/mo).
 - **Q3 Local DB:** Homebrew Postgres 17 (default) vs. installing OrbStack/Docker.
-- **Q4 Identity:** product domain + a bot contact email for the UA and the alert sender. Until then: `FirsthandBot/0.1 (+https://example.invalid/bot)` in dev, never your personal email.
+- **Q4 Identity:** product domain + a bot contact email for the UA  Until then: `FirsthandBot/0.1 (+https://example.invalid/bot)` in dev, never your personal email.
 - **Q5 Geography and SmartRecruiters:** worldwide, English-language postings first (default). SmartRecruiters via public pages + JSON-LD only (default) vs. dropping it entirely.
