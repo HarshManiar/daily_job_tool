@@ -21,6 +21,17 @@ target_titles:
     - Field Analytics / Sales Operations Analyst
     - Client Solutions / Data Solutions Consultant
     - Forward Deployed Analyst / Data Analyst
+  generic_data_roles:   # ALL data analyst / data engineering roles at any company (tier 2 unless a tier-1 title matches)
+    title_regex:
+      - data\s+analyst
+      - (senior|sr\.?)\s+data\s+analyst
+      - data\s+engineer
+      - analytics\s+engineer
+      - (bi|business\s+intelligence)\s+(analyst|developer|engineer)
+      - (business|insights?|reporting|decision\s+science|marketing|sales|operations|healthcare|clinical)\s+analytics?\s+(analyst|consultant)
+      - (business|insights?|reporting|quantitative)\s+analyst
+      - data\s+(solutions|platform|pipeline)\s+(engineer|analyst|consultant)
+    exclude_title_regex: [intern, director, vice\s+president, \bvp\b, principal, staff, head\s+of, manager]   # levels outside 2-6 yrs; "Associate Manager, Commercial Analytics" stays via tier3 list
   tier3:   # stretch, only if the description strongly matches skills
     - Associate Manager, Commercial Analytics
     - Product Analyst / Product Analytics
@@ -52,7 +63,7 @@ location_priority:   # order of preference; everything else still shown, ranked 
   - {name: nj,        states: [NJ]}
   - {name: nyc,       cities: [New York, Brooklyn, Queens, Bronx, Manhattan, Jersey City, Hoboken]}
   - {name: us_remote, remote_regions: [US, NA, AMER, WORLD]}
-industry_priority:
+industry_priority:   # RANKING BOOST ONLY — jobs at any other industry are still included
   - pharma/biotech
   - pharma consulting      # ZS, IQVIA, Beghou, KMK, PharmaACE, Trinity Life Sciences, Indegene, Syneos, EVERSANA, Axtria peers
   - health tech
