@@ -75,6 +75,9 @@ companies = Table(
     Column("seed_source", Text),
     Column("status", company_status, nullable=False, server_default="active"),
     Column("logo_url", Text),
+    Column("industry", Text),
+    Column("is_staffing", Boolean, nullable=False, server_default=text("false")),
+    Column("exclude_reason", Text),  # NULL = not excluded
     _ts("created_at", nullable=False, server_default=_now),
     _ts("updated_at", nullable=False, server_default=_now),
     CheckConstraint("size_bucket IN ('1-10','11-50','51-200','201-1000','1001-5000','5000+')"),
