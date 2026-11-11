@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 import httpx
 import pytest
 
-from firsthand.adapters.greenhouse import GreenhouseAdapter
-from firsthand.http.errors import NotFound
+from daily_job_tool.adapters.greenhouse import GreenhouseAdapter
+from daily_job_tool.http.errors import NotFound
 from tests.adapters._helpers import fixture_client, fixture_json, json_handler, mock_client, src
 
 A = GreenhouseAdapter()

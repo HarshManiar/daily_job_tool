@@ -1,7 +1,7 @@
 import pytest
 
-from firsthand.normalize.text import clean_title, html_to_text, sanitize_html
-from firsthand.normalize.url import canonical_apply_url, strip_tracking
+from daily_job_tool.normalize.text import clean_title, html_to_text, sanitize_html
+from daily_job_tool.normalize.url import canonical_apply_url, strip_tracking
 
 
 @pytest.mark.parametrize(

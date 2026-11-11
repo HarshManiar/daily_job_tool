@@ -1,4 +1,4 @@
-from firsthand.adapters.registry import all_adapters
+from daily_job_tool.adapters.registry import all_adapters
 
 
 def test_all_three_registered():

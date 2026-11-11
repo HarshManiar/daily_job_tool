@@ -3,8 +3,8 @@ from datetime import datetime
 
 import pytest
 
-from firsthand.adapters.ashby import AshbyAdapter
-from firsthand.http.errors import NotFound
+from daily_job_tool.adapters.ashby import AshbyAdapter
+from daily_job_tool.http.errors import NotFound
 from tests.adapters._helpers import fixture_client, fixture_json, json_handler, mock_client, src
 
 A = AshbyAdapter()

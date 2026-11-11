@@ -2,9 +2,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from firsthand.match.engine import match
-from firsthand.match.profile import Profile
-from firsthand.normalize.models import CompanyInfo, NormalizedJob
+from daily_job_tool.match.engine import match
+from daily_job_tool.match.profile import Profile
+from daily_job_tool.normalize.models import CompanyInfo, NormalizedJob
 
 NOW = datetime(2026, 11, 1, tzinfo=UTC)
 GOOD_DESC = "SQL Python PySpark Databricks"

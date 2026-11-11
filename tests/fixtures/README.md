@@ -2,7 +2,7 @@
 
 Recorded HTTP exchanges used by offline adapter tests. Record with:
 
-    uv run firsthand fixtures record ADAPTER TOKEN --url URL [--method POST --json '{...}'] [--config '{...}']
+    uv run daily_job_tool fixtures record ADAPTER TOKEN --url URL [--method POST --json '{...}'] [--config '{...}']
 
 Repeat the command to append more URLs to the same token. Keep each token dir <= 500 KB
 (the recorder refuses beyond that), so choose small boards.
@@ -34,8 +34,8 @@ original URL. A request body that is not JSON never matches a recorded exchange.
 
 ## Replay in tests
 
-    from firsthand.http.client import CrawlClient
-    from firsthand.http.fixtures import FixtureTransport
+    from daily_job_tool.http.client import CrawlClient
+    from daily_job_tool.http.fixtures import FixtureTransport
 
     client = CrawlClient(ua, transport=FixtureTransport(path), retry_delays=(0, 0, 0))
 

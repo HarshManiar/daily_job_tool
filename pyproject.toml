@@ -1,5 +1,5 @@
 [project]
-name = "firsthand"
+name = "daily_job_tool"
 version = "0.1.0"
 description = "Job search built only from employers' own career pages and ATS boards"
 requires-python = ">=3.12"
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-firsthand = "firsthand.cli:app"
+daily_job_tool = "daily_job_tool.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
@@ -53,5 +53,5 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["E501"]  # golden data tables
-"src/firsthand/normalize/{visa,years,sections}.py" = ["E501"]  # long regexes
-"src/firsthand/db/migrations/versions/*.py" = ["E501"]
+"src/daily_job_tool/normalize/{visa,years,sections}.py" = ["E501"]  # long regexes
+"src/daily_job_tool/db/migrations/versions/*.py" = ["E501"]

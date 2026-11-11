@@ -1,6 +1,6 @@
 import pytest
 
-from firsthand.normalize.fx import FALLBACK_USD_PER_UNIT, parse_ecb_day, parse_ecb_xml
+from daily_job_tool.normalize.fx import FALLBACK_USD_PER_UNIT, parse_ecb_day, parse_ecb_xml
 
 ECB_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <gesmes:Envelope xmlns:gesmes="http://www.gesmes.org/xml/2002-08-01"

@@ -4,10 +4,10 @@ from datetime import timedelta
 import httpx
 import pytest
 
-from firsthand.adapters.greenhouse import GreenhouseAdapter
-from firsthand.http.errors import FetchError, NotFound
-from firsthand.normalize import NORMALIZER_VERSION
-from firsthand.pipeline.ingest import (
+from daily_job_tool.adapters.greenhouse import GreenhouseAdapter
+from daily_job_tool.http.errors import FetchError, NotFound
+from daily_job_tool.normalize import NORMALIZER_VERSION
+from daily_job_tool.pipeline.ingest import (
     compute_next_crawl_at,
     ingest_source,
     payload_hash,

@@ -3,10 +3,10 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import text
 
-from firsthand.http.errors import NotFound
-from firsthand.scheduler import worker as worker_mod
-from firsthand.scheduler.breaker import apply_breaker, circuit_pause
-from firsthand.scheduler.worker import claim_sources, cleanup_orphan_runs, run_worker
+from daily_job_tool.http.errors import NotFound
+from daily_job_tool.scheduler import worker as worker_mod
+from daily_job_tool.scheduler.breaker import apply_breaker, circuit_pause
+from daily_job_tool.scheduler.worker import claim_sources, cleanup_orphan_runs, run_worker
 from tests.adapters._helpers import client_for
 from tests.pipeline.helpers import CTX, FakeAdapter, job, rows, scalar
 

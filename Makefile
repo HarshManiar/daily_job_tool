@@ -1,7 +1,7 @@
 .PHONY: dev up test lint fmt db-up migrate
 
 dev:
-	uv run uvicorn firsthand.web.app:app --reload --host 127.0.0.1 --port 8000
+	uv run uvicorn daily_job_tool.web.app:app --reload --host 127.0.0.1 --port 8000
 
 up:
 	./scripts/up.sh

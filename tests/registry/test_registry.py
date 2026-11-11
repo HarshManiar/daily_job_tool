@@ -1,9 +1,9 @@
 import pytest
 from sqlalchemy import text
 
-from firsthand.http.errors import NotFound
-from firsthand.registry.importer import import_seeds, normalize_domain, slugify
-from firsthand.registry.verify import verify_sources
+from daily_job_tool.http.errors import NotFound
+from daily_job_tool.registry.importer import import_seeds, normalize_domain, slugify
+from daily_job_tool.registry.verify import verify_sources
 from tests.adapters._helpers import client_for
 from tests.pipeline.helpers import FakeAdapter, job, rows
 
@@ -107,7 +107,7 @@ async def test_verify_marks_not_found_broken(db_clean, tmp_path, monkeypatch):
     ad = FakeAdapter()
     ad.push([job("1"), job("2")])
     ad.push(NotFound("https://x"))
-    from firsthand.registry import verify as vmod
+    from daily_job_tool.registry import verify as vmod
 
     monkeypatch.setattr(vmod.registry, "get_adapter", lambda name: ad)
     async with client_for(None) as c:

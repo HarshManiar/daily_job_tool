@@ -1,6 +1,6 @@
-# Firsthand — Architecture
+# Daily Job Tool — Architecture
 
-> Working name: **Firsthand** (jobs firsthand from employers). Visual identity: plain, dense, fast; one accent color (deep teal `#0F766E`), system font stack, no imagery. Nothing borrowed from careerhound.io besides the idea.
+> Working name: **Daily Job Tool** (jobs daily_job_tool from employers). Visual identity: plain, dense, fast; one accent color (deep teal `#0F766E`), system font stack, no imagery. Nothing borrowed from careerhound.io besides the idea.
 
 Status: **Draft v1, Phase 0**. Waiting for approval. Owner of this doc: main thread (Opus) / `architect` subagent.
 
@@ -56,7 +56,7 @@ Hard exclusions set `match_status='excluded'` with reasons rather than dropping 
 | Search | Postgres FTS (`tsvector`, weighted) + `pg_trgm` | Move to Meilisearch/Typesense only if p95 search goes over 300 ms at our size or relevance complaints pile up. |
 | Queue / scheduler | **Postgres only** (`SELECT … FOR UPDATE SKIP LOCKED` on `sources.next_crawl_at`) | **Change:** no Redis/arq. The crawl unit is a row with a due time, so a separate queue would just duplicate state. |
 | API + UI | **FastAPI + Jinja2 + HTMX**, Tailwind via the standalone CLI (no Node) | **Change (needs your OK):** server-rendered instead of Next.js. One deploy, no Node toolchain (Node isn't installed here), SEO-friendly company pages, and plenty for a feed-plus-filters product. The JSON API (`/api/v1`) still exists, so a Next.js frontend can be added later. |
-| CLI | `typer` | `firsthand crawl/detect/registry/report/fixtures …` |
+| CLI | `typer` | `daily_job_tool crawl/detect/registry/report/fixtures …` |
 | Alerts | none (removed; daily use) | “New since last visit” marker instead. |
 | Geocoding | **GeoNames** offline dumps (`cities15000`, `admin1`, `countryInfo`, alt names), CC-BY | No external API calls at runtime. |
 | FX | ECB daily reference rates (free XML), cached in `fx_rates` | |
@@ -87,9 +87,9 @@ Processes in prod: `web` (uvicorn), `worker` (crawl loop), plus `postgres`. (Loc
 
 ### Repo layout
 ```
-firsthand/
+daily_job_tool/
   pyproject.toml  uv.lock  Makefile  .env.example  docker-compose.yml  Dockerfile
-  src/firsthand/
+  src/daily_job_tool/
     config.py
     db/            schema.py (SQLAlchemy Core tables), session.py, migrations/ (alembic)
     http/          client.py (CrawlClient), ratelimit.py, robots.py
@@ -301,7 +301,7 @@ CREATE TABLE app_state (key text PRIMARY KEY, value text NOT NULL);   -- e.g. la
 
 Notes:
 - `postings.payload` keeps only the **latest** payload, not history, to keep storage bounded. If a version history turns out to be useful, add `posting_versions` later.
-- `NORMALIZER_VERSION` bump → `firsthand renormalize` reprocesses every open posting from `payload` without any HTTP.
+- `NORMALIZER_VERSION` bump → `daily_job_tool renormalize` reprocesses every open posting from `payload` without any HTTP.
 - Monetization / multi-user is out of scope (personal site). Adding `users` and `plans` tables later would not require changes to the crawl/jobs tables.
 
 ---
@@ -309,7 +309,7 @@ Notes:
 ## 4. Adapter interface
 
 ```python
-# src/firsthand/adapters/base.py
+# src/daily_job_tool/adapters/base.py
 class SalaryRaw(BaseModel):
     min: float | None = None; max: float | None = None
     currency: str | None = None; period: str | None = None   # as given
@@ -361,10 +361,10 @@ Rules for adapters:
 - Pure mapping only (API → `RawJob`). No normalization inside an adapter.
 - Return `complete=False` if any page failed, pagination was capped, or the response looked truncated.
 - Detail fetches happen only for postings that are **new or whose list-level hash changed** (the ingest layer decides). This keeps Workday and SmartRecruiters affordable.
-- Every adapter has fixtures in `tests/fixtures/<adapter>/<token>/` (≤ 500 KB per board, so choose small boards) recorded with `firsthand fixtures record`, plus offline tests: mapping, pagination, empty board, 404 board, malformed record skipped with a warning.
+- Every adapter has fixtures in `tests/fixtures/<adapter>/<token>/` (≤ 500 KB per board, so choose small boards) recorded with `daily_job_tool fixtures record`, plus offline tests: mapping, pagination, empty board, 404 board, malformed record skipped with a warning.
 
 ### CrawlClient
-- UA: `FirsthandBot/0.1 (+https://<domain>/bot; <contact email>)` (see Q4).
+- UA: `DailyJobToolBot/0.1 (+https://<domain>/bot; <contact email>)` (see Q4).
 - robots: fetched per host, cached 24 h in `robots_cache`. A 4xx robots response means allow; 5xx or unreachable means **disallow** for that run (RFC 9309). Honor `Crawl-delay`.
 - Rate limit: a token bucket per host, **default 1 req/s, burst 2**. Overrides per ATS API host: greenhouse/lever/ashby 2 req/s, Workday tenants 0.5 req/s. Global concurrency ≤ 16.
 - Retries: 3 attempts on timeouts, 429, and 5xx; exponential backoff (2s, 8s, 30s) + jitter; honor `Retry-After` (cap 10 min; longer means fail the run).
@@ -444,7 +444,7 @@ Dedupe runs **only within a company** (cross-company duplicates are not a real c
 - **Circuit breaker (per source):** `consecutive_failures ≥ 5` → `circuit_open_until = now() + min(2^(failures-5) × 6h, 7d)`. `not_found` 3 times in a row → `status='broken'`, then queue ATS re-detection for the company (Phase 2).
 - **Robots disallow** → outcome `robots_disallowed`, `status='blocked'`, and it gets reviewed in the admin report.
 - **Capacity check:** 3,000 sources, mostly one request each at about 2 req/s per big ATS host, is about 25 min/day per host. Workday is the expensive one (≈ jobs/20 list calls + detail calls for new jobs only). It runs comfortably on one worker.
-- **Reports** (`firsthand report` and `/admin`, behind basic auth): sources by status, the top failing sources, per-adapter success rate (24h/7d) from `crawl_runs`, jobs opened/closed per day, normalizer coverage (% with salary, location resolved, seniority ≠ unknown).
+- **Reports** (`daily_job_tool report` and `/admin`, behind basic auth): sources by status, the top failing sources, per-adapter success rate (24h/7d) from `crawl_runs`, jobs opened/closed per day, normalizer coverage (% with salary, location resolved, seniority ≠ unknown).
 
 ---
 
@@ -509,5 +509,5 @@ The owner uses the tool daily, so there are no email/desktop alerts and no RSS. 
 - **Q1 Frontend:** HTMX server-rendered (default) vs. Next.js.
 - **Q2 Hosting/budget:** one ~$5–10/mo VM (default) vs. Fly/Render + managed Postgres (~$25–40/mo).
 - **Q3 Local DB:** Homebrew Postgres 17 (default) vs. installing OrbStack/Docker.
-- **Q4 Identity:** product domain + a bot contact email for the UA  Until then: `FirsthandBot/0.1 (+https://example.invalid/bot)` in dev, never your personal email.
+- **Q4 Identity:** product domain + a bot contact email for the UA  Until then: `DailyJobToolBot/0.1 (+https://example.invalid/bot)` in dev, never your personal email.
 - **Q5 Geography and SmartRecruiters:** worldwide, English-language postings first (default). SmartRecruiters via public pages + JSON-LD only (default) vs. dropping it entirely.

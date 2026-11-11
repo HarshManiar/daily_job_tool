@@ -5,9 +5,9 @@ import asyncio
 import pytest
 from sqlalchemy import text
 
-from firsthand.http.errors import FetchError
-from firsthand.pipeline import ingest as ing
-from firsthand.pipeline import renormalize as rn
+from daily_job_tool.http.errors import FetchError
+from daily_job_tool.pipeline import ingest as ing
+from daily_job_tool.pipeline import renormalize as rn
 from tests.pipeline.helpers import CTX, FakeAdapter, FakeT3, at, crawl, job, rows, scalar, seed
 
 V = ing.NORMALIZER_VERSION

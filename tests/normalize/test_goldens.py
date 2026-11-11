@@ -1,15 +1,15 @@
 import pytest
 
-from firsthand.adapters.base import SalaryRaw
-from firsthand.normalize import CompanyInfo, NormContext
-from firsthand.normalize.employment import infer_employment_type
-from firsthand.normalize.function import classify_function
-from firsthand.normalize.location import parse_locations
-from firsthand.normalize.remote import derive_remote_regions, infer_remote_type
-from firsthand.normalize.salary import extract_salary, parse_salary_text
-from firsthand.normalize.seniority import infer_seniority
-from firsthand.normalize.techtags import extract_tech_tags
-from firsthand.normalize.title import normalize_title
+from daily_job_tool.adapters.base import SalaryRaw
+from daily_job_tool.normalize import CompanyInfo, NormContext
+from daily_job_tool.normalize.employment import infer_employment_type
+from daily_job_tool.normalize.function import classify_function
+from daily_job_tool.normalize.location import parse_locations
+from daily_job_tool.normalize.remote import derive_remote_regions, infer_remote_type
+from daily_job_tool.normalize.salary import extract_salary, parse_salary_text
+from daily_job_tool.normalize.seniority import infer_seniority
+from daily_job_tool.normalize.techtags import extract_tech_tags
+from daily_job_tool.normalize.title import normalize_title
 from tests.normalize.golden_locations import LOCATIONS
 from tests.normalize.golden_remote import REMOTE
 from tests.normalize.golden_salary import SALARY_TEXT, SALARY_USD

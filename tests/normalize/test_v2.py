@@ -1,10 +1,10 @@
 import pytest
 import yaml
 
-from firsthand.normalize import NORMALIZER_VERSION
-from firsthand.normalize.employment import infer_employment_detail, infer_employment_type
-from firsthand.normalize.visa import VisaPhrases, classify_visa
-from firsthand.normalize.years import extract_years, extract_years_detail
+from daily_job_tool.normalize import NORMALIZER_VERSION
+from daily_job_tool.normalize.employment import infer_employment_detail, infer_employment_type
+from daily_job_tool.normalize.visa import VisaPhrases, classify_visa
+from daily_job_tool.normalize.years import extract_years, extract_years_detail
 from tests.normalize.golden_employment import CONFLICTS, EMPLOYMENT, NO_CONFLICT
 from tests.normalize.golden_visa import FLAGS, VISA
 from tests.normalize.golden_years import POOLS, YEARS

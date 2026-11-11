@@ -6,9 +6,9 @@ import json
 import httpx
 import pytest
 
-from firsthand.http.blocklist import BUILTIN_BLOCKED, is_blocked_host, load_blocked_domains
-from firsthand.http.client import CrawlClient
-from firsthand.http.errors import (
+from daily_job_tool.http.blocklist import BUILTIN_BLOCKED, is_blocked_host, load_blocked_domains
+from daily_job_tool.http.client import CrawlClient
+from daily_job_tool.http.errors import (
     Blocked,
     CrawlDelayTooLong,
     DomainBlocked,
@@ -16,10 +16,10 @@ from firsthand.http.errors import (
     NotFound,
     RobotsDisallowed,
 )
-from firsthand.http.fixtures import FixtureRecorder, FixtureTransport
-from firsthand.http.ratelimit import HostLimiter
+from daily_job_tool.http.fixtures import FixtureRecorder, FixtureTransport
+from daily_job_tool.http.ratelimit import HostLimiter
 
-UA = "FirsthandBot/0.1 (+https://example.invalid/bot)"
+UA = "DailyJobToolBot/0.1 (+https://example.invalid/bot)"
 
 
 class FakeTime:
@@ -300,7 +300,7 @@ async def test_robots_429_503_disallow(status):
 
 
 async def test_robots_cache_ttl_429_is_one_hour():
-    from firsthand.http.robots import InMemoryRobotsCache
+    from daily_job_tool.http.robots import InMemoryRobotsCache
 
     now = [0.0]
     cache = InMemoryRobotsCache(lambda: now[0])
@@ -367,7 +367,7 @@ async def test_circuit_checked_before_robots():
             with pytest.raises(FetchError):
                 await c.get_text("https://a.example/x")
         net.log.clear()
-        from firsthand.http.errors import HostCircuitOpen
+        from daily_job_tool.http.errors import HostCircuitOpen
 
         with pytest.raises(HostCircuitOpen):
             await c.get_text("https://a.example/x")

@@ -1,6 +1,6 @@
 # Fixture index
 
-Recorded with `uv run firsthand fixtures record` on 2026-11-11. Body bytes are the sum of the body files in each token directory (manifest excluded). All directories are well under the 500 KB cap.
+Recorded with `uv run daily_job_tool fixtures record` on 2026-11-11. Body bytes are the sum of the body files in each token directory (manifest excluded). All directories are well under the 500 KB cap.
 
 | adapter | token | files | body bytes | status | note |
 |---|---|---|---|---|---|

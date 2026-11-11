@@ -9,7 +9,7 @@ cleanup() {
   wait 2>/dev/null
 }
 trap cleanup INT TERM EXIT
-uv run firsthand web --port "${PORT:-8000}" & pids+=($!)
-uv run firsthand worker & pids+=($!)
+uv run daily_job_tool web --port "${PORT:-8000}" & pids+=($!)
+uv run daily_job_tool worker & pids+=($!)
 echo "web: http://127.0.0.1:${PORT:-8000}  (Ctrl-C stops web + worker)"
 wait

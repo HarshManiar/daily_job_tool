@@ -7,7 +7,7 @@ import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from firsthand.web.app import create_app
+from daily_job_tool.web.app import create_app
 
 _seq = itertools.count(1)
 

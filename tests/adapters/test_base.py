@@ -1,8 +1,8 @@
 import pytest
 from pydantic import ValidationError
 
-from firsthand.adapters import registry
-from firsthand.adapters.base import Adapter, FetchResult, RawJob, SalaryRaw, SourceRef
+from daily_job_tool.adapters import registry
+from daily_job_tool.adapters.base import Adapter, FetchResult, RawJob, SalaryRaw, SourceRef
 
 
 def test_rawjob_defaults_and_required():

@@ -1,12 +1,12 @@
 import httpx
 import respx
 
-from firsthand.http.client import CrawlClient
-from firsthand.http.errors import RobotsDisallowed
-from firsthand.http.ratelimit import HostLimiter
-from firsthand.http.robots import InMemoryRobotsCache
+from daily_job_tool.http.client import CrawlClient
+from daily_job_tool.http.errors import RobotsDisallowed
+from daily_job_tool.http.ratelimit import HostLimiter
+from daily_job_tool.http.robots import InMemoryRobotsCache
 
-UA = "FirsthandBot/0.1 (+https://example.invalid/bot)"
+UA = "DailyJobToolBot/0.1 (+https://example.invalid/bot)"
 
 
 def make() -> CrawlClient:
@@ -20,7 +20,8 @@ def make() -> CrawlClient:
 @respx.mock
 async def test_allow_and_deny():
     respx.get("https://x.test/robots.txt").respond(
-        200, text="User-agent: *\nDisallow: /private\n\nUser-agent: FirsthandBot\nDisallow: /nope\n"
+        200,
+        text="User-agent: *\nDisallow: /private\n\nUser-agent: DailyJobToolBot\nDisallow: /nope\n",
     )
     ok = respx.get("https://x.test/jobs").respond(200, json={"a": 1})
     async with make() as c:

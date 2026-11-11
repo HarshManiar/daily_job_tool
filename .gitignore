@@ -8,3 +8,4 @@ data/geonames/
 *.egg-info/
 dist/
 data/profile.yaml
+logs/

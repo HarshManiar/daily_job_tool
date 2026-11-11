@@ -11,14 +11,14 @@ from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from firsthand.config import get_settings
+from daily_job_tool.config import get_settings
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def alembic_config(url: str) -> Config:
     cfg = Config(str(ROOT / "alembic.ini"))
-    cfg.set_main_option("script_location", str(ROOT / "src/firsthand/db/migrations"))
+    cfg.set_main_option("script_location", str(ROOT / "src/daily_job_tool/db/migrations"))
     cfg.set_main_option("sqlalchemy.url", url)
     return cfg
 
@@ -46,15 +46,15 @@ async def _admin(url: URL, sql: str) -> None:
 
 @pytest.fixture(scope="session")
 def migrated_db():
-    """Per-process database `firsthand_<pid>_test`, migrated to head and dropped at the end.
+    """Per-process database `daily_job_tool_<pid>_test`, migrated to head and dropped at the end.
 
     Isolation lets several pytest processes (or agents) run concurrently. Set
-    FIRSTHAND_TEST_SHARED_DB=1 to use TEST_DATABASE_URL (must end in `_test`) as-is instead.
+    DAILY_JOB_TOOL_TEST_SHARED_DB=1 to use TEST_DATABASE_URL (must end in `_test`) as-is instead.
     """
     base = make_url(get_settings().test_database_url)
-    shared = os.environ.get("FIRSTHAND_TEST_SHARED_DB") == "1"
+    shared = os.environ.get("DAILY_JOB_TOOL_TEST_SHARED_DB") == "1"
     own = not shared
-    url = base if shared else base.set(database=f"firsthand_{os.getpid()}_test")
+    url = base if shared else base.set(database=f"daily_job_tool_{os.getpid()}_test")
     assert (url.database or "").endswith("_test"), "refusing to wipe a non-test DB"
     try:
         asyncio.run(_ping(base.set(database="postgres") if own else base))

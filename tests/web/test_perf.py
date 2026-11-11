@@ -2,7 +2,7 @@ import time
 
 from sqlalchemy import text
 
-from firsthand.web.queries import FeedFilters, build_feed
+from daily_job_tool.web.queries import FeedFilters, build_feed
 
 
 async def test_feed_perf_20k(client, db):

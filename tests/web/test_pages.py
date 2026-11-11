@@ -219,7 +219,7 @@ async def test_health_empty_and_populated(client, db):
 
 
 async def test_bot_and_api(client, db):
-    assert "FirsthandBot" in (await client.get("/bot")).text
+    assert "DailyJobToolBot" in (await client.get("/bot")).text
     c = await db.company("A")
     for i in range(5):
         await db.job(c, title=f"x{i}")
@@ -246,7 +246,7 @@ async def test_security(client):
 def test_cli_refuses_public_host():
     from typer.testing import CliRunner
 
-    from firsthand.cli import app
+    from daily_job_tool.cli import app
 
     res = CliRunner().invoke(app, ["web", "--host", "0.0.0.0"])
     assert res.exit_code != 0

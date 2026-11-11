@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Health · Daily Job Tool{% endblock %}
+{% block content %}
+<h1>Health</h1>
+<p>Open jobs <strong>{{ d.open_jobs }}</strong> · last crawl
+  <strong>{{ (d.last_crawl | relative_date(d.now)) if d.last_crawl else 'never' }}</strong>
+  · oldest due source:
+  {% if d.oldest_due %}<strong>#{{ d.oldest_due.id }} {{ d.oldest_due.adapter }}/{{ d.oldest_due.token }}</strong> ({{ d.oldest_due.next_crawl_at.strftime('%Y-%m-%d %H:%M') }} UTC){% else %}none{% endif %}</p>
+
+<h2>Sources by status</h2>
+{% if d.sources_by_status %}<table><tr><th>Status</th><th class="num">Sources</th></tr>
+{% for r in d.sources_by_status %}<tr><td>{{ r.status }}</td><td class="num">{{ r.n }}</td></tr>{% endfor %}</table>{% else %}<p class="muted">No sources.</p>{% endif %}
+
+<h2>Sources needing attention</h2>
+{% if d.problem_sources %}<div class="scroll"><table><tr><th>Source</th><th>Company</th><th>Status</th><th class="num">Failures</th><th>Last outcome</th><th>Last error</th></tr>
+{% for r in d.problem_sources %}<tr><td>#{{ r.id }} {{ r.adapter }}/{{ r.token }}</td><td>{{ r.company }}</td><td>{{ r.status }}</td><td class="num">{{ r.consecutive_failures }}</td><td>{{ r.last_outcome or '-' }}</td><td class="err">{{ (r.last_error or '-')[:200] }}</td></tr>{% endfor %}</table></div>{% else %}<p class="muted">None.</p>{% endif %}
+
+<h2>Adapter success rate</h2>
+{% if d.adapter_success %}<table><tr><th>Adapter</th><th class="num">24h ok / runs</th><th class="num">7d ok / runs</th></tr>
+{% for r in d.adapter_success %}<tr><td>{{ r.adapter }}</td>
+<td class="num">{{ r.ok_24h }} / {{ r.runs_24h }}{% if r.runs_24h %} ({{ (100 * r.ok_24h / r.runs_24h) | round | int }}%){% endif %}</td>
+<td class="num">{{ r.ok_7d }} / {{ r.runs_7d }}{% if r.runs_7d %} ({{ (100 * r.ok_7d / r.runs_7d) | round | int }}%){% endif %}</td></tr>{% endfor %}</table>{% else %}<p class="muted">No crawl runs in the last 7 days.</p>{% endif %}
+
+<h2>Jobs per day</h2>
+<table><tr><th>Day</th><th class="num">Added</th><th class="num">Closed</th></tr>
+{% for r in d.per_day %}<tr><td>{{ r.day }}</td><td class="num">{{ r.added }}</td><td class="num">{{ r.closed }}</td></tr>{% endfor %}</table>
+
+<h2>Open jobs by match status</h2>
+{% if d.match_status %}<table><tr><th>Status</th><th class="num">Jobs</th></tr>
+{% for r in d.match_status %}<tr><td>{{ r.match_status }}</td><td class="num">{{ r.n }}</td></tr>{% endfor %}</table>{% else %}<p class="muted">No jobs.</p>{% endif %}
+{% endblock %}

@@ -1,4 +1,4 @@
-from firsthand.http.ratelimit import HostLimiter, TokenBucket
+from daily_job_tool.http.ratelimit import HostLimiter, TokenBucket
 
 
 class FakeTime:

@@ -3,11 +3,11 @@ import json
 import httpx
 import pytest
 
-from firsthand.http.client import CrawlClient
-from firsthand.http.fixtures import FixtureRecorder, FixtureTooLarge, FixtureTransport
-from firsthand.http.ratelimit import HostLimiter
+from daily_job_tool.http.client import CrawlClient
+from daily_job_tool.http.fixtures import FixtureRecorder, FixtureTooLarge, FixtureTransport
+from daily_job_tool.http.ratelimit import HostLimiter
 
-UA = "FirsthandBot/0.1 (+https://example.invalid/bot)"
+UA = "DailyJobToolBot/0.1 (+https://example.invalid/bot)"
 
 
 def fast() -> HostLimiter:

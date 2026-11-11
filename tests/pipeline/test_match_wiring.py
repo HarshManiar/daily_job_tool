@@ -1,7 +1,7 @@
 from sqlalchemy import text
 
-from firsthand.match.profile import load_profile
-from firsthand.pipeline.renormalize import renormalize, rescore
+from daily_job_tool.match.profile import load_profile
+from daily_job_tool.pipeline.renormalize import renormalize, rescore
 from tests.pipeline.helpers import CTX, FakeAdapter, crawl, job, rows, scalar, seed
 
 PROFILE = load_profile("data/profile.example.yaml")

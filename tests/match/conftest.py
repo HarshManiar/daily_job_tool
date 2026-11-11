@@ -1,6 +1,6 @@
 import pytest
 
-from firsthand.match.profile import load_profile
+from daily_job_tool.match.profile import load_profile
 
 
 @pytest.fixture(scope="session")

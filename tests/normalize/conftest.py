@@ -1,6 +1,6 @@
 import pytest
 
-from firsthand.normalize import NormContext
+from daily_job_tool.normalize import NormContext
 
 # Fixed rates (USD per unit) so USD assertions are deterministic.
 TEST_RATES = {

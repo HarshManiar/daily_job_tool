@@ -5,9 +5,9 @@ from typing import Any, ClassVar
 
 from sqlalchemy import text
 
-from firsthand.adapters.base import Adapter, FetchResult, RawJob, SourceRef
-from firsthand.normalize import NormContext
-from firsthand.pipeline.ingest import ingest_source
+from daily_job_tool.adapters.base import Adapter, FetchResult, RawJob, SourceRef
+from daily_job_tool.normalize import NormContext
+from daily_job_tool.pipeline.ingest import ingest_source
 from tests.adapters._helpers import json_handler, mock_client
 
 T0 = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)

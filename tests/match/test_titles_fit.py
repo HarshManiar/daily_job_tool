@@ -1,7 +1,7 @@
 import pytest
 
-from firsthand.match.fit import fit_score
-from firsthand.match.titles import classify_title
+from daily_job_tool.match.fit import fit_score
+from daily_job_tool.match.titles import classify_title
 from tests.match.golden_titles import T
 
 

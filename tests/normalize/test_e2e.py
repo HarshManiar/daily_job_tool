@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from firsthand.adapters.base import RawJob, SalaryRaw
-from firsthand.normalize import (
+from daily_job_tool.adapters.base import RawJob, SalaryRaw
+from daily_job_tool.normalize import (
     NORMALIZER_VERSION,
     CompanyInfo,
     NormalizedJob,

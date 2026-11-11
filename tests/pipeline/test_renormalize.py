@@ -1,8 +1,8 @@
 from sqlalchemy import text
 
-from firsthand.normalize import NORMALIZER_VERSION
-from firsthand.pipeline.ingest import ingest_source
-from firsthand.pipeline.renormalize import renormalize
+from daily_job_tool.normalize import NORMALIZER_VERSION
+from daily_job_tool.pipeline.ingest import ingest_source
+from daily_job_tool.pipeline.renormalize import renormalize
 from tests.adapters._helpers import fixture_client
 from tests.pipeline.helpers import CTX, at, rows, scalar, seed
 from tests.pipeline.test_ingest import WarpGreenhouse

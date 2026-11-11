@@ -6,17 +6,17 @@ from typing import Any
 
 import httpx
 
-from firsthand.adapters.base import SourceRef
-from firsthand.http.client import CrawlClient
-from firsthand.http.fixtures import FixtureTransport
-from firsthand.http.ratelimit import HostLimiter
+from daily_job_tool.adapters.base import SourceRef
+from daily_job_tool.http.client import CrawlClient
+from daily_job_tool.http.fixtures import FixtureTransport
+from daily_job_tool.http.ratelimit import HostLimiter
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 
 
 def client_for(transport: httpx.AsyncBaseTransport) -> CrawlClient:
     return CrawlClient(
-        "firsthand-test/0.1",
+        "daily_job_tool-test/0.1",
         transport=transport,
         limiter=HostLimiter(overrides=(), default_rate=1000, default_burst=1000),
         retry_delays=(0, 0, 0),

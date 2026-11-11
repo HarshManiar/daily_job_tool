@@ -2,8 +2,8 @@ import httpx
 import pytest
 import respx
 
-from firsthand.http.client import CrawlClient
-from firsthand.http.errors import (
+from daily_job_tool.http.client import CrawlClient
+from daily_job_tool.http.errors import (
     Blocked,
     CrawlError,
     FetchError,
@@ -11,9 +11,9 @@ from firsthand.http.errors import (
     NotFound,
     ResponseTooLarge,
 )
-from firsthand.http.ratelimit import HostLimiter
+from daily_job_tool.http.ratelimit import HostLimiter
 
-UA = "FirsthandBot/0.1 (+https://example.invalid/bot)"
+UA = "DailyJobToolBot/0.1 (+https://example.invalid/bot)"
 URL = "https://api.test/v1/jobs"
 
 

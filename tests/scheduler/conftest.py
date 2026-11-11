@@ -23,7 +23,7 @@ async def db_clean(migrated_db: str):
 
 @pytest.fixture(autouse=True)
 def fake_adapters(monkeypatch):
-    from firsthand.adapters import registry
+    from daily_job_tool.adapters import registry
     from tests.pipeline.helpers import FakeAdapter, FakeT3
 
     registry._load()

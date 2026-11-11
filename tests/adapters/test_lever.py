@@ -3,8 +3,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from firsthand.adapters.lever import LeverAdapter
-from firsthand.http.errors import NotFound
+from daily_job_tool.adapters.lever import LeverAdapter
+from daily_job_tool.http.errors import NotFound
 from tests.adapters._helpers import fixture_client, fixture_json, json_handler, mock_client, src
 
 A = LeverAdapter()

@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from firsthand.web import format as f
+from daily_job_tool.web import format as f
 
 NOW = datetime(2026, 11, 11, 12, tzinfo=UTC)
 
