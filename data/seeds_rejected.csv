@@ -1,0 +1,291 @@
+name,domain,industry,tried_tokens,reason
+Tempus,tempus.com,healthcare data,tempus;tempuslabs,no board found
+Moderna,modernatx.com,pharma/biotech,moderna;modernatx,no board found
+Schrodinger,schrodinger.com,pharma/biotech,schrodinger,no board found
+Denali Therapeutics,denalitx.com,pharma/biotech,denali;denalitherapeutics;denalitx,no board found
+Intellia,intellia.com,pharma/biotech,intellia;intelliatherapeutics,no board found
+Iambic Therapeutics,iambic.ai,pharma/biotech,iambic;iambictherapeutics,no board found
+Guardant Health,guardanthealth.com,pharma/biotech,guardanthealth;guardant,no board found
+GRAIL,grail.com,pharma/biotech,grail,no board found
+Caris Life Sciences,carislifesciences.com,pharma/biotech,caris;carislifesciences,no board found
+10x Genomics,10xgenomics.com,pharma/biotech,10xgenomics,no board found
+Illumina,illumina.com,pharma/biotech,illumina,no board found
+Pacific Biosciences,pacb.com,pharma/biotech,pacificbiosciences;pacbio;pacb,no board found
+Myriad Genetics,myriad.com,pharma/biotech,myriad;myriadgenetics,no board found
+Quanterix,quanterix.com,pharma/biotech,quanterix,no board found
+Cytek Biosciences,cytekbio.com,pharma/biotech,cytek;cytekbiosciences;cytekbio,no board found
+Vir Biotechnology,vir.bio,pharma/biotech,vir;virbiotechnology,no board found
+Arcus Biosciences,arcusbio.com,pharma/biotech,arcusbio;arcusbiosciences,no board found
+Cytokinetics,cytokinetics.com,pharma/biotech,cytokinetics,no board found
+Sarepta Therapeutics,sarepta.com,pharma/biotech,sarepta;sareptatherapeutics,no board found
+Atomwise,atomwise.com,pharma/biotech,atomwise,no board found
+Verily,verily.com,pharma/biotech,verily,no board found
+Color Health,color.com,health tech,color;colorhealth,no board found
+Tango Therapeutics,tangotx.com,pharma/biotech,tango;tangotherapeutics;tangotx,"ambiguous ashby board (postings look like a software company, not the biotech)"
+Mammoth Biosciences,mammoth.bio,pharma/biotech,mammoth;mammothbiosciences,no board found
+Caribou Biosciences,cariboutx.com,pharma/biotech,caribou;cariboubiosciences;cariboutx,"board name mismatch (token resolves to ""Caribou Financial"")"
+Bluebird bio,bluebirdbio.com,pharma/biotech,bluebirdbio,no board found
+ZS Associates,zs.com,pharma consulting,zs;zsassociates,no board found
+IQVIA,iqvia.com,pharma consulting,iqvia,no board found
+KMK Consulting,kmkconsulting.com,pharma consulting,kmkconsulting;kmk,no board found
+PharmaACE,pharmaace.com,pharma consulting,pharmaace,no board found
+Trinity Life Sciences,trinitylifesciences.com,pharma consulting,trinitylifesciences;trinity,no board found
+Indegene,indegene.com,pharma consulting,indegene,no board found
+Syneos Health,syneoshealth.com,pharma consulting,syneoshealth;syneos,no board found
+EVERSANA,eversana.com,pharma consulting,eversana,no board found
+Evaluate,evaluate.com,healthcare data,evaluate,no board found
+Citeline,citeline.com,healthcare data,citeline,no board found
+ODAIA,odaia.com,pharma consulting,odaia,no board found
+Aktana,aktana.com,pharma consulting,aktana,no board found
+Doceree,doceree.com,pharma consulting,doceree,no board found
+Medidata,medidata.com,pharma consulting,medidata,no board found
+Datavant,datavant.com,healthcare data,datavant,no board found
+Hippocratic AI,hippocraticai.com,health tech,hippocraticai;hippocratic,no board found
+Cerebral,cerebral.com,health tech,cerebral,no board found
+Hims & Hers,forhims.com,health tech,hims;himsandhers;forhims,no board found
+Noom,noom.com,health tech,noom,no board found
+Hinge Health,hingehealth.com,health tech,hingehealth;hinge,no board found
+Transcarent,transcarent.com,health tech,transcarent,no board found
+Spring Health,springhealth.com,health tech,springhealth,no board found
+Progyny,progyny.com,health tech,progyny,no board found
+Carbon Health,carbonhealth.com,health tech,carbonhealth;carbon,no board found
+Cityblock Health,cityblock.com,health tech,cityblock;cityblockhealth,no board found
+Privia Health,privia.com,health tech,privia;priviahealth,no board found
+Accolade,accolade.com,health tech,accolade,no board found
+Evolent Health,evolent.com,health tech,evolent;evolenthealth,no board found
+Health Catalyst,healthcatalyst.com,health tech,healthcatalyst,no board found
+Phreesia,phreesia.com,health tech,phreesia,no board found
+Innovaccer,innovaccer.com,health tech,innovaccer,no board found
+Waystar,waystar.com,health tech,waystar,no board found
+Ensemble Health Partners,ensemblehp.com,health tech,ensemblehealthpartners;ensemble;ensemblehp,no board found
+Athelas,athelas.com,health tech,athelas,no board found
+Thirty Madison,thirtymadison.com,health tech,thirtymadison,no board found
+Headspace,headspace.com,health tech,headspace,no board found
+Press Ganey,pressganey.com,healthcare data,pressganey,no board found
+Sharecare,sharecare.com,health tech,sharecare,no board found
+Lumeris,lumeris.com,health tech,lumeris,no board found
+Ribbon Health,ribbonhealth.com,healthcare data,ribbonhealth,no board found
+Particle Health,particlehealth.com,healthcare data,particlehealth,no board found
+Trilliant Health,trillianthealth.com,healthcare data,trilliant;trillianthealth,no board found
+Premier Inc,premierinc.com,healthcare data,premierinc;premier,no board found
+Vizient,vizientinc.com,healthcare data,vizient;vizientinc,no board found
+Syapse,syapse.com,healthcare data,syapse,no board found
+Veradigm,veradigm.com,healthcare data,veradigm,no board found
+Evidation,evidation.com,healthcare data,evidation,no board found
+Lumiata,lumiata.com,healthcare data,lumiata,no board found
+GoodRx,goodrx.com,pbm/health plan,goodrx,no board found
+Navitus,navitus.com,pbm/health plan,navitus,no board found
+Prime Therapeutics,primetherapeutics.com,pbm/health plan,primetherapeutics;prime,no board found
+Curative,curative.com,pbm/health plan,curative,no board found
+Capsule,capsule.com,specialty pharmacy,capsule;capsulepharmacy,ambiguous ashby board (LA-based software postings; not confirmed as the pharmacy)
+Alto Pharmacy,alto.com,specialty pharmacy,alto;altopharmacy,no board found
+Truepill,truepill.com,specialty pharmacy,truepill,no board found
+Mark Cuban Cost Plus Drug,costplusdrugs.com,specialty pharmacy,costplusdrugs;costplus;markcubancostplusdrug,no board found
+Devoted Health,devoted.com,pbm/health plan,devoted;devotedhealth,no board found
+Alignment Healthcare,alignmenthealthcare.com,pbm/health plan,alignmenthealthcare;alignment,no board found
+Confluent,confluent.io,software,confluent,no board found
+dbt Labs,getdbt.com,software,dbtlabs;dbtlabsinc,no board found
+Census,getcensus.com,software,census;getcensus,no board found
+Dagster Labs,dagster.io,software,dagsterlabs;dagster,no board found
+Weights & Biases,wandb.ai,software,wandb;weightsandbiases,no board found
+Glean,glean.com,software,glean,no board found
+Retool,retool.com,software,retool,no board found
+HashiCorp,hashicorp.com,software,hashicorp,no board found
+Anduril,anduril.com,software,anduril,no board found
+Hugging Face,huggingface.co,software,huggingface,no board found
+Watershed,watershed.com,software,watershed,"board name mismatch (token resolves to ""Watershed Informatics"")"
+Postman,postman.com,software,postman,no board found
+New Relic,newrelic.com,software,newrelic,no board found
+Canva,canva.com,software,canva,no board found
+Shopify,shopify.com,e-commerce,shopify,no board found
+Ramp,ramp.com,fintech,ramp,"ambiguous board (name ""RAMP"", 1 job) - not confirmed as the company"
+Marqeta,marqeta.com,fintech,marqeta,no board found
+MoneyLion,moneylion.com,fintech,moneylion,no board found
+Opendoor,opendoor.com,fintech,opendoor,no board found
+Better,better.com,fintech,better,no board found
+Navan,navan.com,fintech,navan,no board found
+Addepar,addepar.com,fintech,addepar,no board found
+Alkami,alkami.com,fintech,alkami,no board found
+nCino,ncino.com,fintech,ncino,no board found
+Q2 Holdings,q2.com,fintech,q2;q2holdings,no board found
+MX,mx.com,fintech,mx,no board found
+Unit,unit.co,fintech,unit,ambiguous ashby board (Tel Aviv + SF postings; not confirmed as unit.co)
+Moov,moov.io,fintech,moov,no board found
+Increase,increase.com,fintech,increase,no board found
+Melio,meliopayments.com,fintech,melio;meliopayments,no board found
+Tipalti,tipalti.com,fintech,tipalti,no board found
+Remitly,remitly.com,fintech,remitly,no board found
+Chainalysis,chainalysis.com,fintech,chainalysis,no board found
+Kraken,kraken.com,fintech,kraken;krakenfx,no board found
+Webull,webull.com,fintech,webull,no board found
+Pipe,pipe.com,fintech,pipe,no board found
+Varo,varomoney.com,fintech,varo;varomoney,no board found
+LendingClub,lendingclub.com,fintech,lendingclub,no board found
+Root Insurance,joinroot.com,insurance,root;rootinsurance,no board found
+Hippo,hippo.com,insurance,hippo,no board found
+Next Insurance,nextinsurance.com,insurance,nextinsurance;next,no board found
+At-Bay,at-bay.com,insurance,atbay;at-bay,no board found
+Corvus Insurance,corvusinsurance.com,insurance,corvus;corvusinsurance,no board found
+Newfront,newfront.com,insurance,newfront,no board found
+Clearcover,clearcover.com,insurance,clearcover,no board found
+Bestow,bestow.com,insurance,bestow,no board found
+Policygenius,policygenius.com,insurance,policygenius,no board found
+Vouch,vouch.us,insurance,vouch,no board found
+Branch Insurance,branchinsurance.com,insurance,branch;branchinsurance,"ambiguous board (name ""Branch"", 2 jobs) - not confirmed as the company"
+Etsy,etsy.com,e-commerce,etsy,no board found
+Wayfair,wayfair.com,e-commerce,wayfair,no board found
+Chewy,chewy.com,e-commerce,chewy,no board found
+Warby Parker,warbyparker.com,e-commerce,warbyparker,no board found
+Allbirds,allbirds.com,e-commerce,allbirds,no board found
+ThredUp,thredup.com,e-commerce,thredup,no board found
+Figs,wearfigs.com,e-commerce,figs;wearfigs,no board found
+Revolve,revolve.com,e-commerce,revolve,no board found
+Lulus,lulus.com,e-commerce,lulus,no board found
+Yelp,yelp.com,e-commerce,yelp,no board found
+Blue Apron,blueapron.com,e-commerce,blueapron,no board found
+Ulta Beauty,ulta.com,retail,ulta;ultabeauty,no board found
+Vroom,vroom.com,e-commerce,vroom,no board found
+Boxed,boxed.com,e-commerce,boxed,no board found
+Honest Company,honest.com,e-commerce,honest;thehonestcompany,no board found
+Casper,casper.com,e-commerce,casper,no board found
+Beyond Inc,beyond.com,e-commerce,beyond;overstock,"ambiguous board (name ""Beyond"", 1 job) - not confirmed as the company"
+Wish,wish.com,e-commerce,wish,no board found
+Slalom,slalom.com,consulting,slalom,no board found
+West Monroe,westmonroe.com,consulting,westmonroe,no board found
+Huron Consulting,huron.com,consulting,huron;huronconsulting,no board found
+Guidehouse,guidehouse.com,consulting,guidehouse,no board found
+Chemonics,chemonics.com,consulting,chemonics,no board found
+EPAM,epam.com,consulting,epam,no board found
+Perficient,perficient.com,consulting,perficient,no board found
+Fractal Analytics,fractal.ai,consulting,fractal;fractalanalytics,no board found
+LatentView Analytics,latentview.com,consulting,latentview;latentviewanalytics,no board found
+Mu Sigma,mu-sigma.com,consulting,musigma;mu-sigma,no board found
+Quantiphi,quantiphi.com,consulting,quantiphi,no board found
+Brillio,brillio.com,consulting,brillio,no board found
+Kearney,kearney.com,consulting,kearney,no board found
+Analysis Group,analysisgroup.com,consulting,analysisgroup,no board found
+Cornerstone Research,cornerstone.com,consulting,cornerstone;cornerstoneresearch,"board name mismatch (token resolves to ""Cornerstone Child Development Center"")"
+LEK Consulting,lek.com,consulting,lek;lekconsulting,no board found
+Credera,credera.com,consulting,credera,no board found
+BlueMountain Capital,bluemountain.com,consulting,bluemountain;bluemountaincapital,no board found
+Improving,improving.com,consulting,improving,no board found
+Caliber,caliberco.com,consulting,caliber;caliberco,no board found
+Mathematica,mathematica.org,consulting,mathematica,no board found
+RTI International,rti.org,consulting,rti;rtiinternational,"board name mismatch (token resolves to ""Real-Time Innovations"")"
+NORC,norc.org,consulting,norc,no board found
+Westat,westat.com,consulting,westat,no board found
+ICF,icf.com,consulting,icf,no board found
+Crowe,crowe.com,consulting,crowe,no board found
+RSM US,rsmus.com,consulting,rsm;rsmus,no board found
+Protiviti,protiviti.com,consulting,protiviti,no board found
+Hackett Group,thehackettgroup.com,consulting,hackettgroup;thehackettgroup,no board found
+New York Times,nytco.com,media,nytimes;newyorktimes,no board found
+BuzzFeed,buzzfeed.com,media,buzzfeed,no board found
+Bustle Digital Group,bustle.com,media,bustle;bustledigitalgroup,no board found
+Netflix,netflix.com,media,netflix,no board found
+Unity,unity.com,software,unity,no board found
+Outbrain,outbrain.com,media,outbrain,no board found
+Magnite,magnite.com,media,magnite,no board found
+Viant Technology,viantinc.com,media,viant;viantinc,no board found
+Integral Ad Science,integralads.com,media,integralads;integraladscience,no board found
+DoubleVerify,doubleverify.com,media,doubleverify,no board found
+Nielsen,nielsen.com,media,nielsen,no board found
+Ziff Davis,ziffdavis.com,media,ziffdavis,no board found
+Vimeo,vimeo.com,media,vimeo,no board found
+Innovid,innovid.com,media,innovid,no board found
+Comscore,comscore.com,media,comscore,no board found
+Gannett,gannett.com,media,gannett,no board found
+Eventbrite,eventbrite.com,media,eventbrite,no board found
+Skillshare,skillshare.com,media,skillshare,no board found
+Quizlet,quizlet.com,media,quizlet,no board found
+Chegg,chegg.com,media,chegg,no board found
+ShipBob,shipbob.com,logistics,shipbob,no board found
+Shippo,goshippo.com,logistics,shippo;goshippo,no board found
+EasyPost,easypost.com,logistics,easypost,no board found
+Veho,veho.com,logistics,veho,no board found
+Stord,stord.com,logistics,stord,no board found
+Berkshire Grey,berkshiregrey.com,logistics,berkshiregrey,no board found
+Symbotic,symbotic.com,logistics,symbotic,no board found
+Aurora Innovation,aurora.tech,logistics,aurora;auroratech,no board found
+Gatik,gatik.ai,logistics,gatik,no board found
+E2open,e2open.com,logistics,e2open,no board found
+Transfix,transfix.io,logistics,transfix,no board found
+Forward Air,forwardair.com,logistics,forwardair,no board found
+Onfleet,onfleet.com,logistics,onfleet,no board found
+FreightWaves,freightwaves.com,logistics,freightwaves,no board found
+Shipwell,shipwell.com,logistics,shipwell,no board found
+Nuvocargo,nuvocargo.com,logistics,nuvocargo,no board found
+Flock Freight,flockfreight.com,logistics,flockfreight,no board found
+Rivian,rivian.com,other,rivian,no board found
+Rippling,rippling.com,software,rippling,no board found
+Deel,deel.com,software,deel,no board found
+Grammarly,grammarly.com,software,grammarly,no board found
+Uber,uber.com,other,uber,no board found
+DoorDash,doordash.com,other,doordash,no board found
+HubSpot,hubspot.com,software,hubspot,no board found
+Gong,gong.io,software,gong,no board found
+Clari,clari.com,software,clari,no board found
+ThoughtSpot,thoughtspot.com,software,thoughtspot,no board found
+Domo,domo.com,software,domo,no board found
+Alteryx,alteryx.com,software,alteryx,no board found
+Snowplow,snowplow.io,software,snowplow,no board found
+RudderStack,rudderstack.com,software,rudderstack,no board found
+Estuary,estuary.dev,software,estuary,no board found
+Sutro Biopharma,sutrobio.com,pharma/biotech,sutrobio;sutro;sutrobiopharma,no board found
+Arcellx,arcellx.com,pharma/biotech,arcellx,no board found
+Immunovant,immunovant.com,pharma/biotech,immunovant,no board found
+Madrigal Pharmaceuticals,madrigalpharma.com,pharma/biotech,madrigal;madrigalpharmaceuticals;madrigalpharma,no board found
+Viking Therapeutics,vikingtherapeutics.com,pharma/biotech,viking;vikingtherapeutics,no board found
+Apogee Therapeutics,apogeetherapeutics.com,pharma/biotech,apogee;apogeetherapeutics,no board found
+Crinetics,crinetics.com,pharma/biotech,crinetics,no board found
+Krystal Biotech,krystalbio.com,pharma/biotech,krystal;krystalbiotech;krystalbio,no board found
+Ideaya Biosciences,ideayabio.com,pharma/biotech,ideaya;ideayabiosciences;ideayabio,no board found
+Rocket Pharmaceuticals,rocketpharma.com,pharma/biotech,rocketpharma;rocketpharmaceuticals,no board found
+Sage Therapeutics,sagerx.com,pharma/biotech,sagetherapeutics;sage;sagerx,no board found
+Biomea Fusion,biomeafusion.com,pharma/biotech,biomea;biomeafusion,no board found
+Emulate,emulatebio.com,pharma/biotech,emulate;emulatebio,no board found
+Certara,certara.com,pharma consulting,certara,no board found
+BioAge Labs,bioagelabs.com,pharma/biotech,bioage;bioagelabs,no board found
+Parexel,parexel.com,pharma consulting,parexel,no board found
+Medpace,medpace.com,pharma consulting,medpace,no board found
+Fortrea,fortrea.com,pharma consulting,fortrea,no board found
+Cotiviti,cotiviti.com,healthcare data,cotiviti,no board found
+Apixio,apixio.com,healthcare data,apixio,no board found
+Machinify,machinify.com,healthcare data,machinify,no board found
+Ontrak,ontrak.com,health tech,ontrak,no board found
+Ellipsis Health,ellipsishealth.com,health tech,ellipsis;ellipsishealth,no board found
+Qualified Health,qualifiedhealth.com,health tech,qualifiedhealth,no board found
+Brightline,gobrightline.com,health tech,brightline;gobrightline,no board found
+Mindbloom,mindbloom.com,health tech,mindbloom,no board found
+Kindbody,kindbody.com,health tech,kindbody,no board found
+Hyro,hyro.ai,health tech,hyro,no board found
+Zelis,zelis.com,health tech,zelis,no board found
+Conifer Health Solutions,coniferhealth.com,health tech,conifer;coniferhealth;coniferhealthsolutions,no board found
+R1 RCM,r1rcm.com,health tech,r1rcm;r1,no board found
+Thoughtful AI,thoughtful.ai,health tech,thoughtfulai;thoughtful,no board found
+Kyruus Health,kyruus.com,health tech,kyruus;kyruushealth,no board found
+Stride Health,stridehealth.com,health tech,stridehealth,no board found
+Benefitfocus,benefitfocus.com,health tech,benefitfocus,no board found
+SingleCare,singlecare.com,pbm/health plan,singlecare,no board found
+Amerita,ameritarx.com,specialty pharmacy,amerita;ameritarx,no board found
+Klarna,klarna.com,fintech,klarna,no board found
+Lendio,lendio.com,fintech,lendio,no board found
+Fundbox,fundbox.com,fintech,fundbox,no board found
+Bench Accounting,bench.co,fintech,bench;benchaccounting,no board found
+Pilot,pilot.com,fintech,pilot;pilotcom,no board found
+M1 Finance,m1.com,fintech,m1;m1finance,no board found
+Avant,avant.com,fintech,avant,no board found
+Bolt,bolt.com,fintech,bolt,no board found
+Alation,alation.com,software,alation,no board found
+Informatica,informatica.com,software,informatica,no board found
+Preset,preset.io,software,preset,no board found
+Tecton,tecton.ai,software,tecton,no board found
+Gretel,gretel.ai,software,gretel;gretelai,no board found
+Replicate,replicate.com,software,replicate,no board found
+Fiddler AI,fiddler.ai,software,fiddler;fiddlerai,no board found
+Sourcegraph,sourcegraph.com,software,sourcegraph,no board found
+Harness,harness.io,software,harness,no board found
+Striim,striim.com,software,striim,no board found
+Redpanda,redpanda.com,software,redpanda;redpandadata,no board found
+Timescale,timescale.com,software,timescale;timescaledb,no board found
+Pulumi,pulumi.com,software,pulumi,no board found
