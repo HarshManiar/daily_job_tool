@@ -25,7 +25,7 @@ Tasks below are adjusted: 1.7 adds the US-eligibility filter; 2.5/2.6 drop Perso
 ## Personal match profile (see ARCHITECTURE §0.2) — adjusts the plan
 
 The product is now a **personal job-matching tool for data analyst / data engineering / commercial-analytics roles at ANY company** (pharma/health industries rank higher but nothing is restricted to them). Changes:
-- **Registry scope stays broad (corrected):** US employers across all industries likely to hire data roles (tech, finance, insurance, retail, consulting, health), with the pharma/biotech/pharma-consulting/health-tech/PBM/specialty-pharmacy/healthcare-data companies seeded first and boosted. Phase 2 goal returns to 1,500–2,000 companies. Phase 1 seeds (1.9) become this list. Large pharma often sits on Workday or custom/enterprise career sites, so **Workday moves up to Phase 1.5 (right after 1.11 report) and iCIMS/SuccessFactors come off Deferred if detection shows many pharma on them.**
+- **Registry scope stays broad (corrected):** US employers across all industries likely to hire data roles (tech, finance, insurance, retail, consulting, health), with the pharma/biotech/pharma-consulting/health-tech/PBM/specialty-pharmacy/healthcare-data companies seeded first and boosted. Phase 2 goal returns to 1,500–2,000 companies. Phase 1 seeds (1.9) become this list. Large pharma often sits on Workday or custom/enterprise career sites, so **All the “other ATS” work is one block, the Workday phase (tasks 2.7a–2.7d, first thing in Phase 2 after the Phase 1 report), scoped by evidence from `data/seeds_rejected.csv` and detection results.**
 - **New task 1.7b** `[sonnet/builder]` (after 1.7; **architect review of the migration**): migration `0002_match` (columns in ARCH §0.2 + `companies.industry/is_staffing`), `normalize` v2 extractors (`years_min/max`, `visa_status`, `employment` hardening), `match/` package (`match(job, company, profile)`, profile loader, title-tier matcher using the profile's titles with slash-alternation expansion and seniority/synonym handling, fit score), wired into ingest + `renormalize`, golden tests: ≥60 titles → tier, ≥60 years phrases, ≥50 visa phrases (both exclude and flag, including near-miss phrases that must NOT exclude, e.g. "we do not discriminate based on visa status"), location rank, staffing, 14-day rule.
 - **1.9 (seeds)** `[haiku/grunt]` now: compile ~300 US companies on Greenhouse/Lever/Ashby, about a third from the priority industries (the owner's named peers + others) and the rest broad data-employing companies, find their ATS via the detector once available; Axtria excluded; `industry` and `is_staffing` set. **Staffing agencies** (e.g. Randstad, Kforce, Robert Half-style firms) are tagged `is_staffing`, not crawled for matches.
 - **Phase 3 changes:** default page = “My matches” (ARCH §0.2 ordering) with a visible “Filtered out (n)” audit tab showing reasons; no alerts or RSS (owner opens the tool daily); a “new since your last visit” highlight instead; drop hidden-gem/high-salary badges (3.2) except a simple “pay ≥ $120K stated” flag; company pages stay minimal.
@@ -72,7 +72,11 @@ The product is now a **personal job-matching tool for data analyst / data engine
 - ☐ **2.4** `[opus/main — switch to Opus]` Review 50 random detections + all probe-based hits; tune; import accepted rows.
 - ☐ **2.5** `[sonnet/builder]` Adapters, run 1: Workable, BambooHR (verify first; stop if no public JSON). (Recruitee and Personio deferred: European-skewed.)
 - ☐ **2.6** `[sonnet/builder]` Adapters, run 2: **cancelled** (Teamtailor, SmartRecruiters deferred/dropped under US-only scope). Re-add if US coverage on the 2,000-company set turns out thin.
-- ☐ **2.7** `[sonnet/builder]` Workday adapter (tenant/site parsing, pagination, sitemap-first diff, detail-on-new, 0.5 req/s) **+ Oracle Recruiting Cloud**. Spot-check, with closer attention to Workday's `complete` handling.
+- ☐ **2.7 — “Workday phase”** (owner decision: the ATS gap found while seeding goes here). First `[haiku/grunt]` **2.7.0**: tally `data/seeds_rejected.csv` + detection output by ATS (count of target companies per unsupported ATS, priority-industry companies weighted ×3) and write `docs/ATS_GAP.md`; the main thread picks the build order from that table. Then `[sonnet/builder]` runs, one per adapter or tightly related pair, each with recorded fixtures and offline tests, spot-checked (Workday gets closer attention to `complete` handling):
+  - **2.7a** Workday (tenant/wdN/site parsing, pagination by 20, sitemap-first diff, detail-on-new, 0.5 req/s per tenant).
+  - **2.7b** The next-most-common unsupported ATS from `ATS_GAP.md` (expected candidates: iCIMS, Oracle Recruiting Cloud, SuccessFactors, Jobvite, Taleo, Phenom/Avature custom sites; HTML/sitemap + JSON-LD where no public JSON).
+  - **2.7c / 2.7d** Further ATSs only while each unlocks ≥ ~10 target companies; stop otherwise.
+  - Exit criterion: ≥ 80% of seeded priority-industry companies have a working source (or are documented as custom pages for the Phase 4 generic fallback).
 - ☐ **2.8** `[sonnet/builder]` Adaptive scheduling (EWMA), `not_found`×3 → broken + re-detect, **+** `firsthand report` and `/admin` (failing sources, per-adapter success 24h/7d, opened/closed per day, normalizer coverage). *(Bundles old 2.11 + 2.12.)*
 - ☐ **2.9** `[opus/main — switch to Opus]` Scale run to 2,000+, **Phase 2 report**. Wait.
 
@@ -107,7 +111,7 @@ The product is now a **personal job-matching tool for data analyst / data engine
 ## Deferred (stretch, cut to save usage)
 
 - Recruitee, Personio, Teamtailor adapters (European-skewed; US-only scope). SmartRecruiters dropped (robots blocks the API).
-- iCIMS, SuccessFactors, and Jobvite adapters (old 2.10)
+- (Moved into the Workday phase, 2.7: iCIMS, SuccessFactors, Jobvite and others, as evidence from the seeds requires.)
 - Playwright headless fallback (old 4.4)
 - LLM extraction with Haiku via API (old 4.5)
 - Dedupe tuning with labeled pairs (old 4.8): the exact/explicit-link dedupe from ARCH §7 stays
