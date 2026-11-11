@@ -4,7 +4,16 @@ from importlib import import_module
 
 from daily_job_tool.adapters.base import Adapter
 
-ADAPTER_MODULES = ["greenhouse", "lever", "ashby"]
+ADAPTER_MODULES = [
+    "greenhouse",
+    "lever",
+    "ashby",
+    "workable",
+    "rippling",
+    "gem",
+    "darwinbox",
+    "pharmaace",
+]
 
 _REGISTRY: dict[str, type[Adapter]] = {}
 _loaded = False

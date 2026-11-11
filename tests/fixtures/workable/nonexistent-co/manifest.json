@@ -1,0 +1,17 @@
+{
+  "adapter": "workable",
+  "token": "nonexistent-co",
+  "config": {},
+  "recorded_at": "2026-11-11T21:57:31.484626+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://apply.workable.com/api/v1/widget/accounts/nonexistent-co-zz?details=true",
+      "json": null,
+      "status": 404,
+      "content_type": "text/plain; charset=utf-8",
+      "headers": {},
+      "file": "000.txt"
+    }
+  ]
+}

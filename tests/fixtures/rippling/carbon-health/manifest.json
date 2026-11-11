@@ -1,0 +1,35 @@
+{
+  "adapter": "rippling",
+  "token": "carbon-health",
+  "config": {},
+  "recorded_at": "2026-11-11T21:58:39.633185+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://api.rippling.com/platform/api/ats/v1/board/carbon-health/jobs",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ats.rippling.com/carbon-health/jobs/b34362b9-43df-45aa-bc0b-4d5807f61f65",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://ats.rippling.com/carbon-health/jobs/7c1662ea-11d1-4e2f-a981-ccb5a7929336",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "headers": {},
+      "file": "002.html"
+    }
+  ]
+}

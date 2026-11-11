@@ -1,0 +1,17 @@
+{
+  "adapter": "pharmaace",
+  "token": "pharmaace",
+  "config": {},
+  "recorded_at": "2026-11-11T21:57:26.645380+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://pharmaace.com/api/V1/careers/jobs",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "headers": {},
+      "file": "000.json"
+    }
+  ]
+}

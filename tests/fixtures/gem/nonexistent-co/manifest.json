@@ -1,0 +1,17 @@
+{
+  "adapter": "gem",
+  "token": "nonexistent-co",
+  "config": {},
+  "recorded_at": "2026-11-11T21:57:29.059408+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://api.gem.com/job_board/v0/nonexistent-co-zz/job_posts/",
+      "json": null,
+      "status": 404,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    }
+  ]
+}

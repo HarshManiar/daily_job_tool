@@ -1,0 +1,17 @@
+{
+  "adapter": "rippling",
+  "token": "nonexistent-co",
+  "config": {},
+  "recorded_at": "2026-11-11T21:58:44.174281+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://api.rippling.com/platform/api/ats/v1/board/nonexistent-co-zz/jobs",
+      "json": null,
+      "status": 404,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    }
+  ]
+}

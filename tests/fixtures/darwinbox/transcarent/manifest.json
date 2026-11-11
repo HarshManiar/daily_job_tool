@@ -1,0 +1,26 @@
+{
+  "adapter": "darwinbox",
+  "token": "transcarent",
+  "config": {},
+  "recorded_at": "2026-11-11T21:57:24.042008+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://transcarent.darwinbox.com/ms/candidateapi/job?page=1",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "headers": {},
+      "file": "000.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://transcarent.darwinbox.com/ms/candidateapi/job?page=4",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "headers": {},
+      "file": "001.json"
+    }
+  ]
+}
