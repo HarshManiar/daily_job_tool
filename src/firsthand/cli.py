@@ -67,3 +67,35 @@ def fixtures_record(
         typer.echo(f"error: {exc}", err=True)
         raise typer.Exit(1) from exc
     typer.echo(f"saved {recorder.manifest_path} ({recorder.total_bytes()} body bytes)")
+
+
+fx_app = typer.Typer(no_args_is_help=True, help="Foreign-exchange rates for salary normalization.")
+app.add_typer(fx_app, name="fx")
+
+
+@fx_app.command("fetch")
+def fx_fetch() -> None:
+    """Fetch the ECB daily reference rates and upsert them into fx_rates (USD per unit)."""
+    from sqlalchemy import text
+
+    from firsthand.db.session import get_conn
+    from firsthand.normalize.fx import fetch_ecb_rates
+
+    async def run() -> int:
+        async with CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA)) as c:
+            day, rates = await fetch_ecb_rates(c)
+        stmt = text(
+            "INSERT INTO fx_rates (day, currency, usd_per_unit) VALUES (:day, :cur, :rate) "
+            "ON CONFLICT (day, currency) DO UPDATE SET usd_per_unit = EXCLUDED.usd_per_unit"
+        )
+        async with get_conn() as conn:
+            for cur, rate in rates.items():
+                await conn.execute(stmt, {"day": day, "cur": cur, "rate": rate})
+        typer.echo(f"upserted {len(rates)} rates for {day}")
+        return len(rates)
+
+    try:
+        asyncio.run(run())
+    except (CrawlError, ValueError) as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from exc

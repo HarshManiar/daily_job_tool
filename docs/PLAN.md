@@ -67,7 +67,7 @@ Dependencies are in `(after …)`. Tasks without mutual dependencies run in para
 
 - ☐ **3.1** `[sonnet/builder]` `SearchFilters` model + query builder for all filters, filter UI (HTMX, URL state), indexes. *AC:* DB test per filter; p95 < 300 ms on 150k synthetic jobs.
 - ☐ **3.2** `[sonnet/builder]` Nightly `company_daily_stats`, company list + pages with 90-day SVG sparkline **+** badges (high-salary percentile, hidden gem, "Hidden gems" view). `[haiku/grunt]` builds `data/well_known.csv` first. *(Bundles old 3.2 + 3.7.)*
-- ~~**3.3** Auth~~ **Removed: personal single-user site, no accounts.** Replaced by a tiny `OWNER_TOKEN` env check (below) folded into 3.4.
+- ~~**3.3** Auth~~ **Removed: personal single-user site, no accounts.** No token needed either: the app listens on 127.0.0.1 only.
 - ☐ **3.4** `[sonnet/builder]` Saved searches CRUD (no users table; single owner; the app listens on 127.0.0.1 only, so no token or login at all) **+** RSS/Atom (per saved search via unguessable `rss_token` + filter URLs). *(Bundles old 3.4 + 3.6.)*
 - ☐ **3.5** `[sonnet/builder]` Alerts for the owner: matcher, daily digest, instant 15-min batches, idempotency. Delivery channels: macOS desktop notification (osascript) + a local `/alerts` inbox page by default; optional email via SMTP (`ALERT_EMAIL`, `SMTP_*` in `.env`, e.g. a Gmail app password), off by default.
 - ☐ **3.6** `[sonnet/builder]` Removal flow (`/remove` form for companies that ask, admin approve on the local `/admin` page, block + hide; keep: it's a compliance rule) **+** `[haiku/grunt]` static pages (about, privacy, `/bot`, removal policy, README).
