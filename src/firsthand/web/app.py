@@ -1,0 +1,124 @@
+"""Firsthand web app: local, single-user, read-only."""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.ext.asyncio import AsyncEngine
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.types import ASGIApp, Receive, Scope, Send
+
+from firsthand.db.session import make_engine
+from firsthand.web.deps import HERE, templates
+
+log = logging.getLogger("firsthand.web")
+
+ALLOWED_HOSTS = frozenset({"localhost", "127.0.0.1", "[::1]"})
+
+CSP = (
+    "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; "
+    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+)
+SECURITY_HEADERS = {
+    "Content-Security-Policy": CSP,
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "X-Frame-Options": "DENY",
+}
+
+
+def _hostname(host_header: str) -> str:
+    h = host_header.strip().lower()
+    if h.startswith("["):  # IPv6 literal: [::1]:8000
+        return h[: h.find("]") + 1] if "]" in h else h
+    return h.split(":")[0]
+
+
+class LocalHostOnly:
+    """DNS-rebinding defense: only localhost / 127.0.0.1 / [::1] Host headers (like
+    TrustedHostMiddleware, but understands IPv6 literals with a port)."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] in ("http", "websocket"):
+            host = dict(scope["headers"]).get(b"host", b"").decode("latin-1")
+            if _hostname(host) not in ALLOWED_HOSTS:
+                if scope["type"] == "http":
+                    await PlainTextResponse("Invalid host header", status_code=400)(
+                        scope, receive, send
+                    )
+                return
+        await self.app(scope, receive, send)
+
+
+class SecurityHeaders:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def wrapped(message):
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                present = {k.lower() for k, _ in headers}
+                for k, v in SECURITY_HEADERS.items():
+                    if k.lower().encode() not in present:
+                        headers.append((k.lower().encode(), v.encode()))
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, wrapped)
+
+
+def create_app(engine: AsyncEngine | None = None) -> FastAPI:
+    owns_engine = engine is None
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        if owns_engine:
+            app.state.engine = make_engine(pool_pre_ping=True)
+        try:
+            yield
+        finally:
+            if owns_engine:
+                await app.state.engine.dispose()
+
+    app = FastAPI(
+        title="Firsthand", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None
+    )
+    if engine is not None:
+        app.state.engine = engine
+
+    from firsthand.web.routes import api, companies, feed, health, jobs
+
+    for mod in (feed, jobs, companies, health, api):
+        app.include_router(mod.router)
+    app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
+
+    @app.exception_handler(StarletteHTTPException)
+    async def http_error(request: Request, exc: StarletteHTTPException):
+        if exc.status_code == 404:
+            return templates.TemplateResponse(request, "404.html", {"page": ""}, status_code=404)
+        return PlainTextResponse(str(exc.detail), status_code=exc.status_code)
+
+    @app.exception_handler(Exception)
+    async def server_error(request: Request, exc: Exception):
+        log.exception("unhandled error on %s", request.url.path)
+        return templates.TemplateResponse(request, "500.html", {"page": ""}, status_code=500)
+
+    app.add_middleware(SecurityHeaders)
+    app.add_middleware(LocalHostOnly)  # outermost: rejects before anything else runs
+    return app
+
+
+app = create_app()

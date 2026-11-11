@@ -1,7 +1,10 @@
-.PHONY: dev test lint fmt db-up migrate
+.PHONY: dev up test lint fmt db-up migrate
 
 dev:
-	uv run uvicorn firsthand.web.app:app --reload
+	uv run uvicorn firsthand.web.app:app --reload --host 127.0.0.1 --port 8000
+
+up:
+	./scripts/up.sh
 
 test:
 	uv run pytest -q

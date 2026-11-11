@@ -1,0 +1,13 @@
+<p class="count"><strong>{{ total }}</strong> {{ 'filtered out' if excluded else 'matches' }} · <span id="showing">showing {{ shown_to }}</span></p>
+{% if excluded and reasons %}
+<p class="reasons">
+  {% for code, n in reasons %}<a class="chip {% if f.reason == code %}on{% endif %}" href="/filtered?{{ f.query_string(reason=('' if f.reason == code else code)) }}">{{ code | reason_text }} <b>{{ n }}</b></a> {% endfor %}
+</p>
+{% endif %}
+{% if rows %}
+<ul class="jobs" id="rows">
+{% include "_rows.html" %}
+</ul>
+{% else %}
+<p class="empty">Nothing here with these filters.</p>
+{% endif %}

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://localhost/firsthand"
     test_database_url: str = "postgresql+asyncpg://localhost/firsthand_test"
     user_agent: str = "FirsthandBot/0.1 (+https://example.invalid/bot)"
+    bot_contact: str = "see repository owner"
     env: str = "dev"
 
 

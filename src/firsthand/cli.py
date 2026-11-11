@@ -372,3 +372,30 @@ def match_rescore() -> None:
     from firsthand.pipeline.renormalize import rescore
 
     typer.echo(f"rescored {asyncio.run(rescore(get_engine()))} jobs")
+
+
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+@app.command()
+def web(
+    port: Annotated[int, typer.Option("--port")] = 8000,
+    host: Annotated[str, typer.Option("--host", help="Loopback only")] = "127.0.0.1",
+    reload: Annotated[bool, typer.Option("--reload")] = False,
+) -> None:
+    """Serve the local web UI at http://127.0.0.1:8000 (never binds a public interface)."""
+    if host not in LOOPBACK_HOSTS:
+        typer.echo(
+            f"error: refusing to bind {host!r}: the web UI is single-user with no auth and "
+            "only runs on 127.0.0.1",
+            err=True,
+        )
+        raise typer.Exit(2)
+    import uvicorn
+
+    if reload:
+        uvicorn.run("firsthand.web.app:app", host=host, port=port, reload=True)
+    else:
+        from firsthand.web.app import app as web_app
+
+        uvicorn.run(web_app, host=host, port=port)

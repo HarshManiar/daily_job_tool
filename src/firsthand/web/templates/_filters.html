@@ -1,0 +1,29 @@
+<form class="filters" action="{{ base_path }}" method="get" hx-get="{{ base_path }}" hx-target="#results" hx-push-url="true" hx-trigger="change, submit, keyup changed delay:400ms from:#f-q">
+  <input id="f-q" type="search" name="q" value="{{ f.q }}" placeholder="Search title, skills, text…" autocomplete="off">
+  <label>Tier
+    <select name="tier">
+      {% for v, l in [('any','Any'),('targets','Targets only'),('1','Tier 1'),('2','Tier 2'),('3','Tier 3')] %}
+      <option value="{{ v }}" {% if f.tier == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select></label>
+  <label>Place
+    <select name="place">
+      {% for v, l in [('any','Anywhere'),('nj','New Jersey'),('nyc','NYC area'),('remote','US remote'),('other','Other US')] %}
+      <option value="{{ v }}" {% if f.place == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select></label>
+  <label>Posted
+    <select name="days">
+      {% for v, l in [('7','7 days'),('14','14 days'),('30','30 days'),('all','All')] %}
+      <option value="{{ v }}" {% if f.days == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select></label>
+  <label>Min pay ($/yr)
+    <input type="number" name="min_pay" min="0" step="5000" value="{{ f.min_pay if f.min_pay is not none else '' }}" placeholder="120000"></label>
+  <label>Unknown pay
+    <select name="pay_unknown">
+      <option value="include" {% if f.pay_unknown == 'include' %}selected{% endif %}>Include</option>
+      <option value="exclude" {% if f.pay_unknown == 'exclude' %}selected{% endif %}>Exclude</option>
+    </select></label>
+  <label class="check"><input type="checkbox" name="industry_only" value="1" {% if f.industry_only %}checked{% endif %}> Priority industry</label>
+  <label class="check"><input type="checkbox" name="visa_only" value="1" {% if f.visa_only %}checked{% endif %}> Offers visa</label>
+  {% if f.reason %}<input type="hidden" name="reason" value="{{ f.reason }}">{% endif %}
+  <noscript><button class="btn" type="submit">Apply filters</button></noscript>
+</form>

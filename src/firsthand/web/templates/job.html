@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ j.title }} · {{ j.company_name }}{% endblock %}
+{% block content %}
+{% set href = j.apply_url | safe_url %}
+<article class="detail">
+  <header>
+    <h1>{{ j.title }}</h1>
+    <p class="job-sub"><a href="/companies/{{ j.company_slug }}">{{ j.company_name }}</a>
+      <span class="dot">·</span>{{ j.locations | location_text(j.remote_type) }}
+      <span class="dot">·</span>{{ j.remote_type }}
+      <span class="dot">·</span>{{ j.employment_type | replace('_', ' ') }}</p>
+    {% if j.closed_at %}<p class="chip warn">Closed {{ j.closed_at.strftime('%Y-%m-%d') }}</p>{% endif %}
+    {% if href %}<a class="btn" href="{{ href }}" target="_blank" rel="noopener noreferrer">Apply ↗</a>{% endif %}
+  </header>
+
+  <section class="panel">
+    <h2>Match</h2>
+    <dl>
+      <dt>Tier</dt><dd>{{ TIER_TEXT[j.match_tier] if j.match_tier else 'Not a target title' }}</dd>
+      <dt>Status</dt><dd>{{ j.match_status }}</dd>
+      <dt>Reasons</dt><dd>{% if j.match_reasons %}<ul>{% for c in j.match_reasons %}<li>{{ c | reason_text }} <code>{{ c }}</code></li>{% endfor %}</ul>{% else %}none{% endif %}</dd>
+      <dt>Visa</dt><dd>{{ j.visa_status | replace('_', ' ') }}{% if j.visa_evidence %}: <q class="evidence">{{ j.visa_evidence }}</q>{% endif %}</dd>
+      <dt>Years</dt><dd>{{ (j.years_min | years_chip(j.years_max)) or 'not stated' }}</dd>
+      <dt>Fit score</dt><dd>{{ j.fit_score }}</dd>
+      <dt>Location rank</dt><dd>{{ j.location_rank }} ({{ LOCATION_RANK_TEXT.get(j.location_rank, '?') }}; 0 NJ, 1 NYC, 2 US remote, 3 other)</dd>
+      <dt>Industry rank</dt><dd>{{ j.industry_rank }} ({{ INDUSTRY_RANK_TEXT.get(j.industry_rank, '?') }}{% if j.company_industry %}: {{ j.company_industry }}{% endif %})</dd>
+      {% if j.norm_flags %}<dt>Normalizer flags</dt><dd>{% for fl in j.norm_flags %}<code>{{ fl }}</code> {% endfor %}</dd>{% endif %}
+    </dl>
+  </section>
+
+  <section class="panel">
+    <h2>Salary</h2>
+    {% set pay = j.salary_min_usd | pay_range(j.salary_max_usd) %}
+    {% if pay %}<p><strong>{{ pay }}</strong> per year (USD)
+      {% if j.salary_min is not none %}<span class="muted">· source: {{ j.salary_min | int }}–{{ (j.salary_max or j.salary_min) | int }} {{ j.salary_currency }}/{{ j.salary_period }}{% if j.salary_source %} ({{ j.salary_source }}){% endif %}</span>{% endif %}</p>
+    {% else %}<p class="muted">Not stated.</p>{% endif %}
+  </section>
+
+  <section class="desc">
+    <h2>Description</h2>
+    {% if j.description_html %}<div class="prose">{{ j.description_html | sanitize | safe }}</div>
+    {% else %}<p class="muted">No description stored.</p>{% endif %}
+  </section>
+
+  <footer class="meta muted">
+    First seen {{ j.first_seen_at.strftime('%Y-%m-%d') }} · last seen {{ j.last_seen_at.strftime('%Y-%m-%d') }}
+    {% if j.posted_at %}· posted {{ j.posted_at.strftime('%Y-%m-%d') }}{% endif %}
+    {% if j.source_adapter %}· board: {{ j.source_adapter }}/{{ j.source_token }}{% endif %}
+    {% set purl = j.posting_url | safe_url %}
+    {% if purl %}· <a href="{{ purl }}" target="_blank" rel="noopener noreferrer">hosted posting ↗</a>{% endif %}
+  </footer>
+</article>
+{% endblock %}
