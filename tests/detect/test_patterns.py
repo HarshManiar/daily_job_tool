@@ -63,7 +63,30 @@ POSITIVE = [
     ("https://jobs.dayforcehcm.com/en-US/acme/CANDIDATEPORTAL", ("dayforce", "acme")),
     ("https://acme.breezy.hr/p/abc", ("breezy", "acme")),
     ("https://acme.applytojob.com/apply", ("applytojob", "acme")),
-    ("https://ats.rippling.com/acme/jobs", ("rippling-ats", "acme")),
+    ("https://ats.rippling.com/acme/jobs", ("rippling", "acme")),
+    ("https://ats.rippling.com/embed/carbon-health/jobs", ("rippling", "carbon-health")),
+    (
+        "https://api.rippling.com/platform/api/ats/v1/board/carbon-health/jobs",
+        ("rippling", "carbon-health"),
+    ),
+    ("https://static-assets.ripplingcdn.com/ats/embeds/job-board.v1.js", ("rippling", None)),
+    ("https://api.gem.com/job_board/v0/mindbloom/job_posts/", ("gem", "mindbloom")),
+    ("https://acme.darwinbox.com/ms/candidatev2/main/careers/allJobs", ("darwinbox", "acme")),
+    ("https://acme.darwinbox.in/ms/candidateapi/job?page=1", ("darwinbox", "acme")),
+    ("https://www.comeet.co/jobs/acme/12.345", ("comeet", "acme")),
+    ("https://www.comeet.co/careers-api/2.0/company/12.345/positions", ("comeet", "12.345")),
+    ("https://app.careerpuck.com/job-board/color-health", ("careerpuck", "color-health")),
+    ("https://app.careerpuck.com/job-board/color-health/job/abc", ("careerpuck", "color-health")),
+    ("https://apply.workable.com/j/8EE4D3922D", ("workable", None)),
+    ("https://apply.workable.com/acme/j/8EE4D3922D/", ("workable", "acme")),
+    (
+        "https://www.paycomonline.net/v4/ats/web.php/portal/026A9FD25D42079640FB1EE2904F167E/career-page",
+        ("paycom", "026A9FD25D42079640FB1EE2904F167E"),
+    ),
+    (
+        "https://boards.greenhouse.io/embed/job_board/js?for=acmeco",
+        ("greenhouse", "acmeco"),
+    ),
     ("https://jobs.gem.com/acme", ("gem", "acme")),
     ("https://www.comeet.com/jobs/acme/12.345", ("comeet", "acme")),
     ("https://acme.pinpointhq.com/", ("pinpoint", "acme")),
@@ -95,6 +118,9 @@ NEGATIVE = [
     "not a url",
     "https://www.teamtailor.com/",
     "https://www.bamboohr.com/",
+    "https://www.darwinbox.com/",
+    "https://app.careerpuck.com/",
+    "https://www.comeet.com/",
 ]
 
 

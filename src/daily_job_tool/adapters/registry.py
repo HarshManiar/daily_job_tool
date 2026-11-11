@@ -13,6 +13,7 @@ ADAPTER_MODULES = [
     "gem",
     "darwinbox",
     "pharmaace",
+    "html_list",
 ]
 
 _REGISTRY: dict[str, type[Adapter]] = {}

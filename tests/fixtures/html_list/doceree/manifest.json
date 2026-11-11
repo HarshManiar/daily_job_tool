@@ -1,0 +1,60 @@
+{
+  "adapter": "html_list",
+  "token": "doceree",
+  "config": {
+    "list_url": "https://www.doceree.com/careers",
+    "mode": "html",
+    "job_link_selector": "ul li > a[href^=\"/careers/\"]",
+    "base_url": "https://www.doceree.com",
+    "detail": {
+      "title": "h1",
+      "location": "label:Location",
+      "department": "label:Department",
+      "employment_type": "[class*=heroMeta] > span:nth-child(2)",
+      "description": "main article"
+    },
+    "id_from": "url_path"
+  },
+  "recorded_at": "2026-11-11T22:00:38.057437+00:00",
+  "trimmed": "scripts/styles/svg stripped; medidata sitemap cut to 10 URLs",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://www.doceree.com/careers",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "headers": {
+        "link": "<https://www.youtube.com>; rel=preconnect, <https://img.youtube.com>; rel=preconnect, <https://js-eu1.hsforms.net>; rel=dns-prefetch, </_next/static/media/9e6813202f725814-s.p.2qijkc4_gtkq0.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </images/doceree-logo.svg>; rel=preload; as=\"image\", </images/logos for cards/abm.svg>; rel=preload; as=\"image\", </images/runs/channels/programmatic.svg>; rel=preload; as=\"image\", </images/runs/channels/poc.svg>; rel=preload; as=\"image\", </images/runs/channels/ctv.svg>; rel=preload; as=\"image\", </images/runs/channels/social.svg>; rel=preload; as=\"image\", </images/runs/channels/dooh-cis.png>; rel=preload; as=\"image\", </images/runs/channels/email.svg>; rel=preload; as=\"image\", </images/runs/channels/sms.svg>; rel=preload; as=\"image\""
+      },
+      "file": "000.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.doceree.com/careers/senior-manager-hr-operations-hris",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.doceree.com/careers/ai-engineer-senior-engineer",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "headers": {},
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.doceree.com/careers/director-corporate-communications",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "headers": {},
+      "file": "003.html"
+    }
+  ]
+}

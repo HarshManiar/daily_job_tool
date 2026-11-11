@@ -1,0 +1,65 @@
+{
+  "adapter": "html_list",
+  "token": "medidata",
+  "config": {
+    "list_url": "https://www.medidata.com/en/career-sitemap.xml",
+    "mode": "sitemap",
+    "link_filter_regex": "/en/careers/[^/]+/job/?$",
+    "detail": {
+      "title": "h1",
+      "location": "label:Location",
+      "department": "label:Category",
+      "description": "div.bp-body",
+      "posted_at": {
+        "selector": "yoast"
+      }
+    },
+    "id_from": "/careers/([^/]+)/job"
+  },
+  "recorded_at": "2026-11-11T22:00:24.374607+00:00",
+  "trimmed": "scripts/styles/svg stripped; medidata sitemap cut to 10 URLs",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://www.medidata.com/en/career-sitemap.xml",
+      "json": null,
+      "status": 200,
+      "content_type": "text/xml; charset=UTF-8",
+      "headers": {},
+      "file": "000.xml"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.medidata.com/en/careers/senior-data-engineer-549311/job/",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {
+        "link": "<https://www.medidata.com/en/wp-json/>; rel=\"https://api.w.org/\", <https://www.medidata.com/en/wp-json/wp/v2/career/379048>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://www.medidata.com/en/?p=379048>; rel=shortlink"
+      },
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.medidata.com/en/careers/engagement-director-remote-548006/job/",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {
+        "link": "<https://www.medidata.com/en/wp-json/>; rel=\"https://api.w.org/\", <https://www.medidata.com/en/wp-json/wp/v2/career/368133>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://www.medidata.com/en/?p=368133>; rel=shortlink"
+      },
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.medidata.com/en/careers/platform-delivery-senior-director-remote-550771/job/",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {
+        "link": "<https://www.medidata.com/en/wp-json/>; rel=\"https://api.w.org/\", <https://www.medidata.com/en/wp-json/wp/v2/career/379761>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://www.medidata.com/en/?p=379761>; rel=shortlink"
+      },
+      "file": "003.html"
+    }
+  ]
+}

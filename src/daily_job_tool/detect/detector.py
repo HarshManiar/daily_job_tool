@@ -27,7 +27,20 @@ COMPANY_TIMEOUT = 60.0
 CAREERS_RX = re.compile(
     r"careers?|jobs?|join\s+us|work\s+with\s+us|open\s+roles?|hiring|opportunities", re.I
 )
-_URL_RX = re.compile(r"https?://[^\s\"'<>\\)]+", re.I)
+_URL_RX = re.compile(r"(?:https?:)?//[^\s\"'<>\\)]+", re.I)
+# a deeper "list of jobs" page reached from a careers landing page
+_JOBS_SUBPATH_RX = re.compile(
+    r"/(?:jobs|open-roles?|open-positions|openings|current-openings|positions|all-jobs|"
+    r"job-search|search-jobs|join-us)/?$",
+    re.I,
+)
+_JOBS_TEXT_RX = re.compile(
+    r"(?:view|see|explore|browse|search|all)\s+(?:all\s+)?(?:open\s+)?(?:jobs|roles|openings|positions)"
+    r"|open\s+(?:roles|positions|jobs)",
+    re.I,
+)
+_CAREERPUCK_API = "https://api.careerpuck.com/v1/public/job-boards/"
+_WORKABLE_CANON_RX = re.compile(r"https?://apply\.workable\.com/([a-z0-9][a-z0-9_-]*)/j/", re.I)
 _JOBLINK_RX = re.compile(r"/(jobs?|positions?|openings?|roles?|vacanc\w*|careers?)/[^/?#]+", re.I)
 
 # confidence by evidence kind
@@ -114,8 +127,12 @@ def scan_page(final_url: str, html: str) -> tuple[list[_Hit], HTMLParser]:
             v = n.attributes.get(attr)
             if v:
                 add(urljoin(final_url, v), kind, f"{kind}")
+    for n in tree.css("#rr-job-board[data-job-board-id]"):  # Rippling embed
+        tok = (n.attributes.get("data-job-board-id") or "").strip()
+        if tok:
+            hits.append(_Hit("rippling", tok, {}, CONF["script"], f"rr-job-board:{tok}", final_url))
     for u in set(_URL_RX.findall(html)):
-        add(u, "inline", "inline_url")
+        add("https:" + u if u.startswith("//") else u, "inline", "inline_url")
     if not hits:
         t = match_text(html)
         if t:
@@ -137,6 +154,63 @@ def _careers_anchor(tree: HTMLParser, base: str) -> str | None:
     return None
 
 
+def _jobs_followup(tree: HTMLParser, base: str, seen: set[str]) -> str | None:
+    """A link from a careers landing page to the real job list (same registrable domain,
+    any subdomain such as careers.<domain>), e.g. /careers/jobs, /open-roles."""
+    base_sp = urlsplit(base)
+    reg = _registrable(base_sp.hostname or "")
+    for a in tree.css("a[href]"):
+        href = (a.attributes.get("href") or "").strip()
+        if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
+            continue
+        full = urljoin(base, href).split("#", 1)[0]
+        sp = urlsplit(full)
+        if sp.scheme not in ("http", "https") or _registrable(sp.hostname or "") != reg:
+            continue
+        same_page = sp.hostname == base_sp.hostname and sp.path.rstrip("/") == base_sp.path.rstrip(
+            "/"
+        )
+        if same_page or full.rstrip("/") in seen:
+            continue
+        text = " ".join((a.text() or "").split())
+        if _JOBS_SUBPATH_RX.search(sp.path) or _JOBS_TEXT_RX.search(text):
+            return full
+    return None
+
+
+async def _resolve_careerpuck(client: CrawlClient, slug: str) -> tuple[str, str] | None:
+    """CareerPuck board slug -> (underlying ATS, its board token), via CareerPuck's public API."""
+    data = await client.get_json(_CAREERPUCK_API + slug)
+    if not isinstance(data, dict):
+        return None
+    jobs = data.get("jobs")
+    first = jobs[0] if isinstance(jobs, list) and jobs and isinstance(jobs[0], dict) else {}
+    board = data.get("jobBoard")
+    if not isinstance(board, dict):
+        board = first.get("jobBoard") if isinstance(first.get("jobBoard"), dict) else {}
+    platform = board.get("atsSourcePlatform") or data.get("atsSourcePlatform")
+    platform = platform or first.get("atsSourcePlatform")
+    token = board.get("atsSourceId") or slug
+    if not isinstance(platform, str) or not platform.strip():
+        return None
+    return platform.strip().lower(), str(token)
+
+
+async def _resolve_workable(client: CrawlClient, shortcode: str) -> str | None:
+    """apply.workable.com/j/<shortcode> -> account slug, read from the canonical URL."""
+    resp = await client.request("GET", f"https://apply.workable.com/j/{shortcode}")
+    m = _WORKABLE_CANON_RX.search(str(resp.url))
+    if m:
+        return m.group(1)
+    tree = HTMLParser(resp.text)
+    for sel, attr in (('link[rel="canonical"]', "href"), ('meta[property="og:url"]', "content")):
+        n = tree.css_first(sel)
+        m = _WORKABLE_CANON_RX.search(n.attributes.get(attr) or "") if n is not None else None
+        if m:
+            return m.group(1)
+    return None
+
+
 def _linkedin_jobs_link(tree: HTMLParser, base: str) -> str | None:
     for a in tree.css("a[href]"):
         full = urljoin(base, a.attributes.get("href") or "")
@@ -144,6 +218,29 @@ def _linkedin_jobs_link(tree: HTMLParser, base: str) -> str | None:
         if m and m[0] == LINKEDIN_ONLY:
             return full
     return None
+
+
+async def _resolve_indirect(client: CrawlClient, d: Detection) -> None:
+    """One extra fetch for skins/shortlinks that hide the real board (CareerPuck, Workable /j/)."""
+    try:
+        if d.ats == "careerpuck" and d.token:
+            d.fetches += 1
+            got = await _resolve_careerpuck(client, d.token)
+            if got:
+                d.evidence = f"careerpuck:{d.token}->{got[0]}:{got[1]}"
+                d.ats, d.token, d.config = got[0], got[1], {}
+            else:
+                d.notes = (d.notes + "; careerpuck: underlying ATS unknown").strip("; ")
+        elif d.ats == "workable" and not d.token and d.config.get("shortcode"):
+            d.fetches += 1
+            slug = await _resolve_workable(client, d.config["shortcode"])
+            if slug:
+                d.evidence = f"workable_shortcode:{d.config['shortcode']}->{slug}"
+                d.token, d.config = slug, {}
+            else:
+                d.notes = (d.notes + "; workable: no canonical account slug").strip("; ")
+    except Exception as exc:  # noqa: BLE001 - resolution is best-effort
+        d.notes = (d.notes + f"; {d.ats} resolve failed {type(exc).__name__}").strip("; ")
 
 
 async def _detect(client: CrawlClient, domain: str, hints: dict[str, Any], d: Detection) -> None:
@@ -156,6 +253,8 @@ async def _detect(client: CrawlClient, domain: str, hints: dict[str, Any], d: De
     fallbacks = [
         f"{home}/careers",
         f"{home}/jobs",
+        f"{home}/careers/jobs",
+        f"{home}/open-roles",
         f"https://careers.{domain}",
         f"https://jobs.{domain}",
     ]
@@ -226,8 +325,12 @@ async def _detect(client: CrawlClient, domain: str, hints: dict[str, Any], d: De
             if link and link.rstrip("/") not in seen:
                 queue.insert(0, link)
             discovered = True
-        elif careers_page is None:
-            careers_page, careers_tree = final, tree
+        else:
+            deeper = _jobs_followup(tree, final, seen)
+            if deeper and deeper.rstrip("/") not in seen:
+                queue.insert(0, deeper)
+            if careers_page is None:
+                careers_page, careers_tree = final, tree
         if is_home and CAREERS_RX.search(urlsplit(final).path):
             careers_page, careers_tree = final, tree
 
@@ -237,6 +340,7 @@ async def _detect(client: CrawlClient, domain: str, hints: dict[str, Any], d: De
         d.ats, d.token, d.config = best.ats, best.token, best.config
         d.confidence, d.evidence, d.careers_url = best.conf, best.evidence, best.url
         d.status = "detected"
+        await _resolve_indirect(client, d)
         return
     if pages_ok == 0:
         d.status = "blocked_by_robots" if robots_hits else "unreachable"

@@ -43,3 +43,13 @@ Matching is on method + full URL (query params order-insensitive) + JSON body. r
 requests not in the manifest get a 404 (allow all). Anything else unmatched raises
 `AssertionError` listing the URL. Pass `limiter=HostLimiter(overrides=(), default_rate=1000,
 default_burst=1000)` to avoid real rate-limit sleeps in tests with many requests.
+
+## html_list fixtures (config-driven HTML adapter)
+
+`tests/fixtures/html_list/{hyro,medidata,doceree}/` hold a list page (or XML sitemap) plus 3
+detail pages each. The source `config` the adapter was written against is stored in each
+`manifest.json` (`config`) and the adapter tests read it from there, so the seeds row and the
+tests cannot drift. These fixtures are hand-trimmed to stay under 500 KB (`"trimmed"` key in
+the manifest): `<script>`/`<style>`/`<svg>`/comments removed (JSON-LD kept), Hyro pages cut to
+`<main>`, and Medidata's sitemap cut from 80 to 10 URLs. Config schema: see the module docstring
+of `src/daily_job_tool/adapters/html_list.py`.

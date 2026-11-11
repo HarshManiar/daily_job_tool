@@ -71,6 +71,8 @@ def _ashby(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | None
 def _workable(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | None:
     if host == "apply.workable.com":
         tok = _first(parts)
+        if tok == "j":  # /j/<shortcode>: the account slug is not in the URL
+            return ("workable", None, {"shortcode": parts[1]}) if len(parts) > 1 else None
         if tok == "api" and len(parts) >= 4:
             tok = parts[3]
         return ("workable", tok, {}) if tok else None
@@ -276,8 +278,15 @@ def _jazzhr(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | Non
 
 def _rippling(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | None:
     if host == "ats.rippling.com":
+        if parts[:1] == ["embed"]:
+            parts = parts[1:]  # iframe form: /embed/<token>/jobs
         tok = _first(parts)
-        return ("rippling-ats", tok, {}) if tok else None
+        return ("rippling", tok, {}) if tok else None
+    if host == "api.rippling.com" and "board" in parts:  # /platform/api/ats/v1/board/<token>/jobs
+        i = parts.index("board")
+        return ("rippling", parts[i + 1] if i + 1 < len(parts) else None, {})
+    if host.endswith("ripplingcdn.com") and parts[:2] == ["ats", "embeds"]:
+        return "rippling", None, {}  # embed script; the token is in #rr-job-board[data-...]
     return None
 
 
@@ -285,14 +294,36 @@ def _gem(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | None:
     if host == "jobs.gem.com":
         tok = _first(parts)
         return ("gem", tok, {}) if tok else None
+    if host == "api.gem.com" and parts[:2] == ["job_board", "v0"] and len(parts) >= 3:
+        return "gem", parts[2], {}  # inline fetch('https://api.gem.com/job_board/v0/<t>/job_posts')
     return None
 
 
 def _comeet(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | None:
-    if host in ("www.comeet.com", "comeet.com", "www.comeet.co", "comeet.co") and parts[:1] == [
-        "jobs"
-    ]:
+    if host not in ("www.comeet.com", "comeet.com", "www.comeet.co", "comeet.co"):
+        return None
+    if parts[:1] == ["jobs"]:
         return "comeet", (parts[1] if len(parts) > 1 else None), {}
+    if parts[:1] == ["careers-api"] and "company" in parts:  # /careers-api/2.0/company/<uid>/...
+        i = parts.index("company")
+        return "comeet", (parts[i + 1] if i + 1 < len(parts) else None), {}
+    return None
+
+
+def _darwinbox(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | None:
+    m = re.fullmatch(r"([a-z0-9][a-z0-9_-]*)\.darwinbox\.(?:com|in)", host)
+    if m and m.group(1) not in _NOT_TENANT:
+        return "darwinbox", m.group(1), {"host": host}
+    return None
+
+
+def _careerpuck(host: str, parts: list[str], q: dict[str, list[str]]) -> Match | None:
+    """CareerPuck is a skin over another ATS; the detector resolves the underlying one."""
+    if host == "app.careerpuck.com" and parts[:1] == ["job-board"] and len(parts) >= 2:
+        return "careerpuck", parts[1], {}
+    if host == "api.careerpuck.com" and "job-boards" in parts:
+        i = parts.index("job-boards")
+        return ("careerpuck", parts[i + 1], {}) if i + 1 < len(parts) else None
     return None
 
 
@@ -345,6 +376,8 @@ _RULES: tuple[Callable[[str, list[str], dict[str, list[str]]], Match | None], ..
     _rippling,
     _gem,
     _comeet,
+    _darwinbox,
+    _careerpuck,
     _pinpoint,
     _hirebridge,
     _linkedin,
@@ -392,6 +425,8 @@ TEXT_SIGNATURES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
         (r"eightfold\.ai", "eightfold"),
         (r"csod\.com", "cornerstone"),
         (r"dayforcehcm\.com", "dayforce"),
+        (r"ripplingcdn\.com/ats/embeds/job-board|rr-job-board", "rippling"),
+        (r"api\.gem\.com/job_board|jobs\.gem\.com", "gem"),
     )
 )
 

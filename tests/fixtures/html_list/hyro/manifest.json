@@ -1,0 +1,69 @@
+{
+  "adapter": "html_list",
+  "token": "hyro",
+  "config": {
+    "list_url": "https://www.hyro.ai/careers/",
+    "mode": "html",
+    "job_link_selector": "a.site-main_section--positions__link",
+    "link_filter_regex": "^https://www\\.hyro\\.ai/careers/[^/]+/?$",
+    "detail": {
+      "title": "h1.site-main--career__title",
+      "location": "p.site-main--career__location",
+      "department": "li.site-main--career__tag--department",
+      "employment_type": "li.site-main--career__tag--type",
+      "description": "article.site-main--career__body",
+      "posted_at": {
+        "selector": "yoast"
+      }
+    },
+    "id_from": "url_path"
+  },
+  "recorded_at": "2026-11-11T22:00:12.562982+00:00",
+  "trimmed": "scripts/styles/svg stripped; medidata sitemap cut to 10 URLs",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://www.hyro.ai/careers/",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {
+        "link": "<https://www.hyro.ai/?p=206>; rel=shortlink"
+      },
+      "file": "000.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.hyro.ai/careers/17.D60/",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {
+        "link": "<https://www.hyro.ai/?p=2553>; rel=shortlink"
+      },
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.hyro.ai/careers/E8.378/",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {
+        "link": "<https://www.hyro.ai/?p=2553>; rel=shortlink"
+      },
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://www.hyro.ai/careers/AD.273/",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {
+        "link": "<https://www.hyro.ai/?p=2553>; rel=shortlink"
+      },
+      "file": "003.html"
+    }
+  ]
+}
