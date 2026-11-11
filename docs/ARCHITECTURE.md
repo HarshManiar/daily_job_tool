@@ -34,7 +34,7 @@ Status: **Draft v1, Phase 0**. Waiting for approval. Owner of this doc: main thr
 | Email | Provider abstraction; **Resend** or **Postmark** in prod, console backend in dev | Magic-link auth and alerts. |
 | Geocoding | **GeoNames** offline dumps (`cities15000`, `admin1`, `countryInfo`, alt names), CC-BY | No external API calls at runtime. |
 | FX | ECB daily reference rates (free XML), cached in `fx_rates` | |
-| LLM (Phase 4 only) | Anthropic API, `claude-haiku-5-5`, results cached by page hash | Last-resort extraction for custom career pages only, with a hard monthly cost cap. |
+| LLM (**deferred**) | Anthropic API, `claude-haiku-5-5`, results cached by page hash | Last-resort extraction for custom career pages only, with a hard monthly cost cap. Cut from the lean plan along with Playwright and the iCIMS/SuccessFactors/Jobvite adapters (see PLAN "Deferred"). The interfaces still allow them. |
 | Local dev | **Homebrew Postgres 17** (Docker isn't installed) + `docker-compose.yml` kept for deploy parity | See open question Q3. |
 | Deploy | One small VM (e.g. Hetzner CX22, ~US$5/mo, 4 GB RAM) running Postgres + web + worker under Docker Compose + Caddy (TLS). Nightly `pg_dump` to object storage. | Managed-Postgres free tiers (~0.5 GB) are too small. Estimate: 1–3 GB within months. |
 
