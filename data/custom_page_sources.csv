@@ -1,0 +1,3 @@
+name,domain,careers_url,adapter,token,hq_country,size_bucket,tags,industry,is_staffing,exclude_reason,config
+Color Health,color.com,https://color.com/careers/,ashby,color-health,US,,oncology;cancer-care,health tech,,,
+Innovaccer,innovaccer.com,https://innovaccer.com/careers/jobs,workable,innovaccer-analytics,US,,healthcare-data;analytics,health tech,,,
