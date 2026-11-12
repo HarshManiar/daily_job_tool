@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from daily_job_tool.adapters.greenhouse import GreenhouseAdapter
-from daily_job_tool.http.errors import FetchError, NotFound
+from daily_job_tool.http.errors import Blocked, FetchError, HostBlocked, NotFound
 from daily_job_tool.normalize import NORMALIZER_VERSION
 from daily_job_tool.pipeline.ingest import (
     compute_next_crawl_at,
@@ -451,3 +451,51 @@ async def test_unknown_source_raises(db_clean):
     async with mock_client(lambda r: httpx.Response(200)) as c:
         with pytest.raises(LookupError):
             await ingest_source(db_clean, 999, FakeAdapter(), c, CTX)
+
+
+class BlockingDetail(FakeAdapter):
+    async def fetch_detail(self, src, job, http):
+        n = len(self.detail_calls) + 1
+        await super().fetch_detail(src, job, http)
+        if n == 3:
+            raise Blocked("https://example.com/d", 403)
+        return job.model_copy(update={"needs_detail": False})
+
+
+@pytest.mark.parametrize("exc_cls", [Blocked, HostBlocked])
+async def test_blocked_detail_aborts_crawl(db_clean, exc_cls):
+    eng = db_clean
+    sid = await seed(eng)
+    ad = FakeAdapter().push([job("1"), job("2")])
+    assert (await crawl(eng, sid, ad, 0)).outcome == "ok"
+    ad = BlockingDetail()
+    if exc_cls is HostBlocked:
+
+        async def fd(src, j, http):
+            ad.detail_calls.append(j.external_id)
+            if len(ad.detail_calls) == 3:
+                raise HostBlocked("example.com")
+            return j.model_copy(update={"needs_detail": False})
+
+        ad.fetch_detail = fd
+    new = [job(str(i), needs_detail=True) for i in range(10, 16)]
+    ad.push([job("1"), *new])  # job 2 is missing: would normally count as missed
+    r = await crawl(eng, sid, ad, 1)
+    assert len(ad.detail_calls) == 3  # nothing requested after the Blocked
+    assert r.outcome == "http_error"
+    assert r.error.startswith("blocked by site (403/challenge): crawl aborted")
+    assert await scalar(eng, "SELECT count(*) FROM postings WHERE source_id=:s", s=sid) == 2
+    assert (
+        await scalar(
+            eng,
+            "SELECT count(*) FROM postings WHERE source_id=:s AND closed_at IS NULL "
+            "AND missed_crawls = 0",
+            s=sid,
+        )
+        == 2
+    )
+    row = (
+        await rows(eng, "SELECT outcome::text AS o, error FROM crawl_runs WHERE id=:i", i=r.run_id)
+    )[0]
+    assert row.o == "http_error" and row.error.startswith("blocked by site")
+    assert await scalar(eng, "SELECT consecutive_failures FROM sources WHERE id=:s", s=sid) == 1

@@ -7,6 +7,7 @@ from daily_job_tool.http.errors import (
     Blocked,
     CrawlError,
     FetchError,
+    HostBlocked,
     HostCircuitOpen,
     NotFound,
     ResponseTooLarge,
@@ -227,3 +228,55 @@ async def test_gzip_body_decoded(robots):
     )  # fmt: skip
     async with make() as c:
         assert await c.get_json(URL) == {"a": 1}
+
+
+async def test_block_circuit_opens_after_two_blocked_and_closes(robots, caplog):
+    route = robots.get(URL).respond(403)
+    other = robots.get("https://other.test/x").respond(200, text="fine")
+    async with make() as c:
+        for _ in range(2):
+            with pytest.raises(Blocked) as ei:
+                await c.get_text(URL)
+            assert not isinstance(ei.value, HostBlocked)
+        assert route.call_count == 2
+        assert "api.test" in c.blocked_hosts()
+        before = robots.calls.call_count
+        with caplog.at_level("WARNING"):
+            with pytest.raises(HostBlocked) as ei:
+                await c.get_text("https://api.test/other")
+        assert isinstance(ei.value, Blocked)
+        assert robots.calls.call_count == before  # zero network calls, robots included
+        assert await c.get_text("https://other.test/x") == "fine" and other.call_count == 1
+        c.t.now += 6 * 3600 + 1  # type: ignore[attr-defined]
+        assert c.blocked_hosts() == {}
+        with pytest.raises(Blocked) as ei:
+            await c.get_text(URL)
+        assert not isinstance(ei.value, HostBlocked)
+        assert route.call_count == 3
+
+
+async def test_block_circuit_counts_challenge_not_404(robots):
+    robots.get(URL).respond(404)
+    robots.get("https://api.test/c").respond(
+        200, headers={"content-type": "text/html"}, text="<div class='cf-chl'></div>"
+    )
+    async with make() as c:
+        for _ in range(5):
+            with pytest.raises(NotFound):
+                await c.get_text(URL)
+        assert c.blocked_hosts() == {}
+        for _ in range(2):
+            with pytest.raises(Blocked):
+                await c.get_text("https://api.test/c")
+        assert "api.test" in c.blocked_hosts()
+
+
+async def test_block_circuit_window_expires(robots):
+    robots.get(URL).respond(403)
+    async with make() as c:
+        with pytest.raises(Blocked):
+            await c.get_text(URL)
+        c.t.now += 11 * 60  # type: ignore[attr-defined]
+        with pytest.raises(Blocked):
+            await c.get_text(URL)
+        assert c.blocked_hosts() == {}

@@ -54,6 +54,17 @@ class Blocked(FetchError):
         super().__init__(url, status, message)
 
 
+class HostBlocked(Blocked):
+    """Block-circuit is open for this host: a site that answered 401/403/challenge repeatedly.
+
+    Raised WITHOUT any network call. Subclass of Blocked so every existing handler applies.
+    """
+
+    def __init__(self, host: str) -> None:
+        super().__init__(f"https://{host}", None, f"host {host} blocked; requests paused")
+        self.host = host
+
+
 class ResponseTooLarge(FetchError):
     def __init__(self, url: str, max_bytes: int) -> None:
         super().__init__(url, None, f"response exceeds {max_bytes} bytes")

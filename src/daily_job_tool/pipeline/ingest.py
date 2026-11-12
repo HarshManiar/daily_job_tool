@@ -173,6 +173,9 @@ def raw_from_payload(adapter: Adapter, payload: dict[str, Any]) -> RawJob | None
     return raw.model_copy(update={"needs_detail": False})
 
 
+BLOCKED_PREFIX = "blocked by site (403/challenge)"
+
+
 def classify_failure(exc: BaseException) -> tuple[str, int | None]:
     """Map an exception from the adapter to (crawl_outcome, http_status)."""
     if isinstance(exc, NotFound):
@@ -447,6 +450,8 @@ async def ingest_source(
     async def fail(exc: BaseException) -> IngestResult:
         outcome, status = classify_failure(exc)
         res.outcome, res.error = outcome, f"{type(exc).__name__}: {exc}"[:2000]
+        if isinstance(exc, Blocked):  # marker the breaker counts (scheduler.breaker)
+            res.error = f"{BLOCKED_PREFIX}: crawl aborted"
         res.duration_ms = int((time.monotonic() - t0) * 1000)
         async with engine.begin() as c:
             await c.execute(
@@ -561,6 +566,15 @@ async def ingest_source(
                         await build(e)
                     except asyncio.CancelledError:
                         raise
+                    except Blocked as exc:
+                        # 401/403/challenge: stop sending requests to this site, now. Nothing has
+                        # been written yet (writes are one transaction after this loop), so the
+                        # abort leaves postings untouched and nothing can close.
+                        log.warning(
+                            "source %s: blocked at job %s (%r); aborting", source_id, ext, exc
+                        )
+                        res.http_requests = acct.requests
+                        return await fail(exc)
                     except Exception as exc:  # noqa: BLE001
                         log.warning("source %s job %s skipped: %r", source_id, ext, exc)
                         res.warnings.append(f"{ext}: {type(exc).__name__}: {exc}"[:300])

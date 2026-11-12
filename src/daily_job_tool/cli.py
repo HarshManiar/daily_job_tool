@@ -294,6 +294,29 @@ def registry_verify(
     typer.echo(f"{ok}/{len(rows)} ok")
 
 
+@registry_app.command("blocked")
+def registry_blocked() -> None:
+    """List sources marked blocked (403/challenge/robots) for manual review."""
+    from daily_job_tool.db.session import get_engine
+    from daily_job_tool.registry.blocked import list_blocked
+
+    async def run() -> Any:
+        engine = get_engine()
+        try:
+            return await list_blocked(engine)
+        finally:
+            await engine.dispose()
+
+    rows = asyncio.run(run())
+    for r in rows:
+        when = r.last_crawled_at.date().isoformat() if r.last_crawled_at else "-"
+        typer.echo(
+            f"{r.source_id:>5}  {r.company[:28]:<28} {r.adapter:<12} {r.token[:20]:<20} "
+            f"{when}  {(r.last_error or '')[:100]}"
+        )
+    typer.echo(f"{len(rows)} blocked source(s)")
+
+
 match_app = typer.Typer(no_args_is_help=True, help="Personal match engine (profile-driven).")
 app.add_typer(match_app, name="match")
 

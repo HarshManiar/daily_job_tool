@@ -3,6 +3,7 @@
 import asyncio
 import contextvars
 import http.cookiejar
+import logging
 import random
 import time
 from collections import deque
@@ -22,6 +23,7 @@ from daily_job_tool.http.errors import (
     CrawlDelayTooLong,
     DomainBlocked,
     FetchError,
+    HostBlocked,
     HostCircuitOpen,
     NotFound,
     ResponseTooLarge,
@@ -35,6 +37,8 @@ from daily_job_tool.http.robots import (
     RobotsPolicy,
 )
 
+log = logging.getLogger(__name__)
+
 BLOCK_MARKERS = (
     "cf-chl",
     "Attention Required! | Cloudflare",
@@ -47,6 +51,9 @@ CIRCUIT_WINDOW = 20
 CIRCUIT_MIN_SAMPLES = 10
 CIRCUIT_FAIL_RATIO = 0.5
 CIRCUIT_PAUSE = 30 * 60.0
+BLOCK_CIRCUIT_THRESHOLD = 2  # Blocked outcomes from one host within the window ...
+BLOCK_CIRCUIT_WINDOW = 10 * 60.0
+BLOCK_CIRCUIT_PAUSE = 6 * 3600.0  # ... pause every request to that host for this long
 ROBOTS_MAX_BYTES = 512 * 1024
 MAX_REDIRECTS = 5
 MAX_CRAWL_DELAY = 60.0
@@ -163,6 +170,9 @@ class CrawlClient:
         self._robots = RobotsPolicy(robots_cache or InMemoryRobotsCache(clock), self._fetch_robots)
         self._outcomes: dict[str, deque[bool]] = {}  # True = failure
         self._open_until: dict[str, float] = {}
+        # block circuit: independent of the failure circuit above (which ignores 401/403)
+        self._block_times: dict[str, list[float]] = {}
+        self._block_until: dict[str, float] = {}
         self.stats: dict[str, HostStats] = {}
         self.request_count = 0
 
@@ -236,6 +246,30 @@ class CrawlClient:
         window.append(failed)
         if len(window) >= CIRCUIT_MIN_SAMPLES and sum(window) / len(window) > CIRCUIT_FAIL_RATIO:
             self._open_until[host] = self._clock() + CIRCUIT_PAUSE
+
+    # -- block circuit (401/403/challenge) -------------------------------
+    def _check_block_circuit(self, host: str) -> None:
+        until = self._block_until.get(host)
+        if until is None:
+            return
+        if self._clock() < until:
+            raise HostBlocked(host)
+        del self._block_until[host]
+        self._block_times.pop(host, None)
+
+    def _note_blocked(self, host: str) -> None:
+        now = self._clock()
+        times = [t for t in self._block_times.get(host, []) if now - t <= BLOCK_CIRCUIT_WINDOW]
+        times.append(now)
+        self._block_times[host] = times
+        if len(times) >= BLOCK_CIRCUIT_THRESHOLD and host not in self._block_until:
+            self._block_until[host] = now + BLOCK_CIRCUIT_PAUSE
+            log.warning("host %s blocked (403) — pausing requests for 6h", host)
+
+    def blocked_hosts(self) -> dict[str, float]:
+        """Hosts whose block circuit is open now, mapped to seconds remaining."""
+        now = self._clock()
+        return {h: u - now for h, u in self._block_until.items() if u > now}
 
     # -- blocklist / redirects ------------------------------------------
     def _check_blocked(self, url: str) -> None:
@@ -395,6 +429,7 @@ class CrawlClient:
     ) -> httpx.Response:
         host = urlsplit(url).netloc.lower()
         self._check_blocked(url)
+        self._check_block_circuit(host)  # before robots.txt: no network call to a blocked host
         self._check_circuit(host)
         await self._check_robots(url, host)
 
@@ -422,6 +457,7 @@ class CrawlClient:
             if self._is_challenge(resp) or status in (401, 403):
                 self._count(host, errors=1)
                 self._note_outcome(host, False)
+                self._note_blocked(host)
                 raise Blocked(url, status)
             if status in (404, 410):
                 self._count(host, errors=1)

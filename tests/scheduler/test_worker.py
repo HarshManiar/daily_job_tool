@@ -385,3 +385,52 @@ async def test_orphan_cleanup_closes_unfinished_run_at_start(db_clean, monkeypat
     await _run(db_clean)
     r = (await rows(db_clean, "SELECT outcome::text AS o, finished_at FROM crawl_runs"))[0]
     assert r.o == "timeout" and r.finished_at is not None
+
+
+async def _blocked_run(
+    engine, sid, k, outcome="http_error", err="blocked by site (403/challenge): crawl aborted"
+):
+    now = datetime(2026, 11, 1, tzinfo=UTC) + timedelta(minutes=k)
+    async with engine.begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO crawl_runs (source_id, adapter, started_at, finished_at, outcome, "
+                "error) VALUES (:s,'x',:t,:t,CAST(:o AS crawl_outcome),:e)"
+            ),
+            {"s": sid, "t": now, "o": outcome, "e": err},
+        )
+    async with engine.begin() as conn:
+        await apply_breaker(conn, sid, now=now)
+    return await scalar(engine, "SELECT status::text FROM sources WHERE id=:i", i=sid)
+
+
+async def test_two_blocked_crawls_mark_source_blocked(db_clean):
+    sid = await add_source(db_clean)
+    assert await _blocked_run(db_clean, sid, 0) == "active"
+    assert await _blocked_run(db_clean, sid, 1) == "blocked"
+    assert await claim_sources(db_clean, 10) == []
+
+
+async def test_blocked_then_ok_resets(db_clean):
+    sid = await add_source(db_clean)
+    assert await _blocked_run(db_clean, sid, 0) == "active"
+    assert await _blocked_run(db_clean, sid, 1, "ok", None) == "active"
+    assert await _blocked_run(db_clean, sid, 2) == "active"
+
+
+async def test_plain_http_errors_do_not_block(db_clean):
+    sid = await add_source(db_clean)
+    await _blocked_run(db_clean, sid, 0, err="FetchError: HTTP 400")
+    assert await _blocked_run(db_clean, sid, 1, err="FetchError: HTTP 400") == "active"
+
+
+async def test_registry_blocked_query(db_clean):
+    from daily_job_tool.registry.blocked import list_blocked
+
+    sid = await add_source(db_clean)
+    await add_source(db_clean)
+    await _blocked_run(db_clean, sid, 0)
+    await _blocked_run(db_clean, sid, 1)
+    got = await list_blocked(db_clean)
+    assert [g.source_id for g in got] == [sid]
+    assert got[0].last_error.startswith("blocked by site")
