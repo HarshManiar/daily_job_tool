@@ -16,7 +16,6 @@ EXCLUSION_TEXT = {
 
 # Attention flags shown as warn chips in the feed.
 WARN_TEXT = {
-    "employment:unknown": "type not stated",
     "pay:below_min": "pay < $120K",
     "date:undated": "undated",
     "years:maybe_7+": "maybe 7+ yrs",
@@ -25,6 +24,9 @@ WARN_TEXT = {
     "employment:conflict": "type conflict",
     "years:below_range": "below your yrs range",
 }
+
+# Informational reasons shown as a visually quiet chip (never an attention flag).
+QUIET_TEXT = {"employment:unknown": "type not stated"}
 
 INFO_TEXT = {
     "visa:offered": "Employer offers visa sponsorship",
@@ -133,6 +135,10 @@ def warn_chips(reasons: Sequence[str] | None) -> list[str]:
     return [WARN_TEXT[r] for r in reasons or [] if r in WARN_TEXT]
 
 
+def quiet_chips(reasons: Sequence[str] | None) -> list[str]:
+    return [QUIET_TEXT[r] for r in reasons or [] if r in QUIET_TEXT]
+
+
 def reason_text(reason: str) -> str:
     if reason in EXCLUSION_TEXT:
         return EXCLUSION_TEXT[reason]
@@ -140,7 +146,7 @@ def reason_text(reason: str) -> str:
         return f"Requires {reason[len('years:min_') :]} years"
     if reason in WARN_TEXT:
         return WARN_TEXT[reason].capitalize()
-    return INFO_TEXT.get(reason, reason)
+    return QUIET_TEXT.get(reason) or INFO_TEXT.get(reason, reason)
 
 
 def exclusion_reasons(reasons: Sequence[str] | None) -> list[str]:

@@ -33,7 +33,6 @@ def test_clean_include(profile):
 @pytest.mark.parametrize(
     "kw,reason",
     [
-        ({"employment_type": "unknown"}, "employment:unknown"),
         ({"salary_max_usd": 90000}, "pay:below_min"),
         ({"posted_at": None}, "date:undated"),
         ({"norm_flags": ["visa:export_control"]}, "visa:export_control"),
@@ -51,6 +50,7 @@ def test_attention_flags(profile, kw, reason):
     "kw,reason",
     [
         ({"visa_status": "offered"}, "visa:offered"),
+        ({"employment_type": "unknown"}, "employment:unknown"),
         ({"title_norm": "brand manager"}, "title:not_target"),
         ({"title_norm": "staff data engineer"}, "title:level_out_of_range"),
     ],
@@ -131,3 +131,17 @@ def test_location_rank(profile, kw, rank):
 def test_empty_profile_is_permissive():
     r = match(J(), C(), Profile())
     assert r.status in {"include", "flagged"} and r.tier is None
+
+
+def test_unknown_employment_alone_is_include_but_keeps_info_reason(profile):
+    r = match(J(employment_type="unknown"), C(), profile)
+    assert r.status == "include" and r.reasons == ["employment:unknown"]
+
+
+def test_unknown_employment_with_real_flag_stays_flagged(profile):
+    r = match(J(employment_type="unknown", posted_at=None), C(), profile)
+    assert r.status == "flagged" and r.reasons == ["date:undated", "employment:unknown"]
+
+
+def test_unknown_employment_still_excludes_on_contract_signal(profile):
+    assert match(J(employment_type="contract"), C(), profile).status == "excluded"

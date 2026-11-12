@@ -1,11 +1,12 @@
 """Normalizer I/O models (ARCHITECTURE.md sections 3 and 6)."""
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from pydantic import BaseModel, Field
 
-NORMALIZER_VERSION = 2
+NORMALIZER_VERSION = 3
 
 
 class CompanyInfo(BaseModel):
@@ -34,8 +35,8 @@ class NormalizedJob(BaseModel):
     remote_regions: list[str] = Field(default_factory=list)
     locations: list[dict[str, Any]] = Field(default_factory=list)
     countries: list[str] = Field(default_factory=list)
-    salary_min: float | None = None
-    salary_max: float | None = None
+    salary_min: Decimal | None = None  # Decimal: floats leak 17.6499999... into numeric
+    salary_max: Decimal | None = None
     salary_currency: str | None = None
     salary_period: str | None = None
     salary_min_usd: int | None = None

@@ -146,3 +146,137 @@ FLAGS: list[tuple[str, str, str | None]] = [
     ("We do not sponsor visas.", NA, None),
     ("Data analyst role in Edison.", NS, None),
 ]
+
+
+# (text, flags visa:export_control?) -- lightly anonymised snippets from the Phase 1 live crawl.
+EXPORT: list[tuple[str, bool]] = [
+    # --- true positives
+    (
+        "Required: Candidates have active Top Secret / Sensitive Compartmented Information (TS/SCI) security clearance.",
+        True,
+    ),
+    (
+        "What We Require Active US Security clearance, or eligibility and willingness to obtain a US Security clearance.",
+        True,
+    ),
+    (
+        "Active security clearance is required, along with experience in highly regulated public-sector markets.",
+        True,
+    ),
+    (
+        "Due to federal contract requirements, U.S. citizenship and eligibility for a U.S. government secret clearance are required to access classified information.",
+        True,
+    ),
+    (
+        "Must haves: An active TS/SCI clearance (Full Scope Polygraph is a nice to have) 3+ years of experience.",
+        True,
+    ),
+    (
+        "Candidates must be eligible and willing to obtain and maintain a U.S. government security clearance.",
+        True,
+    ),
+    (
+        "Required: Public Trust Clearance - Candidates must be able to obtain and maintain a US public trust clearance.",
+        True,
+    ),
+    ("Clearance: Active Secret clearance required; TS/SCI strongly preferred.", True),
+    (
+        "To comply with U.S. export control laws and regulations, candidates for this role may need to meet certain legal status requirements as provided in those laws and regulations.",
+        True,
+    ),
+    (
+        "To conform to US export control regulations, candidates should be eligible for any required authorizations from the US government.",
+        True,
+    ),
+    (
+        "This is a U.S. Persons-only role. Because of the export-control status of the data, all candidates must independently qualify as U.S. Persons.",
+        True,
+    ),
+    (
+        "The successful applicant will be performing work in FedRAMP High environments, and therefore, must be a U.S. Person (i.e. U.S. citizen, U.S. national, lawful permanent resident).",
+        True,
+    ),
+    (
+        "To comply with a U.S. government contract, applicants for this position must be U.S. persons (i.e., U.S. lawful permanent residents, refugees, and asylees).",
+        True,
+    ),
+    (
+        "What We Require U.S. Person Required 1+ years of relevant, post-college work experience.",
+        True,
+    ),
+    (
+        "Applicants must be eligible to work with ITAR-controlled technical data and are restricted to U.S. persons.",
+        True,
+    ),
+    (
+        "For USG: An active U.S. security clearance, or eligibility and willingness to obtain one, is required. For all other roles: a clearance is beneficial.",
+        True,
+    ),
+    ("Ability to obtain and maintain security clearance if required.", True),
+    # --- false positives (must NOT flag)
+    (
+        "Compliance If access to export-controlled technology or source code is required for performance of job duties, it is within Employer's discretion whether to apply for a U.S. government license.",
+        False,
+    ),
+    (
+        "Our company develops technology that is subject to U.S. and other countries' export controls and licensing requirements for individuals who are located in or are nationals of the following sanctioned countries and regions: Belarus, Cuba, Iran.",
+        False,
+    ),
+    (
+        "Certain positions may be limited to candidates that can satisfy additional scrutiny, and eligibility for such positions may hinge on verification of a candidate's U.S. person status and/or citizenship status.",
+        False,
+    ),
+    (
+        "This position may require access to information protected under U.S. export control laws, including the U.S. Export Administration Regulations.",
+        False,
+    ),
+    (
+        "If you are a curious person and your instinct when something breaks is to redesign the process, you will do well here.",
+        False,
+    ),
+    ("You're a naturally curious person who enjoys digging into the data.", False),
+    ("Obtain clearance from Management whenever this cannot be done.", False),
+    (
+        "Cohere is seeking a Global Public Policy Manager to lead policy engagement on compute infrastructure, export controls, and sovereign AI.",
+        False,
+    ),
+    (
+        "Familiarity with export controls and the regulatory requirements that apply to partners and counterparties.",
+        False,
+    ),
+    (
+        "Monitor global AI, privacy, copyright, and export-control developments and translate them into practical internal guidance.",
+        False,
+    ),
+    (
+        "Manage the contract lifecycle through DocuSign, run related-party and export control checks, and maintain the contract repository.",
+        False,
+    ),
+    (
+        "Answer public sector customer questions (what a boundary allows, CUI, IRS Publication 1075, CJIS, ITAR) and handle RFIs.",
+        False,
+    ),
+    (
+        "Advanced knowledge of international trade regulations, including the Export Administration Regulations (EAR) and ITAR.",
+        False,
+    ),
+    (
+        "Active US Security clearance, or eligibility and willingness to obtain a US Security clearance is beneficial, but not necessary.",
+        False,
+    ),
+    (
+        "Clearance: An active U.S. government security clearance is preferred but not required.",
+        False,
+    ),
+    ("Active or prior U.S. security clearance is a plus, but not required.", False),
+    (
+        "Data classification levels, federal security control profiles, and personnel security clearances.",
+        False,
+    ),
+    (
+        "Bachelor's degree in Information Security, Computer Science, or related field required.",
+        False,
+    ),
+    ("Everything must clear inventory; no security clearance is required for this role.", False),
+    ("As a U.S. person for tax purposes you may file Form 1040.", False),
+]

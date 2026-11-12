@@ -9,7 +9,7 @@ It is for personal, non-commercial use only; nothing is republished.</p>
   <li>Respects <code>robots.txt</code> and does not fetch disallowed paths.</li>
   <li>Rate-limited per host, with backoff when a site returns errors.</li>
   <li>User agent: <code>{{ ua }}</code></li>
-  <li>Contact: {{ contact }}</li>
+  {% if contact %}<li>Contact: {{ contact }}</li>{% endif %}
 </ul>
-<p>If you operate a site and want the crawler to stop, say so via the contact above and it will be blocked.</p>
+<p>If you operate a site and want the crawler to stop, say so via the contact above (when listed) and it will be blocked.</p>
 {% endblock %}

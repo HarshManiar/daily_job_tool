@@ -48,9 +48,9 @@ def test_reasons_and_chips():
     assert f.reason_text("company:excluded") == "Excluded employer"
     assert f.reason_text("company:staffing") == "Staffing agency"
     assert f.warn_chips(["employment:unknown", "title:not_target", "pay:below_min"]) == [
-        "type not stated",
         "pay < $120K",
     ]
+    assert f.quiet_chips(["employment:unknown", "pay:below_min"]) == ["type not stated"]
     assert f.exclusion_reasons(["years:min_7+", "pay:below_min"]) == ["years:min_7+"]
 
 

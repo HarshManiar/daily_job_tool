@@ -11,7 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from daily_job_tool.adapters import registry
-from daily_job_tool.config import get_settings
+from daily_job_tool.config import get_user_agent
 from daily_job_tool.http.client import CrawlClient
 from daily_job_tool.normalize import NormContext
 from daily_job_tool.pipeline.ingest import ingest_source
@@ -165,7 +165,7 @@ async def crawl_one(
 
 
 def _default_client_factory() -> CrawlClient:
-    return CrawlClient(get_settings().user_agent)
+    return CrawlClient(get_user_agent())
 
 
 async def run_worker(

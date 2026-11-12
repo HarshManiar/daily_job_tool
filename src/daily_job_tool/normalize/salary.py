@@ -44,7 +44,7 @@ _CODES = (
 _SYM_ALT = "|".join(re.escape(s) for s in sorted(_SYMBOLS, key=len, reverse=True))
 _CODE_ALT = "|".join(_CODES)
 _NUM = (
-    r"(?<![\d.,])(?:\d{1,3}(?:,\d{2,3})+(?:\.\d+)?|\d{1,3}(?:\.\d{3})+(?:,\d+)?|"
+    r"(?<![\d.,])(?:\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d{1,2}(?:,\d{2})+,\d{3}(?:\.\d+)?|\d{1,3}(?:\.\d{3})+(?:,\d+)?|"
     r"\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?)(?![\d])"
 )
 _SUF = r"(?:[kK](?![A-Za-z])|LPA|lpa|[lL]akhs?|[lL]acs?|L(?![A-Za-z])|[cC]rores?)"
@@ -57,7 +57,10 @@ def _price(i: int) -> str:
     )
 
 
-_RANGE_RE = re.compile(_price(1) + r"(?:\s*(?:-|–|—|~|\bto\b|\band\b)\s*" + _price(2) + r")?")
+_UNIT_MID = r"(?:\s?(?:/|per\s+)\s?(?:yr|year|hr|hour|mo|month|wk|week|annum)\b\.?)?"
+_RANGE_RE = re.compile(
+    _price(1) + r"(?:" + _UNIT_MID + r"\s*(?:-|–|—|~|\bto\b|\band\b)\s*" + _price(2) + r")?"
+)
 _AFTER_PERIOD = re.compile(
     r"^\s*(?:(?:gross|net|brutto|base|before tax|pre-tax)\s+)*"
     r"(?:(?:/|per\s+|a\s+|an\s+|each\s+|every\s+)(?:the\s+)?"
@@ -104,8 +107,22 @@ _EXCL_WORDS = re.compile(
 _PAY_WORDS = re.compile(r"\b(?:salary|base|pay|compensation|range|ote|wage|remuneration)\b", re.I)
 _AFTER_EXCL = re.compile(
     r"^\s*(?:in |of )?(?:annual |signing |sign-on |performance |target |relocation |"
-    r"stock |equity |cash )*(?:bonus|equity|stock|rsus?|options|relocation|stipend|"
+    r"stock |equity |cash |lunch |meal |wellness |learning |home office |phone |internet |gym )*"
+    r"(?:bonus|equity|stock|rsus?|options|relocation|stipend|"
     r"in funding|in revenue|funding|raised|commission|allowance|match)",
+    re.I,
+)
+# money words that make an open-ended "up to $N" a benefit/budget, not pay
+_BENEFIT_CTX = re.compile(
+    r"\b(?:match|matching|401|contribut\w*|reimburs\w*|budget|tuition|fund(?:ing|s)?|hsa|fsa|"
+    r"perks?|benefits?|per employee|allowance|credit)\b",
+    re.I,
+)
+# "(this does not include bonus, equity and benefits): $76,000" -> the excluded items are not
+# what the number is
+_NEGATED_EXCL = re.compile(
+    r"\([^)]*\)\s*:?|(?:does\s+not|doesn['’]t|do\s+not|not)\s+(?:include|including)[^$€£]*|"
+    r"(?:excluding|excludes?|exclusive\s+of|before|without)\s[^$€£]*",
     re.I,
 )
 _AFTER_BIG = re.compile(r"^\s?(?:m\b|mm\b|bn?\b|million|billion|%)", re.I)
@@ -142,7 +159,7 @@ def to_float(s: str) -> float:
             return float(s.replace(".", "").replace(",", "."))
         return float(s.replace(",", ""))
     if "," in s:
-        if re.fullmatch(r"\d{1,3}(?:,\d{2,3})+", s):
+        if re.fullmatch(r"\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})+,\d{3}", s):
             return float(s.replace(",", ""))
         return float(s.replace(",", "."))
     if "." in s:
@@ -195,6 +212,9 @@ def finalize(
         return None
     rate = ctx.fx_rates.get(currency) if currency else None
     if rate is None:
+        # no USD figure, but a yearly amount under 1,000 in any currency is not a salary
+        if any(annualize(v, period) < 1000 for v in (mn, mx) if v is not None):
+            return None
         return (None, None)
     lo = annualize(mn, period) * rate if mn is not None else None
     hi = annualize(mx, period) * rate if mx is not None else None
@@ -229,7 +249,8 @@ def _candidates(text: str) -> list[tuple[Parsed, int, bool]]:
         tail = text[end : end + 12]
         if _AFTER_BIG.match(tail):
             continue
-        before_seg = re.split(r"[.;\n]", text[max(0, start - 40) : start])[-1]
+        before_seg = re.split(r"[.;\n]", text[max(0, start - 160) : start])[-1]
+        before_seg = _NEGATED_EXCL.sub(" ", before_seg)[-40:]
         excl = list(_EXCL_WORDS.finditer(before_seg))
         if excl:
             pay = list(_PAY_WORDS.finditer(before_seg))
@@ -256,6 +277,10 @@ def _candidates(text: str) -> list[tuple[Parsed, int, bool]]:
                 hi = None
             elif text[end : end + 1] == "+":
                 hi = None
+        if lo is None or hi is None:
+            ctx150 = text[max(0, start - 150) : start]
+            if _BENEFIT_CTX.search(ctx150) and not _PAY_WORDS.search(ctx150):
+                continue  # open-ended "up to $15,000": a 401k match / budget, not pay
         pm = _AFTER_PERIOD.match(text[end : end + 60])
         period = None
         if pm:

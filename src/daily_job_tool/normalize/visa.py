@@ -82,10 +82,41 @@ _OPT_ONLY = re.compile(
     r"cap[- ]subject)\b",
     re.I,
 )
-_EXPORT = re.compile(
-    r"\bITAR\b|u\.?s\.?\s+persons?\b|export[- ]control\w*|"
-    r"(?:secret|top\s+secret|ts/sci|public\s+trust|security)\s+clearance|"
-    r"clearance\s+(?:is\s+)?(?:required|needed)|obtain\s+(?:a\s+)?(?:security\s+)?clearance",
+# --- export control / clearance (attention flag only; never an exclusion) -------------------------
+# A term only flags when the sentence reads like a requirement on the candidate. Topic mentions
+# (a policy/compliance role "familiar with export controls"), company-wide boilerplate (Databricks
+# "if access to export-controlled technology is required...", Elastic sanctioned-country notice,
+# Kodiak "such positions may hinge on U.S. person status") and look-alikes ("curious person",
+# "obtain clearance from Management") do not.
+_EXPORT_TERM = re.compile(
+    r"\bITAR\b|(?<![\w.])(?:u\.?s\.?|united\s+states)\s+persons?\b|export[- ]control\w*|"
+    r"\b(?:secret|top\s+secret|ts/sci|sci|public\s+trust|security|dod|doe\s+q)\s+clearances?\b|"
+    r"\bclearances?\s+(?:is\s+|are\s+)?(?:required|needed|mandatory)\b|"
+    r"\bobtain\s+(?:and\s+maintain\s+)?(?:an?\s+)?(?:active\s+)?(?:u\.?s\.?\s+|government\s+)?"
+    r"(?:security\s+)?clearances?\s*(?:\b(?:prior|before|upon)\b|[,.;]|$)",
+    re.I,
+)
+_CLEARANCE = re.compile(r"clearance", re.I)
+_EXPORT_NEEDS_CTX = re.compile(r"\bITAR\b|export[- ]control", re.I)
+_REQ_CTX = re.compile(
+    r"\b(?:candidates?|applicants?|employees?|individuals?|hires?|citizens?|citizenship|nationals|"
+    r"eligib\w*|authori[sz]\w*|licen[sc]\w*|legal\s+status|must|required?|requirements?|restricted|"
+    r"u\.?s\.?\s+persons?)\b",
+    re.I,
+)
+_SOFT = re.compile(r"\bbeneficial\b|\bnot\s+(?:necessary|required|needed)\b", re.I)
+_HARD = re.compile(r"(?<!not\s)\brequire[ds]?\b|\bmust\b", re.I)
+_TOPIC_CTX = re.compile(
+    r"\b(?:experience|familiar\w*|knowledge|understanding|expertise|developments|policy|"
+    r"navigate|monitor|advis\w+|counsel|trade\s+compliance)\b",
+    re.I,
+)
+_EXPORT_BOILER = re.compile(
+    r"if\s+access\s+to\s+export[- ]controlled|within\s+(?:the\s+)?employer['’]s\s+discretion|"
+    r"sanctioned\s+countries|position\s+may\s+require\s+access\s+to\s+(?:information|technology)|"
+    r"such\s+positions|should\s+the\s+position\s+require|"
+    r"tax(?:es|ation)?\b|personnel\s+security\s+clearances?|"
+    r"(?:data|information|network|cyber|product|physical)\s+security\s+clearance\s+(?:levels?|policy)",
     re.I,
 )
 _SENT = re.compile(
@@ -143,14 +174,42 @@ def _transfer_evidence(text: str) -> str | None:
     return None
 
 
+def _export_evidence(text: str) -> str | None:
+    """The first sentence with genuine export-control / clearance language, else None."""
+    for sent in (x.strip() for x in _SENT.split(text)):
+        if not sent or _EXPORT_BOILER.search(sent):
+            continue
+        if _SOFT.search(sent) and not _HARD.search(sent):
+            continue  # "clearance is beneficial / preferred but not required"
+        for m in _EXPORT_TERM.finditer(sent):
+            if _NEG_BEFORE.search(sent[max(0, m.start() - 30) : m.start()]):
+                continue
+            if re.match(r"\s*(?:is|are)?\s*not\b|\s*(?:is|are)\s+n['’]t\b", sent[m.end() :], re.I):
+                continue
+            if _CLEARANCE.search(m.group(0)):
+                if re.match(r"\s+(?:levels?|policy|policies)\b", sent[m.end() :], re.I):
+                    continue
+                return sent[:300]
+            if (
+                _EXPORT_NEEDS_CTX.match(m.group(0))
+                and _TOPIC_CTX.search(sent)
+                and not re.search(r"\bcandidates?\b|\bmust\b", sent, re.I)
+            ):
+                continue
+            if _EXPORT_NEEDS_CTX.match(m.group(0)) and not _REQ_CTX.search(sent):
+                continue
+            return sent[:300]
+    return None
+
+
 def classify_visa(text: str | None, profile_phrases=None) -> VisaResult:
     if not text:
         return VisaResult("not_stated")
     ph = _phrases(profile_phrases or VisaPhrases())
     exc, flg = _compile(ph.exclude, ph.flag)
     flags: list[str] = []
-    exp = _EXPORT.search(text)
-    if exp and not _NEG_BEFORE.search(text[max(0, exp.start() - 30) : exp.start()]):
+    exp_ev = _export_evidence(text)
+    if exp_ev:
         flags.append("visa:export_control")
     tr = _transfer_evidence(text)
     if tr:
@@ -190,5 +249,5 @@ def classify_visa(text: str | None, profile_phrases=None) -> VisaResult:
                     break
                 if offered:
                     break
-    evid = offered or (exp.group(0) if exp and "visa:export_control" in flags else None)
+    evid = offered or exp_ev
     return VisaResult("offered" if offered else "not_stated", evid, tuple(flags))

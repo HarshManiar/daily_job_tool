@@ -2,7 +2,6 @@
 
 import asyncio
 import csv
-import os
 from pathlib import Path
 
 from daily_job_tool.detect.detector import Detection, detect_company
@@ -61,9 +60,9 @@ async def run_batch(
     counts: dict[str, int] = {}
     own = client is None
     if client is None:
-        from daily_job_tool.cli import DEFAULT_UA
+        from daily_job_tool.config import get_user_agent
 
-        client = CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA))
+        client = CrawlClient(get_user_agent())
     sem = asyncio.Semaphore(concurrency)
     lock = asyncio.Lock()
     with out_path.open("a", newline="") as fh:

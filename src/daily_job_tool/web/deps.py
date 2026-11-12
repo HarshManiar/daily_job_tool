@@ -25,6 +25,7 @@ _env.filters.update(
     reason_text=fmt.reason_text,
     safe_url=fmt.safe_http_url,
     warn_chips=fmt.warn_chips,
+    quiet_chips=fmt.quiet_chips,
     exclusion_reasons=fmt.exclusion_reasons,
     location_text=fmt.location_text,
     tier_label=fmt.tier_label,

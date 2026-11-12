@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Request
 
-from daily_job_tool.config import get_settings
+from daily_job_tool.config import get_settings, get_user_agent
 from daily_job_tool.web import queries
 from daily_job_tool.web.deps import Conn, templates
 
@@ -17,7 +17,8 @@ async def health(request: Request, conn: Conn):
 
 @router.get("/bot")
 async def bot(request: Request):
-    contact = get_settings().bot_contact
+    contact = get_settings().bot_contact.strip()
+    ua = get_user_agent() if contact else get_settings().user_agent
     return templates.TemplateResponse(
-        request, "bot.html", {"page": "", "contact": contact, "ua": get_settings().user_agent}
+        request, "bot.html", {"page": "", "contact": contact, "ua": ua}
     )

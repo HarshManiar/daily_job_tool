@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 from daily_job_tool.match.profile import load_profile
+from daily_job_tool.normalize.models import NORMALIZER_VERSION
 from daily_job_tool.pipeline.renormalize import renormalize, rescore
 from tests.pipeline.helpers import CTX, FakeAdapter, crawl, job, rows, scalar, seed
 
@@ -67,7 +68,11 @@ async def test_renormalize_populates_match_columns_on_old_rows(db_clean):
         )
     assert await renormalize(eng, CTX, profile=PROFILE) == 1
     r = (await rows(eng, "SELECT * FROM jobs"))[0]
-    assert r.normalizer_version == 2 and r.match_status == "excluded" and r.location_rank == 0
+    assert (
+        r.normalizer_version == NORMALIZER_VERSION
+        and r.match_status == "excluded"
+        and r.location_rank == 0
+    )
     assert r.match_tier == 2
 
     async with eng.begin() as conn:

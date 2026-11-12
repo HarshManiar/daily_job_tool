@@ -194,6 +194,87 @@ SALARY_TEXT: list[tuple] = [
     ("", N),
 ]
 
+# --- Phase 1 live-crawl audit (task 1.12): real snippets, lightly anonymised
+SALARY_TEXT += [
+    # range with a unit after the first number used to collapse to the first value
+    (
+        "Base Salary Range: $100,000/year to $150,000/year + equity + benefits",
+        (100000, 150000, "USD", Y),
+    ),
+    (
+        "Our cash compensation amount for this role is $147,000/yr to $190,000/yr in Denver",
+        (147000, 190000, "USD", Y),
+    ),
+    (
+        "Our cash compensation is between $89,165/yr - $112,942/yr in Denver",
+        (89165, 112942, "USD", Y),
+    ),
+    ("The hourly range for this role is $28.00/hr to $47.00/hr", (28, 47, "USD", H)),
+    # excluded items named in a parenthetical / negated clause are not what the number is
+    (
+        "US base salary range for this position (this does not include bonus, equity and benefits): $76,000\u2014$95,000 USD Commitment to Equal Opportunity",
+        (76000, 95000, "USD", Y),
+    ),
+    ("Base pay (excluding equity and bonus): $140,000 - $170,000", (140000, 170000, "USD", Y)),
+    # malformed digit groups ("$206,00") are not 20,600
+    (
+        "Our cash compensation is $206,00/yr to $248,000/yr in Denver and $243,000/yr to $292,000/yr for San Francisco",
+        (243000, 292000, "USD", Y),
+    ),
+    # benefits / budgets are not pay
+    ("401(k) with a company match of $2 for every $1 contributed, up to $15,000 annually", N),
+    ("Benefits include an education budget of up to $20,000 per year for courses", N),
+    ("A $75 lunch stipend and a USD$500 home office setup", N),
+    (
+        "We raised a $30M Series B. The annual base salary is between $269,000 USD and $404,000 USD, plus benefits",
+        (269000, 404000, "USD", Y),
+    ),
+    # real pay-transparency layouts
+    (
+        "The base pay for this role is: $122,212 - $160,404 per year. You are also eligible for employee benefits",
+        (122212, 160404, "USD", Y),
+    ),
+    (
+        "Zone A: ($106,000 - $159,800) Zone B: ($99,000 - $148,600) Zone C: ($90,600 - $135,900)",
+        (106000, 159800, "USD", Y),
+    ),
+    (
+        "The salary range for this role is $2,800 - $4,500 per month (Gross in USD) About Sezzle",
+        (2800, 4500, "USD", M),
+    ),
+    ("Average Weekly Pay: $1,800 - $2100 + Bonus Opportunities Home Daily", (1800, 2100, "USD", W)),
+    (
+        "USA hourly base pay: $55.00 USA monthly base pay: $9,500 Please note that visa sponsorship",
+        (55, 55, "USD", H),
+    ),
+    (
+        "The salary for this position is $12,100 monthly. Our Commitment to Inclusion",
+        (12100, 12100, "USD", M),
+    ),
+    (
+        "Modesto, CA: USD $17.65 per hour The salary range above reflects what we would expect",
+        (17.65, 17.65, "USD", H),
+    ),
+    ("Compensation Range: $225-275/hour based upon prior experience", (225, 275, "USD", H)),
+    (
+        "The starting cash range for this role is $160.000-$200.000. Please note that this is a target",
+        (160000, 200000, "USD", Y),
+    ),
+    (
+        "The US base salary range for this role is $67.9K\u2013$183.5K annually, plus equity and benefits.",
+        (67900, 183500, "USD", Y),
+    ),
+    (
+        "For Portugal based hires: Estimated annual salary of \u20ac28,000-39,000. Equity This role",
+        (28000, 39000, "EUR", Y),
+    ),
+    (
+        "Region 1 $185,000 - 200,000 A recruiter can determine your Region based on your US location.",
+        (185000, 200000, "USD", Y),
+    ),
+    ("Total On-Target Earnings: $180,000 OTE in New York City", (180000, 180000, "USD", Y)),
+]
+
 # (text, expected (min_usd, max_usd)) using conftest.TEST_RATES.
 SALARY_USD: list[tuple] = [
     ("$120,000 - $150,000 per year", (120000, 150000)),

@@ -251,3 +251,18 @@ def test_cli_refuses_public_host():
     res = CliRunner().invoke(app, ["web", "--host", "0.0.0.0"])
     assert res.exit_code != 0
     assert "refusing" in res.output
+
+
+async def test_bot_page_shows_contact_only_when_set(client, monkeypatch):
+    from daily_job_tool import config
+
+    monkeypatch.setenv("BOT_CONTACT", "")
+    config.get_settings.cache_clear()
+    html = (await client.get("/bot")).text
+    assert "Contact:" not in html
+    monkeypatch.setenv("BOT_CONTACT", "ops@example.org")
+    config.get_settings.cache_clear()
+    html = (await client.get("/bot")).text
+    assert "Contact: ops@example.org" in html
+    assert "DailyJobToolBot/0.1 (+ops@example.org)" in html
+    config.get_settings.cache_clear()

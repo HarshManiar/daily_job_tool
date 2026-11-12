@@ -75,7 +75,7 @@ def match(job: NormalizedJob, company: CompanyInfo, profile: Profile) -> MatchRe
         if f in nf:
             flags.append(f)
     if job.employment_type == "unknown":
-        flags.append("employment:unknown")
+        info.append("employment:unknown")  # Greenhouse/Ashby rarely state it: chip only
     mn = profile.profile.min_base_usd
     if mn and job.salary_max_usd is not None and job.salary_max_usd < mn:
         flags.append("pay:below_min")

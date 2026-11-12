@@ -6,7 +6,7 @@ from daily_job_tool.normalize.employment import infer_employment_detail, infer_e
 from daily_job_tool.normalize.visa import VisaPhrases, classify_visa
 from daily_job_tool.normalize.years import extract_years, extract_years_detail
 from tests.normalize.golden_employment import CONFLICTS, EMPLOYMENT, NO_CONFLICT
-from tests.normalize.golden_visa import FLAGS, VISA
+from tests.normalize.golden_visa import EXPORT, FLAGS, VISA
 from tests.normalize.golden_years import POOLS, YEARS
 
 with open("data/profile.example.yaml", encoding="utf-8") as _f:
@@ -15,7 +15,7 @@ PHRASES = VisaPhrases(tuple(_v["exclude_if_phrases"]), tuple(_v["flag_if_phrases
 
 
 def test_v2_sizes():
-    assert NORMALIZER_VERSION == 2
+    assert NORMALIZER_VERSION == 3
     assert len(YEARS) >= 60 and len(VISA) >= 50 and len(EMPLOYMENT) >= 20
 
 
@@ -55,6 +55,14 @@ def test_visa_flags(text, status, flag):
     assert (flag in got.flags) if flag else not got.flags
     if flag == "visa:export_control":
         assert got.evidence
+
+
+@pytest.mark.parametrize("text,flagged", EXPORT)
+def test_export_control_flag(text, flagged):
+    got = classify_visa(text, PHRASES)
+    assert ("visa:export_control" in got.flags) is flagged
+    assert got == "not_stated"  # never an exclusion
+    assert bool(got.evidence) is flagged
 
 
 @pytest.mark.parametrize("text,pool,flags", POOLS)

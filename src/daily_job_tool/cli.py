@@ -2,13 +2,13 @@
 
 import asyncio
 import json
-import os
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
 
 import typer
 
+from daily_job_tool.config import get_user_agent
 from daily_job_tool.http.client import CrawlClient
 from daily_job_tool.http.errors import CrawlError, NotFound
 from daily_job_tool.http.fixtures import FixtureRecorder, FixtureTooLarge
@@ -55,7 +55,7 @@ def fixtures_record(
     recorder = FixtureRecorder(out / adapter / token, adapter=adapter, token=token, config=cfg)
 
     async def run() -> None:
-        async with CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA), recorder=recorder) as c:
+        async with CrawlClient(get_user_agent(), recorder=recorder) as c:
             kw = {"json": body} if body is not None else {}
             await c.request(method.value, url, **kw)
 
@@ -82,7 +82,7 @@ def fx_fetch() -> None:
     from daily_job_tool.normalize.fx import fetch_ecb_rates
 
     async def run() -> int:
-        async with CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA)) as c:
+        async with CrawlClient(get_user_agent()) as c:
             day, rates = await fetch_ecb_rates(c)
         stmt = text(
             "INSERT INTO fx_rates (day, currency, usd_per_unit) VALUES (:day, :cur, :rate) "
@@ -160,7 +160,7 @@ def ingest(
         if name is None:
             raise typer.BadParameter(f"no such source {source}")
         ctx = NormContext.load(await _latest_fx_rates())
-        async with CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA)) as c:
+        async with CrawlClient(get_user_agent()) as c:
             res = await ingest_source(
                 engine, source, get_adapter(name), c, ctx, us_only=not include_non_us
             )
@@ -278,7 +278,7 @@ def registry_verify(
     async def run() -> list[Any]:
         engine = get_engine()
         try:
-            async with CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA)) as c:
+            async with CrawlClient(get_user_agent()) as c:
                 return await verify_sources(engine, c, limit=limit, adapter=adapter)
         finally:
             await engine.dispose()
@@ -418,7 +418,7 @@ def detect(
     if domain:
 
         async def one() -> None:
-            async with CrawlClient(os.environ.get("USER_AGENT", DEFAULT_UA)) as c:
+            async with CrawlClient(get_user_agent()) as c:
                 d = await detect_company(c, domain)
             typer.echo(json.dumps(d.__dict__, indent=2, default=str))
 
