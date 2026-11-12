@@ -9,37 +9,61 @@ List: ``POST https://{host}/wday/cxs/{tenant}/{site}/jobs`` with
 externalPath, locationsText ("2 Locations" when several), postedOn (relative text such as
 "Posted Today", "Posted 6 Days Ago", "Posted 30+ Days Ago"), bulletFields (job id) and often
 timeType. ``total`` is the match count; some tenants only report it on the first page (later
-pages say 0), so the first page's value is kept. Paging stops at an empty page or
-offset >= total. Hitting max_jobs / max_pages returns ``complete=False`` plus a warning.
+pages say 0), so ``total`` is the MAX non-zero value seen on any page. Paging continues until
+an EMPTY page (it does not stop at offset >= total, so jobs posted mid-crawl are still
+reached). A page that adds no new ``externalPath`` (server ignoring ``offset``, or overlapping
+pages from an unstable sort) stops the crawl with ``complete=False`` and a warning.
+``complete=True`` requires ``distinct paths seen + malformed records skipped >= total``;
+there is no percentage slack, so a silent miss can never let ingest auto-close live jobs.
+Hitting max_jobs / max_pages returns ``complete=False`` plus the warning "tenant too large for
+full enumeration; jobs will not auto-close" (no sitemap diffing; big tenants simply never
+auto-close).
 
 US narrowing: the response ``facets`` tree contains a country facet (``locationCountry`` or
 ``Country``) whose value for the United States has the same global id on every tenant seen
 (bc33aa3152ec42d4995f4791a106ed09). When ``us_facet`` is true and such a facet exists, the
 first (unfiltered) page is only used for discovery and listing restarts at offset 0 with
-``appliedFacets={<facet>: [<US id>]}``. Tenants without a country facet are listed in full
-and ingest's US filter handles them. ``complete=True`` then means "the entire US-filtered
-view was enumerated"; that view is applied consistently on every crawl (it only changes if the
-tenant adds or removes its country facet), so closing rules stay trustworthy.
+``appliedFacets={<facet>: [<US id>]}``. The US id is DISCOVERED per tenant from the facet value
+whose descriptor says United States (the known global id is just what it usually is). Tenants
+without a country facet are listed in full and ingest's US filter handles them. If the filtered
+first page errors (any FetchError, e.g. 400/422), a warning is added and the whole listing is
+retried UNFILTERED once; nothing is remembered across crawls. Switching between the filtered
+and unfiltered view between crawls only changes which NON-US postings are listed (harmless:
+ingest drops them anyway), so ``complete=True`` still means "every posting in the view
+enumerated". A 400/422 on the first UNFILTERED page raises NotFound (counts toward 'broken').
+Sandbox hosts (``impl-wdN`` / ``wdN-impl``) are rejected with ConfigError.
+
+Stable payload: ingest hashes the payload, and ``postedOn`` is relative text that changes daily.
+So the stored payload drops ``postedOn`` and instead carries ``_posted``, the absolute ISO date
+``anchor - N days`` where anchor = today in America/Los_Angeles and N comes from "Posted
+Today/Yesterday/N Days Ago". N and the anchor both advance one per day, so the value is the
+same on every crawl and an unchanged job hashes identically day to day. "Posted 30+ Days Ago"
+(unbounded) stores NO date key, so posted_at is None (the feed treats undated as first_seen).
+A job crossing from 29 days to "30+" changes its payload once. ``external_id`` comes only from
+the list item's externalPath (last ``_`` segment, e.g. ``R-101600`` or the repost form ``R9-1``),
+never from bulletFields or the detail response (bulletFields stays in the payload for display).
 
 Detail: ``GET https://{host}/wday/cxs/{tenant}/{site}{externalPath}`` ->
 ``jobPostingInfo`` {jobDescription (HTML), location, additionalLocations, timeType,
 remoteType (only on some), startDate (ISO date, equals the posting date), jobReqId,
 externalUrl, ...}. Detail calls are slow (0.5 req/s per host), so ``needs_detail`` is set only
 for titles matching ``detail_title_regex`` (default DEFAULT_DETAIL_TITLE_REGEX); the rest keep
-list-level fields. posted_at: detail ``startDate`` when present, else derived from the list's
-relative text (approximate to the day; "30+ Days Ago" is unbounded so None).
+list-level fields. posted_at: detail ``startDate`` when present, else the stored ``_posted`` date.
 
 ``_map`` rebuilds a RawJob from the stored payload (list item + optional ``detail`` +
-``_host``/``_site``/``_nd`` context keys) with no HTTP.
+``_host``/``_site``/``_nd``/``_posted`` context keys) with no HTTP.
 """
 
 import re
 from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urlsplit
+from zoneinfo import ZoneInfo
 
 from daily_job_tool.adapters.base import Adapter, FetchResult, RawJob, SourceRef
+from daily_job_tool.adapters.html_list import ConfigError
 from daily_job_tool.adapters.registry import register
+from daily_job_tool.http.errors import FetchError, NotFound
 
 if TYPE_CHECKING:
     from daily_job_tool.http.client import CrawlClient
@@ -53,8 +77,42 @@ DEFAULT_DETAIL_TITLE_REGEX = (
     r"data|analy|insight|report|intelligence|\bBI\b|scien|engineer|machine learning|\bML\b|\bAI\b"
     r"|statistic|forecast|commercial|real.world|\bRWE\b|\bHEOR\b|claims|market access|pricing"
     r"|operations research|decision|consult|solutions|product analyst|sales operations|field"
+    r"|econom|epidem|access|planner|planning|\bops\b|operations|revops|research|informatics"
+    r"|actuar|programmer|strategy|engagement|evidence|tableau|incentive|gross.to.net|outcomes"
+    r"|value|population health|performance|measurement|quantitative|risk adjustment|biostat"
+    r"|clinical data|medical affairs"
 )
-HOST_RE = re.compile(r"^([a-z0-9][a-z0-9-]*)\.((?:impl-)?wd\d+(?:-impl)?)\.myworkdayjobs\.com$")
+HOST_RE = re.compile(r"^([a-z0-9][a-z0-9-]*)\.(wd\d+)\.myworkdayjobs\.com$")
+IMPL_RE = re.compile(r"\.(impl-wd\d+|wd\d+-impl)\.myworkdayjobs\.com$")
+LA = ZoneInfo("America/Los_Angeles")
+STATES = {
+    s.lower()
+    for s in (
+        "Alabama Alaska Arizona Arkansas California Colorado Connecticut Delaware Florida Georgia "
+        "Hawaii Idaho Illinois Indiana Iowa Kansas Kentucky Louisiana Maine Maryland Massachusetts "
+        "Michigan Minnesota Mississippi Missouri Montana Nebraska Nevada Ohio Oklahoma Oregon "
+        "Pennsylvania Tennessee Texas Utah Vermont Virginia Washington Wisconsin Wyoming"
+    ).split()
+} | {
+    "new hampshire",
+    "new jersey",
+    "new mexico",
+    "new york",
+    "north carolina",
+    "north dakota",
+    "rhode island",
+    "south carolina",
+    "south dakota",
+    "west virginia",
+    "district of columbia",
+}
+
+
+def la_today() -> date:
+    """Date anchor for relative 'Posted N Days Ago' text (America/Los_Angeles calendar date)."""
+    return datetime.now(LA).date()
+
+
 LOCALE_RE = re.compile(r"^[a-z]{2}-[A-Za-z]{2}$")
 NOT_SITES = {"wday", "job", "jobs", "login", "introduceYourself", "refreshFacet"}
 
@@ -110,15 +168,27 @@ def find_us_facet(facets: Any) -> tuple[str, str] | None:
         for v in f.get("values") or []:
             if not isinstance(v, dict) or not v.get("id"):
                 continue
-            if v["id"] == US_COUNTRY_ID or str(v.get("descriptor", "")).lower() in US_NAMES:
+            if str(v.get("descriptor", "")).lower() in US_NAMES:
                 return param, str(v["id"])
     return None
+
+
+def _place(seg: str) -> str:
+    words = [w for w in seg.replace("_", "-").split("-") if w]
+    if len(words) < 2:
+        return " ".join(words)
+    for n in (2, 1):
+        if len(words) > n:
+            tail = " ".join(words[-n:])
+            if tail.lower() in STATES or (n == 1 and re.fullmatch(r"[A-Z]{2}", tail)):
+                return f"{' '.join(words[:-n])}, {tail}"
+    return f"{words[0]}, {' '.join(words[1:])}" if len(words) == 2 else " ".join(words)
 
 
 def _slug_location(path: str) -> str | None:
     parts = [p for p in path.split("/") if p]
     if len(parts) >= 3 and parts[0] == "job":
-        return " - ".join(x.replace("-", " ").strip() for x in parts[1].split("---")) or None
+        return " - ".join(_place(x) for x in parts[1].split("---") if x.strip()) or None
     return None
 
 
@@ -147,8 +217,17 @@ class WorkdayAdapter(Adapter):
             if "/" in src.token and host:
                 tenant, site = src.token.split("/", 1)
             else:
-                raise ValueError(f"workday {src.token}: config needs host, tenant and site")
-        return str(host), str(tenant), str(site)
+                raise ConfigError(f"workday {src.token}: config needs host, tenant and site")
+        host = str(host).lower()
+        if IMPL_RE.search(host):
+            raise ConfigError(f"workday {src.token}: sandbox (impl) host {host} is not supported")
+        if not HOST_RE.match(host):
+            raise ConfigError(f"workday {src.token}: {host} is not a *.wdN.myworkdayjobs.com host")
+        return host, str(tenant), str(site)
+
+    @staticmethod
+    def _today() -> date:
+        return la_today()
 
     async def fetch_jobs(self, src: SourceRef, http: "CrawlClient") -> FetchResult:
         host, tenant, site = self._cfg(src)
@@ -157,6 +236,7 @@ class WorkdayAdapter(Adapter):
         detail_re = re.compile(
             src.config.get("detail_title_regex") or DEFAULT_DETAIL_TITLE_REGEX, re.IGNORECASE
         )
+        today = self._today()
         url = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
         warnings: list[str] = []
         applied: dict[str, list[str]] = {}
@@ -174,53 +254,89 @@ class WorkdayAdapter(Adapter):
             return data
 
         pages = 1
-        data = await page(0)
+        try:
+            data = await page(0)
+        except FetchError as exc:
+            if exc.status in (400, 422):
+                raise NotFound(url, exc.status) from exc
+            raise
         if src.config.get("us_facet", True):
             us = find_us_facet(data.get("facets"))
             if us:
                 applied = {us[0]: [us[1]]}
                 pages += 1
-                data = await page(0)  # restart so page 1 is the US-filtered view
+                try:
+                    data = await page(0)  # restart so page 1 is the US-filtered view
+                except FetchError as exc:
+                    warnings.append(
+                        f"workday {src.token}: US facet request failed ({exc.status}); "
+                        "retrying unfiltered"
+                    )
+                    applied = {}
+                    pages += 1
+                    data = await page(0)
 
-        total = data.get("total") if isinstance(data.get("total"), int) else 0
+        total = 0
         jobs: list[RawJob] = []
         seen: set[str] = set()
+        skipped = 0
         complete = True
         offset = 0
         while True:
+            if isinstance(data.get("total"), int):
+                total = max(total, data["total"])
             items = data["jobPostings"]
             if not items:
                 break
+            valid = new = 0
             for rec in items:
-                job = self._build(rec, host, site, detail_re)
+                job = self._build(rec, host, site, detail_re, today)
                 if job is None:
+                    skipped += 1
                     warnings.append(f"skipped malformed record: {str(rec)[:120]}")
-                elif rec["externalPath"] not in seen:
+                    continue
+                valid += 1
+                if rec["externalPath"] not in seen:
                     seen.add(rec["externalPath"])
                     jobs.append(job)
+                    new += 1
             offset += len(items)
-            if total and offset >= total:
+            if valid and not new:
+                complete = False
+                warnings.append(
+                    f"workday {src.token}: page at offset {offset - len(items)} added no new "
+                    "postings (offset ignored or unstable sort); stopping"
+                )
                 break
             if len(jobs) >= max_jobs or pages >= max_pages:
                 complete = False
-                warnings.append(f"workday {src.token}: cap hit at {len(jobs)} jobs / {pages} pages")
+                warnings.append(
+                    f"workday {src.token}: tenant too large for full enumeration; "
+                    f"jobs will not auto-close (cap hit at {len(jobs)} jobs / {pages} pages)"
+                )
                 break
             pages += 1
             data = await page(offset)
-        if complete and total and len(seen) < total * 0.9:
+        if complete and len(seen) + skipped < total:
             complete = False
-            warnings.append(f"workday {src.token}: listed {len(seen)} of reported total {total}")
+            warnings.append(
+                f"workday {src.token}: listed {len(seen)} (+{skipped} malformed) of "
+                f"reported total {total}"
+            )
         return FetchResult(jobs=jobs, complete=complete, warnings=warnings)
 
-    def _build(self, rec: Any, host: str, site: str, detail_re: re.Pattern[str]) -> RawJob | None:
+    def _build(
+        self, rec: Any, host: str, site: str, detail_re: re.Pattern[str], today: date
+    ) -> RawJob | None:
         if not isinstance(rec, dict) or not rec.get("title") or not rec.get("externalPath"):
             return None
-        payload = {
-            **rec,
-            "_host": host,
-            "_site": site,
-            "_nd": bool(detail_re.search(str(rec["title"]))),
-        }
+        payload = {k: v for k, v in rec.items() if k != "postedOn"}
+        payload.update(
+            {"_host": host, "_site": site, "_nd": bool(detail_re.search(str(rec["title"])))}
+        )
+        posted = parse_relative(rec.get("postedOn"), today)
+        if posted is not None:
+            payload["_posted"] = posted.date().isoformat()
         return self._map(payload)
 
     @staticmethod
@@ -233,14 +349,8 @@ class WorkdayAdapter(Adapter):
             return None
         detail = payload.get("detail") if isinstance(payload.get("detail"), dict) else None
         d = detail or {}
-        bullets = payload.get("bulletFields")
-        bullet = (
-            next((b for b in bullets if isinstance(b, str) and b), None)
-            if isinstance(bullets, list)
-            else None
-        )
         last = path.rstrip("/").rsplit("/", 1)[-1]
-        ext_id = d.get("jobReqId") or bullet or (last.rsplit("_", 1)[-1] if "_" in last else last)
+        ext_id = last.rsplit("_", 1)[-1] if "_" in last else last
         url = d.get("externalUrl") or f"https://{host}/{site}{path}"
         if detail and isinstance(d.get("location"), str):
             extra = d.get("additionalLocations")
@@ -256,9 +366,7 @@ class WorkdayAdapter(Adapter):
             else:
                 slug = _slug_location(path)
                 locs = [slug] if slug else []
-        posted = _iso_date(d.get("startDate")) or parse_relative(
-            payload.get("postedOn") or d.get("postedOn"), datetime.now(UTC).date()
-        )
+        posted = _iso_date(d.get("startDate")) or _iso_date(payload.get("_posted"))
         return RawJob(
             external_id=str(ext_id),
             title=str(title),
@@ -283,6 +391,7 @@ class WorkdayAdapter(Adapter):
         info = data.get("jobPostingInfo") if isinstance(data, dict) else None
         if not isinstance(info, dict):
             raise ValueError(f"workday {src.token}: unexpected detail payload")
+        info = {k: v for k, v in info.items() if k != "postedOn"}  # volatile relative text
         mapped = self._map({**job.payload, "detail": info})
         return mapped if mapped is not None else job
 

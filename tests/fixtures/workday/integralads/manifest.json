@@ -57,6 +57,38 @@
       "content_type": "application/json",
       "headers": {},
       "file": "003.json"
+    },
+    {
+      "method": "POST",
+      "url": "https://integralads.wd1.myworkdayjobs.com/wday/cxs/integralads/IAScareers/jobs",
+      "json": {
+        "appliedFacets": {
+          "locationCountry": [
+            "bc33aa3152ec42d4995f4791a106ed09"
+          ]
+        },
+        "limit": 20,
+        "offset": 9,
+        "searchText": ""
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "004.json"
+    },
+    {
+      "method": "POST",
+      "url": "https://integralads.wd1.myworkdayjobs.com/wday/cxs/integralads/IAScareers/jobs",
+      "json": {
+        "appliedFacets": {},
+        "limit": 20,
+        "offset": 18,
+        "searchText": ""
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "005.json"
     }
   ]
 }
