@@ -301,6 +301,9 @@ class WorkdayAdapter(Adapter):
                     jobs.append(job)
                     new += 1
             offset += len(items)
+            covered = total > 0 and len(seen) + skipped >= total
+            if valid and not new and covered:
+                break  # tail page repeating postings already seen; nothing left to list
             if valid and not new:
                 complete = False
                 warnings.append(
@@ -308,6 +311,8 @@ class WorkdayAdapter(Adapter):
                     "postings (offset ignored or unstable sort); stopping"
                 )
                 break
+            if covered and len(items) < PAGE_SIZE:
+                break  # short final page and every reported job seen: no trailing request
             if len(jobs) >= max_jobs or pages >= max_pages:
                 complete = False
                 warnings.append(

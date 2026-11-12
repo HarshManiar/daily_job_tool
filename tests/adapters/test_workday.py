@@ -774,7 +774,7 @@ async def test_facet_4xx_falls_back_unfiltered():
     res = await run(handler)
     assert len(res.jobs) == 25 and res.complete
     assert any("retrying unfiltered" in w for w in res.warnings)
-    assert [bool(b["appliedFacets"]) for b in log] == [False, True, False, False, False]
+    assert [bool(b["appliedFacets"]) for b in log] == [False, True, False, False]
 
 
 async def test_us_id_discovered_from_descriptor():
@@ -817,3 +817,88 @@ async def test_impl_hosts_rejected(host):
     async with mock_client(server(1)) as c:
         with pytest.raises(ConfigError, match="sandbox"):
             await A.fetch_jobs(s("t/s", host=host, tenant="t", site="s"), c)
+
+
+def _chunks(n, total=None, repeat_tail=False, facets=None):
+    """Handler serving n distinct jobs in 20-item pages; past the end it repeats the tail
+    (like Workday) or returns an empty page."""
+
+    def pages(b):
+        off = b["offset"]
+        if off >= n:
+            items = [mk(i) for i in range(max(0, n - 18), n)] if repeat_tail else []
+        else:
+            items = [mk(i) for i in range(off, min(off + 20, n))]
+        body = {"total": n if total is None else total, "jobPostings": items}
+        if facets is not None:
+            body["facets"] = facets
+        return body
+
+    return pages
+
+
+async def test_short_list_no_trailing_request():
+    log = []
+    res = await run(listing(_chunks(18, repeat_tail=True), log))
+    assert res.complete and len(res.jobs) == 18 and not res.warnings
+    assert len(log) == 1
+
+
+async def test_three_pages_total_45():
+    log = []
+    res = await run(listing(_chunks(45, repeat_tail=True), log))
+    assert res.complete and len(res.jobs) == 45 and not res.warnings
+    assert [b["offset"] for b in log] == [0, 20, 40]
+
+
+async def test_tail_repeat_after_seen_ge_total_is_complete():
+    log = []
+    res = await run(listing(_chunks(40, repeat_tail=True), log))  # full last page
+    assert res.complete and len(res.jobs) == 40 and not res.warnings
+    assert [b["offset"] for b in log] == [0, 20, 40]
+
+
+async def test_offset_ignored_total_100_incomplete():
+    log = []
+    res = await run(
+        listing(lambda b: {"total": 100, "jobPostings": [mk(i) for i in range(20)]}, log)
+    )
+    assert len(log) == 2 and len(res.jobs) == 20 and not res.complete
+    assert any("no new" in w for w in res.warnings)
+
+
+async def test_total_grows_before_coverage_incomplete():
+    # page 0 reports 20 of 25; page 1 (short, 5 items) reports total 27 -> 2 never seen
+    def pages(b):
+        off = b["offset"]
+        if off == 0:
+            return {"total": 25, "jobPostings": [mk(i) for i in range(20)]}
+        return (
+            {"total": 27, "jobPostings": [mk(i) for i in range(20, 25)]}
+            if off == 20
+            else {
+                "total": 27,
+                "jobPostings": [],
+            }
+        )
+
+    res = await run(listing(pages))
+    assert len(res.jobs) == 25 and not res.complete
+
+
+async def test_total_only_on_first_page_short_list():
+    def pages(b):
+        if b["offset"] == 0:
+            return {"total": 18, "jobPostings": [mk(i) for i in range(18)]}
+        return {"total": 0, "jobPostings": [mk(i) for i in range(18)]}
+
+    log = []
+    res = await run(listing(pages, log))
+    assert res.complete and len(res.jobs) == 18 and len(log) == 1
+
+
+async def test_us_facet_short_list_no_trailing_request():
+    log = []
+    res = await run(listing(_chunks(18, repeat_tail=True, facets=US_FACETS), log))
+    assert res.complete and len(res.jobs) == 18
+    assert [b["offset"] for b in log] == [0, 0]  # discovery + filtered page 1 only
