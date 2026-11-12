@@ -491,3 +491,27 @@ async def test_fixture_transport_non_json_body_does_not_raise(tmp_path):
     req = httpx.Request("POST", "https://a.example/x", content=b"\xff\xfenot json")
     with pytest.raises(AssertionError, match="No fixture"):
         await t.handle_async_request(req)
+
+
+async def test_request_deadline_on_stalled_transport():
+    never = asyncio.Event()
+    calls = 0
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404)
+        calls += 1
+        await never.wait()
+        return httpx.Response(200)
+
+    ft = FakeTime()
+    c = CrawlClient(
+        UA, transport=httpx.MockTransport(handler), clock=ft.clock, sleep=ft.sleep,
+        retry_delays=(1, 1), request_deadline=0.05,
+    )  # fmt: skip
+    with pytest.raises(FetchError) as ei:
+        await asyncio.wait_for(c.get_text("https://hung.example/x"), 5)
+    assert "timeout" in ei.value.message.lower() or "ReadTimeout" in ei.value.message
+    assert calls == 3  # initial + 2 retries per the retry policy
+    await c.aclose()

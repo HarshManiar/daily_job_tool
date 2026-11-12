@@ -50,6 +50,7 @@ CIRCUIT_PAUSE = 30 * 60.0
 ROBOTS_MAX_BYTES = 512 * 1024
 MAX_REDIRECTS = 5
 MAX_CRAWL_DELAY = 60.0
+REQUEST_DEADLINE = 90.0  # wall-clock cap on one send + body read (a stalled socket after sleep)
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 
 
@@ -134,11 +135,13 @@ class CrawlClient:
         retry_delays: tuple[float, ...] = (2, 8, 30),
         recorder: Recorder | None = None,
         blocked: BlockedCheck | None = None,
+        request_deadline: float | None = REQUEST_DEADLINE,
     ) -> None:
         self.user_agent = user_agent
         self.max_bytes = max_bytes
         self.retry_delays = tuple(retry_delays)
         self.recorder = recorder
+        self.request_deadline = request_deadline
         # blocked(hostname) -> True if the host must never be fetched
         self._blocked: BlockedCheck = blocked or is_blocked_host
         self._clock = clock
@@ -303,23 +306,14 @@ class CrawlClient:
         async with self._sem:
             await self._limiter.acquire(host)
             self._count(host, requests=1, robots=robots)
-            resp = await self._http.send(req, stream=True, follow_redirects=False)
             try:
-                declared = resp.headers.get("content-length")
-                if not truncate and declared and declared.isdigit() and int(declared) > cap:
-                    raise ResponseTooLarge(url, cap)
-                chunks: list[bytes] = []
-                total = 0
-                async for chunk in resp.aiter_bytes():
-                    total += len(chunk)
-                    if total > cap:
-                        if not truncate:
-                            raise ResponseTooLarge(url, cap)
-                        chunks.append(chunk[: len(chunk) - (total - cap)])
-                        break
-                    chunks.append(chunk)
-            finally:
-                await resp.aclose()
+                async with asyncio.timeout(self.request_deadline):
+                    resp, chunks = await self._exchange(req, url, cap, truncate)
+            except TimeoutError as exc:
+                # httpx timeouts only bound individual socket ops; this bounds the whole attempt.
+                raise httpx.ReadTimeout(
+                    f"request exceeded {self.request_deadline}s wall-clock deadline", request=req
+                ) from exc
         # body is already decoded; drop encoding/length headers so the copy is self-consistent
         headers = httpx.Headers(resp.headers)
         for h in ("content-encoding", "content-length", "transfer-encoding"):
@@ -330,6 +324,28 @@ class CrawlClient:
             content=b"".join(chunks),
             request=resp.request,
         )
+
+    async def _exchange(
+        self, req: httpx.Request, url: str, cap: int, truncate: bool
+    ) -> tuple[httpx.Response, list[bytes]]:
+        resp = await self._http.send(req, stream=True, follow_redirects=False)
+        try:
+            declared = resp.headers.get("content-length")
+            if not truncate and declared and declared.isdigit() and int(declared) > cap:
+                raise ResponseTooLarge(url, cap)
+            chunks: list[bytes] = []
+            total = 0
+            async for chunk in resp.aiter_bytes():
+                total += len(chunk)
+                if total > cap:
+                    if not truncate:
+                        raise ResponseTooLarge(url, cap)
+                    chunks.append(chunk[: len(chunk) - (total - cap)])
+                    break
+                chunks.append(chunk)
+        finally:
+            await resp.aclose()
+        return resp, chunks
 
     def _jittered(self, attempt: int) -> float:
         return self.retry_delays[attempt] * random.uniform(0.8, 1.2)

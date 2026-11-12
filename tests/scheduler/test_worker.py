@@ -217,3 +217,171 @@ async def test_breaker_not_found_and_robots(db_clean):
     sid = await add_source(db_clean)
     _, r, _ = await _breaker(db_clean, sid, 3, ["not_found", "ok", "not_found"])
     assert r.st == "active"
+
+
+# -- continuous pool, wall-clock cap, shutdown ------------------------------------------
+
+
+class SlowAdapter(FakeAdapter):
+    """Per-token behaviour: 'hang' sleeps forever, 'slow' 0.6 s, others instant."""
+
+    def __init__(self, delays, log):
+        super().__init__()
+        self.delays, self.log = delays, log
+
+    async def fetch_jobs(self, src, http):
+        self.log.append(("start", src.id, asyncio.get_running_loop().time()))
+        d = self.delays.get(src.id, 0)
+        await (asyncio.sleep(3600) if d == "hang" else asyncio.sleep(d))
+        self.log.append(("end", src.id, asyncio.get_running_loop().time()))
+        from daily_job_tool.adapters.base import FetchResult
+
+        return FetchResult(jobs=[job("1")], complete=True)
+
+
+def _patch(monkeypatch, ad):
+    monkeypatch.setattr(worker_mod.registry, "get_adapter", lambda name: ad)
+
+
+async def _run(db, **kw):
+    kw.setdefault("once", True)
+    return await run_worker(
+        db, CTX, client_factory=lambda: client_for(None), install_signals=False, **kw
+    )
+
+
+async def test_hung_source_times_out_and_does_not_block(db_clean, monkeypatch):
+    hung = await add_source(db_clean, priority=1)
+    fast = [await add_source(db_clean, priority=5) for _ in range(5)]
+    log: list = []
+    _patch(monkeypatch, SlowAdapter({hung: "hang"}, log))
+    out = await _run(db_clean, concurrency=2, source_timeout_seconds=1.0)
+    by = {s.source_id: s for s in out}
+    assert by[hung].outcome == "timeout" and by[hung].error == "source exceeded wall-clock cap"
+    assert all(by[f].outcome == "ok" for f in fast)
+    ends = {sid: t for k, sid, t in log if k == "end"}
+    starts = {sid: t for k, sid, t in log if k == "start"}
+    assert max(ends.values()) - starts[hung] < 0.9  # fast ones finished before the cap fired
+    r = (
+        await rows(
+            db_clean,
+            "SELECT locked_until, consecutive_failures AS f, last_outcome::text AS o, "
+            "next_crawl_at > now() AS later FROM sources WHERE id=:i", i=hung,
+        )
+    )[0]  # fmt: skip
+    assert r.locked_until is None and r.f == 1 and r.o == "timeout" and r.later
+    run = (
+        await rows(
+            db_clean,
+            "SELECT outcome::text AS o, error, finished_at FROM crawl_runs WHERE source_id=:i",
+            i=hung,
+        )
+    )[0]
+    assert run.o == "timeout" and run.error == "source exceeded wall-clock cap"
+    assert run.finished_at is not None
+
+
+async def test_cancel_mid_ingest_leaves_no_partial_state(db_clean, monkeypatch):
+    class HangAfterJobs(FakeAdapter):
+        async def fetch_jobs(self, src, http):
+            await asyncio.sleep(3600)
+
+    sid = await add_source(db_clean)
+    _patch(monkeypatch, HangAfterJobs())
+    await _run(db_clean, source_timeout_seconds=0.3)
+    assert await scalar(db_clean, "SELECT count(*) FROM postings") == 0
+    assert await scalar(db_clean, "SELECT count(*) FROM crawl_runs WHERE finished_at IS NULL") == 0
+    assert await scalar(db_clean, "SELECT locked_until IS NULL FROM sources WHERE id=:i", i=sid)
+
+
+async def test_cancel_inside_open_transaction_rolls_back(db_clean, monkeypatch):
+    sid = await add_source(db_clean)
+
+    async def fake_ingest(engine, source_id, *a, **k):
+        async with engine.begin() as conn:
+            await conn.execute(text("UPDATE sources SET consecutive_failures = 99"))
+            await asyncio.sleep(3600)
+
+    monkeypatch.setattr(worker_mod, "ingest_source", fake_ingest)
+    await _run(db_clean, source_timeout_seconds=0.3)
+    r = (await rows(db_clean, "SELECT consecutive_failures AS f FROM sources WHERE id=:i", i=sid))[
+        0
+    ]
+    assert r.f == 1  # the 99 was rolled back; only the timeout increment remains
+
+
+async def test_pool_refills_as_slots_free(db_clean, monkeypatch):
+    a = await add_source(db_clean, priority=1)  # slow
+    b = await add_source(db_clean, priority=2)  # fast
+    c = await add_source(db_clean, priority=3)
+    d = await add_source(db_clean, priority=4)
+    log: list = []
+    _patch(monkeypatch, SlowAdapter({a: 1.5, b: 0.1, c: 0.1, d: 0.1}, log))
+    out = await _run(db_clean, concurrency=2, poll_seconds=30)
+    assert len(out) == 4
+    starts = {sid: t for k, sid, t in log if k == "start"}
+    ends = {sid: t for k, sid, t in log if k == "end"}
+    # c starts right after b ends (not after the whole first batch), d after c
+    assert starts[c] - ends[b] < 0.5 and starts[d] - ends[c] < 0.5
+    assert starts[d] < ends[a]
+
+
+async def test_shutdown_grace_cancels_in_flight(db_clean, monkeypatch):
+    hung = await add_source(db_clean, priority=1)
+    quick = await add_source(db_clean, priority=2)
+    later = await add_source(db_clean, priority=3)
+    log: list = []
+    _patch(monkeypatch, SlowAdapter({hung: "hang", quick: 0.1}, log))
+    stop = asyncio.Event()
+    task = asyncio.create_task(
+        _run(
+            db_clean,
+            concurrency=1,
+            stop=stop,
+            shutdown_grace_seconds=0.5,
+            source_timeout_seconds=60,
+        )
+    )
+    await asyncio.sleep(0.5)
+    t0 = asyncio.get_running_loop().time()
+    stop.set()
+    out = await asyncio.wait_for(task, 10)
+    assert asyncio.get_running_loop().time() - t0 >= 0.45  # waited for the grace period
+    by = {s.source_id: s for s in out}
+    assert by[hung].outcome == "timeout" and "cancelled" in by[hung].error
+    assert quick not in by and later not in by  # nothing claimed after stop
+    assert {c.id for c in await claim_sources(db_clean, 10)} == {quick, later}
+    run = (
+        await rows(
+            db_clean, "SELECT outcome::text AS o, error FROM crawl_runs WHERE source_id=:i", i=hung
+        )
+    )[0]
+    assert run.o == "timeout" and "cancelled" in run.error
+    assert await scalar(db_clean, "SELECT locked_until IS NULL FROM sources WHERE id=:i", i=hung)
+
+
+async def test_force_stop_cancels_immediately(db_clean, monkeypatch):
+    hung = await add_source(db_clean)
+    _patch(monkeypatch, SlowAdapter({hung: "hang"}, []))
+    stop, force = asyncio.Event(), asyncio.Event()
+    task = asyncio.create_task(
+        _run(db_clean, stop=stop, force_stop=force, shutdown_grace_seconds=60)
+    )
+    await asyncio.sleep(0.5)
+    stop.set()
+    force.set()
+    out = await asyncio.wait_for(task, 5)
+    assert [s.outcome for s in out] == ["timeout"]
+    assert await scalar(db_clean, "SELECT locked_until IS NULL FROM sources")
+
+
+async def test_orphan_cleanup_closes_unfinished_run_at_start(db_clean, monkeypatch):
+    sid = await add_source(db_clean, due=False)
+    async with db_clean.begin() as conn:
+        await conn.execute(
+            text("INSERT INTO crawl_runs (source_id, adapter, started_at) "
+                 "VALUES (:s,'x', now() - interval '3 hours')"), {"s": sid},
+        )  # fmt: skip
+    await _run(db_clean)
+    r = (await rows(db_clean, "SELECT outcome::text AS o, finished_at FROM crawl_runs"))[0]
+    assert r.o == "timeout" and r.finished_at is not None
