@@ -86,7 +86,7 @@ The product is now a **personal job-matching tool for data analyst / data engine
 
 **Main thread:** Sonnet.
 
-- ☐ **3.1** `[sonnet/builder]` `SearchFilters` model + query builder for all filters, filter UI (HTMX, URL state), indexes, **plus the “new since last visit” marker** (`app_state` migration `0005`). *AC:* DB test per filter; p95 < 300 ms on 150k synthetic jobs.
+- ☐ **3.1** `[sonnet/builder]` `SearchFilters` model + query builder for all filters, filter UI (HTMX, URL state), indexes, **plus the “new since last visit” marker** (`app_state` migration `0005`). **Also (owner request): two quick checkboxes in the filter bar, “Posted last 24 hours” and “Posted last 48 hours”** (checking both behaves as 48 h; each overrides the days selector; based on `freshness_at`, so undated jobs count by first-seen time; show the matching count next to each box). *AC:* DB test per filter; p95 < 300 ms on 150k synthetic jobs.
 - ☐ **3.2** `[sonnet/builder]` Nightly `company_daily_stats`, company list + pages with 90-day SVG sparkline **+** badges (high-salary percentile, hidden gem, "Hidden gems" view). `[haiku/grunt]` builds `data/well_known.csv` first. *(Bundles old 3.2 + 3.7.)*
 - ~~**3.3** Auth~~ **Removed: personal single-user site, no accounts.** No token needed either: the app listens on 127.0.0.1 only.
 - ☐ **3.4** `[sonnet/builder]` Saved searches CRUD (no users table; single owner; the app listens on 127.0.0.1 only, so no token or login at all) (RSS removed along with alerts: the tool is opened daily).
