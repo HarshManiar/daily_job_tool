@@ -1,0 +1,46 @@
+name,domain,industry,host,tenant,site,careers_url,status,notes
+Moderna,modernatx.com,pharma/biotech,modernatx.wd1.myworkdayjobs.com,modernatx,M_tx,https://modernatx.wd1.myworkdayjobs.com/M_tx/job/Cambridge-Massachusetts/Director--Therapeutics-Translational-Research_R18015-1,parsed,verified total=237; no country facet
+Caris Life Sciences,carislifesciences.com,pharma/biotech,,,,https://wd12.myworkdaysite.com/recruiting/carislifesciences/CLS,missing_tenant,myworkdaysite.com recruiting URL; different host form (not supported in v1)
+Cytokinetics,cytokinetics.com,pharma/biotech,cytokinetics.wd1.myworkdayjobs.com,cytokinetics,Cytokinetics,https://cytokinetics.wd1.myworkdayjobs.com/Cytokinetics,parsed,verified total=60; no country facet
+Verily,verily.com,pharma/biotech,verily.wd1.myworkdayjobs.com,verily,Verily_Careers,https://verily.wd1.myworkdayjobs.com/Verily_Careers,parsed,verified total=94; no country facet
+Trinity Life Sciences,trinitylifesciences.com,pharma consulting,trinitylifesciences.wd108.myworkdayjobs.com,trinitylifesciences,Trinity,https://trinitylifesciences.wd108.myworkdayjobs.com/Trinity,parsed,verified total=72; no country facet
+Pacific Biosciences,pacb.com,pharma/biotech,pacbio.wd12.myworkdayjobs.com,pacbio,PacBio-,https://pacbio.wd12.myworkdayjobs.com/PacBio-,parsed,site ends with hyphen (as linked); verified total=18; no country facet
+Progyny,progyny.com,health tech,progyny.wd5.myworkdayjobs.com,progyny,progyny,https://progyny.wd5.myworkdayjobs.com/progyny,parsed,verified total=16; no country facet
+Cityblock Health,cityblock.com,health tech,cityblockhealth.wd1.myworkdayjobs.com,cityblockhealth,CityblockExternalCareerSite,https://cityblockhealth.wd1.myworkdayjobs.com/CityblockExternalCareerSite,parsed,verified total=41; US facet locationCountry count=40
+Evolent Health,evolent.com,health tech,evolent.wd1.myworkdayjobs.com,evolent,External,https://evolent.wd1.myworkdayjobs.com/External?q=clinical,parsed,verified total=40; US facet Country count=26
+Health Catalyst,healthcatalyst.com,health tech,healthcatalyst.wd5.myworkdayjobs.com,healthcatalyst,healthcatalystcareers,https://healthcatalyst.wd5.myworkdayjobs.com/healthcatalystcareers,parsed,verified total=4; no country facet
+Ensemble Health Partners,ensemblehp.com,health tech,ensemblehp.wd5.myworkdayjobs.com,ensemblehp,EnsembleHealthPartnersCareers,https://ensemblehp.wd5.myworkdayjobs.com/en-US/EnsembleHealthPartnersCareers/jobs,parsed,verified total=483; no country facet
+Phreesia,phreesia.com,health tech,phreesia.wd1.myworkdayjobs.com,phreesia,Phreesia,https://phreesia.wd1.myworkdayjobs.com/en-US/Phreesia/,parsed,verified total=8; no country facet
+Press Ganey,pressganey.com,healthcare data,pressganey.wd1.myworkdayjobs.com,pressganey,Careers,https://pressganey.wd1.myworkdayjobs.com/Careers,parsed,verified total=14; no country facet
+Lumeris,lumeris.com,health tech,lumeris.wd1.myworkdayjobs.com,lumeris,LC,https://lumeris.wd1.myworkdayjobs.com/LC,parsed,verified total=10; no country facet
+Premier Inc,premierinc.com,healthcare data,premierinc.wd1.myworkdayjobs.com,premierinc,External_Professional,https://premierinc.wd1.myworkdayjobs.com/External_Professional,parsed,verified total=44; no country facet
+Veradigm,veradigm.com,healthcare data,veradigm.wd12.myworkdayjobs.com,veradigm,VR,https://veradigm.wd12.myworkdayjobs.com/VR,parsed,verified total=104; US facet locationCountry count=40
+GoodRx,goodrx.com,pbm/health plan,goodrx.wd1.myworkdayjobs.com,goodrx,careers,https://goodrx.wd1.myworkdayjobs.com/careers,parsed,verified total=7; no country facet
+Prime Therapeutics,primetherapeutics.com,pbm/health plan,primetherapeutics.wd1.myworkdayjobs.com,primetherapeutics,PrimeTherapeuticsCareers,https://primetherapeutics.wd1.myworkdayjobs.com/PrimeTherapeuticsCareers,parsed,verified total=33; no country facet
+Truepill,truepill.com,specialty pharmacy,alto.wd1.myworkdayjobs.com,alto,FuzeHealthCareerSite,https://alto.wd1.myworkdayjobs.com/FuzeHealthCareerSite,parsed,verified total=35; no country facet
+Alto Pharmacy,alto.com,specialty pharmacy,alto.wd1.myworkdayjobs.com,alto,FuzeHealthCareerSite,https://alto.wd1.myworkdayjobs.com/FuzeHealthCareerSite,parsed,verified total=35; no country facet
+Devoted Health,devoted.com,pbm/health plan,devoted.wd1.myworkdayjobs.com,devoted,Devoted,https://devoted.wd1.myworkdayjobs.com/Devoted,parsed,verified total=81; no country facet
+Alignment Healthcare,alignmenthealthcare.com,pbm/health plan,alignmenthealthcare5.impl-wd12.myworkdayjobs.com,alignmenthealthcare5,ahc_external,https://alignmenthealthcare5.impl-wd12.myworkdayjobs.com/en-US/ahc_external/introduceYourself,parsed,impl (sandbox) tenant host; verify FAILED: RobotsDisallowed: robots.txt disallows https://alignmenthealthcare5.impl-wd12.myworkdayjobs.com/wday/cxs/alignmentheal
+Q2 Holdings,q2.com,fintech,q2ebanking.wd5.myworkdayjobs.com,q2ebanking,Q2,https://q2ebanking.wd5.myworkdayjobs.com/Q2,parsed,verified total=62; no country facet
+Remitly,remitly.com,fintech,,,,https://careers.remitly.com,missing_tenant,no direct myworkdayjobs URL; inline_keyword:myworkdayjobs.com
+Alkami,alkami.com,fintech,alkami.wd12.myworkdayjobs.com,alkami,Alkami,https://alkami.wd12.myworkdayjobs.com/Alkami,parsed,verified total=47; no country facet
+LendingClub,lendingclub.com,fintech,lendingclub.wd1.myworkdayjobs.com,lendingclub,External,https://lendingclub.wd1.myworkdayjobs.com/External,parsed,verified total=33; no country facet
+Beyond Inc,beyond.com,e-commerce,overstock.wd5.myworkdayjobs.com,overstock,BedBathandBeyond_Careers,https://overstock.wd5.myworkdayjobs.com/BedBathandBeyond_Careers,parsed,verified total=34; no country facet
+Guidehouse,guidehouse.com,consulting,guidehouse.wd1.myworkdayjobs.com,guidehouse,External,https://guidehouse.wd1.myworkdayjobs.com/External,parsed,verified total=830; US facet locationCountry count=667
+Chemonics,chemonics.com,consulting,,,,https://www.chemonics.com/careers/,missing_tenant,no direct myworkdayjobs URL; inline_keyword:myworkdaysite.com
+Quantiphi,quantiphi.com,consulting,quantiphi.wd1.myworkdayjobs.com,quantiphi,Careers_at_Quantiphi,https://quantiphi.wd1.myworkdayjobs.com/Careers_at_Quantiphi,parsed,verified total=82; no country facet
+Protiviti,protiviti.com,consulting,roberthalf.wd1.myworkdayjobs.com,roberthalf,ProtivitiNA,https://roberthalf.wd1.myworkdayjobs.com/ProtivitiNA,parsed,verified total=149; no country facet
+RSM US,rsmus.com,consulting,rsm.wd1.myworkdayjobs.com,rsm,RSMCareers,https://rsm.wd1.myworkdayjobs.com/RSMCareers/login,parsed,verified total=650; US facet locationCountry count=395
+Magnite,magnite.com,media,osv-rubicon.wd5.myworkdayjobs.com,osv-rubicon,MagniteCareers,https://osv-rubicon.wd5.myworkdayjobs.com/MagniteCareers,parsed,verify FAILED: FetchError: https://osv-rubicon.wd5.myworkdayjobs.com/wday/cxs/osv-rubicon/MagniteCareers/jobs -> 422: HTTP 422
+Integral Ad Science,integralads.com,media,integralads.wd1.myworkdayjobs.com,integralads,IAScareers,https://integralads.wd1.myworkdayjobs.com/en-US/IAScareers/,parsed,verified total=18; US facet locationCountry count=9
+DoubleVerify,doubleverify.com,media,doubleverify.wd5.myworkdayjobs.com,doubleverify,DV_Careers,https://doubleverify.wd5.myworkdayjobs.com/DV_Careers,parsed,verified total=36; no country facet
+Stord,stord.com,logistics,stord.wd503.myworkdayjobs.com,stord,Stord_External_Career,https://stord.wd503.myworkdayjobs.com/Stord_External_Career/job/Remote-United-Kingdom/Head-of-Carrier-Management---Europe_JR103466-2,parsed,verified total=107; no country facet
+Comscore,comscore.com,media,comscore.wd5.myworkdayjobs.com,comscore,External,https://comscore.wd5.myworkdayjobs.com/en-US/External/introduceYourself,parsed,verified total=25; no country facet
+Alteryx,alteryx.com,software,alteryx.wd108.myworkdayjobs.com,alteryx,AlteryxCareers,https://alteryx.wd108.myworkdayjobs.com/AlteryxCareers,parsed,verified total=47; US facet locationCountry count=32
+Madrigal Pharmaceuticals,madrigalpharma.com,pharma/biotech,madrigalpharma.wd501.myworkdayjobs.com,madrigalpharma,Madrigal,https://madrigalpharma.wd501.myworkdayjobs.com/Madrigal,parsed,verified total=63; no country facet
+Crinetics,crinetics.com,pharma/biotech,crinetics.wd12.myworkdayjobs.com,crinetics,CrineticsCareers,https://crinetics.wd12.myworkdayjobs.com/CrineticsCareers,parsed,verified total=3; no country facet
+Ideaya Biosciences,ideayabio.com,pharma/biotech,ideayabio.wd501.myworkdayjobs.com,ideayabio,External,https://ideayabio.wd501.myworkdayjobs.com/External,parsed,verified total=12; no country facet
+Sage Therapeutics,sagerx.com,pharma/biotech,sagerx.wd5.myworkdayjobs.com,sagerx,Sagerx,https://sagerx.wd5.myworkdayjobs.com/en-US/Sagerx/introduceYourself,parsed,verified total=0; 0 jobs; not seeded
+Benefitfocus,benefitfocus.com,health tech,godirect.wd5.myworkdayjobs.com,godirect,voya_jobs,https://godirect.wd5.myworkdayjobs.com/voya_jobs?q=Benefitfocus ,parsed,verified total=112; no country facet
+Lendio,lendio.com,fintech,lendio.wd1.myworkdayjobs.com,lendio,lendio,https://lendio.wd1.myworkdayjobs.com/lendio,parsed,verified total=2; no country facet
+Avant,avant.com,fintech,avant.wd503.myworkdayjobs.com,avant,External_Careers,https://avant.wd503.myworkdayjobs.com/External_Careers,parsed,verified total=8; no country facet

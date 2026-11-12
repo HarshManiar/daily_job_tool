@@ -1,0 +1,26 @@
+{
+  "adapter": "workday",
+  "token": "nosuchsite",
+  "config": {
+    "host": "cytokinetics.wd1.myworkdayjobs.com",
+    "tenant": "cytokinetics",
+    "site": "NoSuchSite"
+  },
+  "recorded_at": "2026-11-12T00:25:06.926156+00:00",
+  "exchanges": [
+    {
+      "method": "POST",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/NoSuchSite/jobs",
+      "json": {
+        "appliedFacets": {},
+        "limit": 20,
+        "offset": 0,
+        "searchText": ""
+      },
+      "status": 404,
+      "content_type": "application/json;charset=ISO-8859-1",
+      "headers": {},
+      "file": "000.json"
+    }
+  ]
+}

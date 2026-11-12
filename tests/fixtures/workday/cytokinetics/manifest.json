@@ -1,0 +1,95 @@
+{
+  "adapter": "workday",
+  "token": "cytokinetics",
+  "config": {
+    "host": "cytokinetics.wd1.myworkdayjobs.com",
+    "tenant": "cytokinetics",
+    "site": "Cytokinetics"
+  },
+  "recorded_at": "2026-11-12T00:25:03.349381+00:00",
+  "exchanges": [
+    {
+      "method": "POST",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/Cytokinetics/jobs",
+      "json": {
+        "appliedFacets": {},
+        "limit": 20,
+        "offset": 0,
+        "searchText": ""
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    },
+    {
+      "method": "POST",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/Cytokinetics/jobs",
+      "json": {
+        "appliedFacets": {},
+        "limit": 20,
+        "offset": 20,
+        "searchText": ""
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "001.json"
+    },
+    {
+      "method": "POST",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/Cytokinetics/jobs",
+      "json": {
+        "appliedFacets": {},
+        "limit": 20,
+        "offset": 40,
+        "searchText": ""
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "002.json"
+    },
+    {
+      "method": "POST",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/Cytokinetics/jobs",
+      "json": {
+        "appliedFacets": {},
+        "limit": 20,
+        "offset": 60,
+        "searchText": ""
+      },
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "003.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/Cytokinetics/job/Radnor-Pennsylvania/Associate-Director--Business-Insights---Analytics-Data-Scientist_R703",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "004.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/Cytokinetics/job/South-San-Francisco-California/Senior-Manager--Biostatistics_R714",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "005.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://cytokinetics.wd1.myworkdayjobs.com/wday/cxs/cytokinetics/Cytokinetics/job/Radnor-Pennsylvania/Director--US-Regulatory-Affairs--Advertising---Promotion_R648",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "006.json"
+    }
+  ]
+}

@@ -14,6 +14,7 @@ ADAPTER_MODULES = [
     "darwinbox",
     "pharmaace",
     "html_list",
+    "workday",
 ]
 
 _REGISTRY: dict[str, type[Adapter]] = {}
