@@ -1,11 +1,26 @@
-"""Employment type (rule 8)."""
+"""Employment type (rule 8).
+
+Precedence: a non-full-time ATS value wins. An ATS 'full time' is never downgraded by weak
+title/description signals (flagged 'employment:conflict' instead), EXCEPT when the title holds a
+strong, unambiguous token (standalone 1099, contractor, N-month/week/year contract, C2C,
+contract-to-hire): then the role is classified contract. Bare '1099' is deliberately NOT scanned
+in descriptions ('1099 tax forms experience'); descriptions keep explicit phrases only.
+'contract' directly followed by an ordinary noun (Contract Pricing Analyst) is not a signal.
+"""
 
 import re
+
+_STRONG_TITLE = re.compile(
+    r"\b1099\b|\bcontractor\b|\bc2c\b|"
+    r"\b\d+[- ]?(?:month|week|year)s?[- ]contract\b|"
+    r"\bcontract[- ]to[- ](?:hire|perm\w*)\b"
+)
 
 _TITLE_TOKENS: list[tuple[str, re.Pattern[str]]] = [
     ("internship", re.compile(r"\b(?:intern|internship|co-?op|working student|werkstudent)\b")),
     ("apprenticeship", re.compile(r"\bapprentice(?:ship)?\b")),
     ("part_time", re.compile(r"\bpart[- ]?time\b")),
+    ("contract", re.compile(r"\bfixed[- ]term\s+contract\b")),
     (
         "temporary",
         re.compile(r"\b(?:temporary|temp|fixed[- ]term|seasonal)\b(?!\s+(?:agency|staffing))"),
@@ -15,10 +30,12 @@ _TITLE_TOKENS: list[tuple[str, re.Pattern[str]]] = [
         "contract",
         re.compile(
             # 'contract' only as a qualifier of the position, never as part of the job's subject
-            r"\b(?:contractor|freelance)\b|"
+            r"\b(?:contractor|freelance)\b|\b1099\b|"
+            r"\b\d+[- ]?(?:month|week|year)s?[- ]contract\b|"
+            r"\bcontract\s*\(|[(\[]\s*contract\s*,|\bcontract\s+[-–—]\s*\S|"
             r"[(\[]\s*contract\s*[)\]]|"
             r"(?:\s[-–—|]\s|,\s*)contract(?:\s+(?:role|position|only|basis))?\s*$|"
-            r"\bcontract\s+(?:role|position|only|basis)\b|"
+            r"\bcontract\s+(?:role|position|only|basis|opportunity)\b|"
             r"\bcontract[- ]to[- ](?:hire|perm\w*)\b|"
             r"\b(?:analyst|engineer|developer|scientist|consultant)\s+contract\s*$|"
             r"^(?:(?:senior|sr\.?|jr\.?|junior|lead)\s+)?contract\s+"
@@ -90,6 +107,8 @@ def infer_employment_detail(
         elif _DESC_TEMP.search(hl):
             hit = "temporary"
     if ats == "full_time":
+        if _STRONG_TITLE.search(t):
+            return "contract", ()
         if hit in ("internship", "apprenticeship", "part_time"):
             return hit, ()
         return "full_time", (("employment:conflict",) if hit else ())
