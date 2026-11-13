@@ -80,14 +80,14 @@ async def test_experience_buckets(client, db):
     await db.job(c, title="y5+", years_min=5)
     await db.job(c, title="y6", years_min=6, years_max=6)
     assert await t(client, "experience=0-2") == {"unk", "y1", "y0-2", "y2-4"}
-    assert await t(client, "experience=3-5") == {"unk", "y3", "y2-4", "y4-6", "y5+"}
-    assert await t(client, "experience=5%2B") == {"unk", "y5+", "y6"} | {"y4-6"}
+    assert await t(client, "experience=3-5") == {"unk", "y3", "y4-6"}
+    assert await t(client, "experience=5%2B") == {"unk", "y5+", "y6"}
     assert await t(client, "experience=any") == await t(client)
     assert await t(client, "only_stated_years=1") == {
         "y1", "y0-2", "y3", "y2-4", "y4-6", "y5+", "y6"
     }  # fmt: skip
     assert await t(client, "experience=0-2&only_stated_years=1") == {"y1", "y0-2", "y2-4"}
-    assert await t(client, "experience=5%2B&only_stated_years=1") == {"y5+", "y6", "y4-6"}
+    assert await t(client, "experience=5%2B&only_stated_years=1") == {"y5+", "y6"}
     page = (await client.get("/")).text
     assert (
         "Jobs that don't state years are included" in page and "Only jobs that state years" in page

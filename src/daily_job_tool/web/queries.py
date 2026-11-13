@@ -284,9 +284,9 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
     if f.experience == "0-2":
         where.append(f"({unk}j.years_min <= 2)")
     elif f.experience == "3-5":
-        where.append(f"({unk}(j.years_min <= 5 AND COALESCE(j.years_max, j.years_min) >= 3))")
+        where.append(f"({unk}(j.years_min BETWEEN 3 AND 4))")
     elif f.experience == "5+":
-        where.append(f"({unk}j.years_min >= 5 OR j.years_max >= 5)")
+        where.append(f"({unk}j.years_min >= 5)")
     elif f.only_stated_years:
         where.append(stated)
     if f.company:
