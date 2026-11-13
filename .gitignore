@@ -14,3 +14,4 @@ data/*.local.*
 *.dump
 *.sql.gz
 ec*.json
+data/private/

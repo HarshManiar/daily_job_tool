@@ -52,6 +52,15 @@ If something fails, read the error, fix it, explain it simply. Do not continue u
 
 ## B. Interview
 
+**B0. Start from her CV.** Ask her to give you her CV/resume (drag the file into Claude Code, give its
+path, or paste the text) and, optionally, a LinkedIn "About" text or a few job postings she likes.
+Save any file she wants kept ONLY in `data/private/` (gitignored); never copy her CV into docs, tests,
+commits or the profile text itself. Read it and draft answers to the questions below (role, years,
+titles, skills, industries, tools, location hints), then show her the draft and ask her to correct it.
+Only ask questions the CV could not answer, and always ask the ones it cannot know (visa, locations,
+minimum pay, current employer, avoided levels, age of postings). She may also correct or add anything
+by chatting; treat her words as final over the CV.
+
 Ask conversationally, 2-4 questions at a time, and reflect answers back. Offer examples from their
 field when they are stuck. Collect:
 

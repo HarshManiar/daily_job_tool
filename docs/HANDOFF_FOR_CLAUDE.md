@@ -28,6 +28,8 @@ You MUST ASK HER (never guess or invent): her real contact email or https page f
 every interview answer below. Anything not on the list above is a question for her.
 
 ## What you need FROM THE USER (the interview, ONBOARDING step B)
+Start by asking for her CV (file, path or pasted text) and pre-fill the answers from it, then confirm
+with her. She provides her own details; keep her CV only in `data/private/` (gitignored).
 Current role and years of experience; target job titles in three tiers; broad roles to include
 anywhere; levels to avoid; years-of-experience range to keep; work authorization or visa situation;
 locations in priority order; industries to prioritize (this only boosts ranking); strong skills and gap
@@ -41,7 +43,7 @@ skills; minimum pay; current employer to exclude; how old a posting may be.
   `data/seeds.local.csv` (gitignored) and run `make seeds`.
 
 ## Files you will create (all private, never commit or share)
-`.env`, `data/profile.yaml`, `data/seeds.local.csv`.
+`.env`, `data/profile.yaml`, `data/seeds.local.csv`, `data/private/` (her CV and notes).
 
 ## Command cheat sheet (all from the project root)
 ```
