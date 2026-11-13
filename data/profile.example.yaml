@@ -59,7 +59,7 @@ hard_filters:
   exclude_companies: [YourCurrentEmployer]
   exclude_staffing_reposts: true
   visa:
-    status: h1b_transfer_needed
+    status: none                    # none = visa filters off; h1b_transfer_needed = drop postings that rule out sponsorship
     exclude_if_phrases:             # case-insensitive regex; matching postings are dropped
       - no\s+(visa\s+)?sponsorship
       - (will\s+)?not\s+(be\s+able\s+to\s+)?(provide\s+|offer\s+)?(visa\s+)?sponsor

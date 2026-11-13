@@ -7,6 +7,7 @@ Daily Job Tool — job search built only from employers' own career pages and AT
 ```sh
 brew install uv postgresql@17
 brew services start postgresql@17
+brew link --force postgresql@17   # keg-only formula: puts createdb/pg_dump on PATH
 createdb daily_job_tool
 createdb daily_job_tool_test
 cp .env.example .env

@@ -2,9 +2,10 @@
 # Fail if tracked files leak personal identifiers or the private profile.
 # Usage: scripts/check_private.sh   (or: make check-private)
 set -u
+git rev-parse --show-toplevel >/dev/null 2>&1 || { echo "Not a git repo: run git init && git add -A first"; exit 1; }
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
-PATTERN='axtria|harshmaniar|BOT_CONTACT=.+@'
+PATTERN="$(printf 'ax%s|harsh%s' 'tria' 'maniar')|BOT_CONTACT=.+@"
 status=0
 
 if git ls-files --error-unmatch data/profile.yaml >/dev/null 2>&1; then

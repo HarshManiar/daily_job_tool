@@ -19,6 +19,7 @@ brew --version                       # if missing: install Homebrew from https:/
 brew list postgresql@17 >/dev/null 2>&1 || brew install postgresql@17
 command -v uv >/dev/null || brew install uv
 brew services start postgresql@17    # Postgres must be running
+brew link --force postgresql@17      # keg-only: puts createdb and pg_dump on PATH
 ```
 
 Then, from the project root:
@@ -37,7 +38,10 @@ createdb <DB>_test                   # used only by the tests
 ```
 
 Edit `.env` (it is gitignored): set `DATABASE_URL=postgresql+asyncpg://localhost/<DB>` and
-`TEST_DATABASE_URL=postgresql+asyncpg://localhost/<DB>_test`. Leave BOT_CONTACT for step E.
+`TEST_DATABASE_URL=postgresql+asyncpg://localhost/<DB>_test`. Also ask NOW for her real email (or an https page) and set `BOT_CONTACT=` to it in `.env`: the company
+detection and verification in step D already make web requests, and sites should know who is calling.
+If the folder has no `.git` (it came from a zip), run `git init` and make a first commit so
+`make check-private` works.
 Create the tables and check everything works:
 
 ```sh
@@ -72,7 +76,9 @@ field when they are stuck. Collect:
 ## C. Write data/profile.yaml
 
 1. If `data/profile.yaml` exists, STOP and ask before touching it (offer to save a copy first).
-2. Start from `data/profile.example.yaml` (it documents every key in comments) and fill in her answers:
+2. Start from `data/profile.example.yaml` (it documents the main keys in comments; the optional keys `skill_aliases`, `crawl.detail_title_regex`,
+   `target_titles.blocked_levels`, `scoring` and per-location `label` are explained in
+   `src/daily_job_tool/match/profile.py`) and fill in her answers:
    `target_titles` (tier1/tier2/tier3, `generic_data_roles.title_regex` and `exclude_title_regex`,
    `blocked_levels` for avoided levels), `hard_filters` (`max_age_days`, `years_required`,
    `exclude_companies`, `visa`), `location_priority` (ordered; each entry has `name` plus `states`,
@@ -130,7 +136,7 @@ make seeds                           # registry import + registry verify
 1. Ethics first, tell her: we read only public job listings from employers' own career pages or
    job boards, respect robots.txt, rate-limit politely, and never bypass logins, CAPTCHAs or blocks
    (a blocked source is simply left alone). Ask for a real contact email and put it in `.env` as
-   `BOT_CONTACT=her@email` so site owners can reach her. Never invent or reuse someone else's.
+   `BOT_CONTACT=<her email>` so site owners can reach her. Never invent or reuse someone else's.
 2. Crawl. Warn her the first run takes a while (many minutes to an hour or more for ~400+ boards)
    and the laptop must stay awake:
 
@@ -159,3 +165,10 @@ make dev                             # web UI at http://127.0.0.1:8000
 
 When finished, give her a short summary: where the app runs, how to refresh (`make rescore`,
 `uv run daily_job_tool crawl --once`), and which files are hers and private.
+
+## Gotchas
+- The profile is read once per process: after editing `data/profile.yaml`, run `make rescore` AND restart
+  `make dev` (the auto-reload only watches Python files), or the Context tab and filters stay stale.
+- City preferences only match cities listed in `data/locations.yaml`; prefer `states`, or check the city is there.
+- If she skips the `crawl.detail_title_regex` step, a pharma/analytics-leaning default is used, which gives thin
+  detail data for other fields. Always set it for her field.
