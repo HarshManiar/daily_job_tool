@@ -302,7 +302,11 @@ async def test_refresh_spawns_once_then_running(mk, paths):
     assert r.status_code == 200 and "Refreshing" in r.text and 'hx-trigger="every 5s"' in r.text
     assert len(sp.calls) == 1
     argv, log = sp.calls[0]
-    assert argv[-2:] == ["crawl", "--once"] and log == paths["refresh_log_path"]
+    assert (
+        argv[-4:-2] == ["crawl", "--once"]
+        and argv[-2] == "--stale-hours"
+        and log == paths["refresh_log_path"]
+    )
     r = await c.post("/refresh", headers=h)
     assert len(sp.calls) == 1 and "already running" in r.text
     st = await c.get("/refresh/status?poll=1")

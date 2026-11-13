@@ -28,6 +28,7 @@ from daily_job_tool.ops.heartbeat import classify, read_heartbeat
 log = logging.getLogger("daily_job_tool.web.refresh")
 
 MAX_AGE = timedelta(hours=3)  # a pid file older than this is treated as stale (pid reuse guard)
+STALE_HOURS = 6  # Refresh re-crawls anything not crawled in the last 6 hours
 Spawner = Callable[[list[str], Path], int]
 
 
@@ -45,8 +46,16 @@ def crawl_argv() -> list[str]:
     """Fixed argv, no user input."""
     script = Path(sys.executable).parent / "daily_job_tool"
     if script.exists():
-        return [str(script), "crawl", "--once"]
-    return [sys.executable, "-c", "from daily_job_tool.cli import app; app()", "crawl", "--once"]
+        return [str(script), "crawl", "--once", "--stale-hours", str(STALE_HOURS)]
+    return [
+        sys.executable,
+        "-c",
+        "from daily_job_tool.cli import app; app()",
+        "crawl",
+        "--once",
+        "--stale-hours",
+        str(STALE_HOURS),
+    ]
 
 
 def real_spawner(argv: list[str], log_path: Path) -> int:
@@ -79,6 +88,11 @@ def default_spawner() -> Spawner:
 def pid_alive(pid: int) -> bool:
     if pid <= 0:
         return False
+    try:
+        if os.waitpid(pid, os.WNOHANG)[0] == pid:  # our own finished child: reap the zombie
+            return False
+    except ChildProcessError:
+        pass  # not our child
     try:
         os.kill(pid, 0)
     except PermissionError:

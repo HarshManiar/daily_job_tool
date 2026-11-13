@@ -5,7 +5,7 @@
   <span class="avatar" aria-hidden="true">{{ r.company_name | initial }}</span>
   <div class="card-main">
     <h3 class="card-h"><a class="job-title" href="/jobs/{{ r.id }}">{{ r.title }}</a>{% if since and r.first_seen_at > since %} <span class="tag new">New</span>{% endif %}</h3>
-    <div class="card-co">{{ r.company_name }}</div>
+    <div class="card-co">{{ r.company_name }} <span class="score s{{ (r.job_score | int) }}" title="How well this fits your profile (title, skills, years, location, industry)">{{ '%g' % r.job_score }}/10</span></div>
     <div class="card-loc">{{ r.locations | card_location(r.remote_type) }}</div>
     {% set pay = r.salary_min_usd | pay_line(r.salary_max_usd, r.salary_period, r.salary_min, r.salary_max) %}
     {% if pay %}<div class="card-pay">{{ pay }}</div>{% endif %}

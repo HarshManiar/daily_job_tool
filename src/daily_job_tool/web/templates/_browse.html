@@ -150,7 +150,7 @@
       <label class="check"><input type="checkbox" name="clean_only" value="1" {% if f.clean_only %}checked{% endif %}> Clean only (hide jobs with warnings)</label>
       <label class="check"><input type="checkbox" name="show_dismissed" value="1" {% if f.show_dismissed %}checked{% endif %}> Show dismissed (with Undo)</label>
       <label class="stack">Sort by
-        <select name="sort"><option value="best" {% if f.sort == 'best' %}selected{% endif %}>Best match</option><option value="newest" {% if f.sort == 'newest' %}selected{% endif %}>Newest</option></select></label>
+        <select name="sort"><option value="best" {% if f.sort == 'best' %}selected{% endif %}>Best match</option><option value="score" {% if f.sort == 'score' %}selected{% endif %}>Fit score (high to low)</option><option value="newest" {% if f.sort == 'newest' %}selected{% endif %}>Newest</option></select></label>
     </div>
     <div class="drawer-foot"><a class="link" href="{{ bp }}">Reset all</a><button class="btn-primary" type="submit">Show results</button></div>
   </dialog>

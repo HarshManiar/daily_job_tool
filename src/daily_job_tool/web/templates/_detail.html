@@ -10,6 +10,7 @@
     <p class="d-meta">Seen on the employer's site {{ j.last_seen_at | ago(now) }}</p>
     {% if j.closed_at %}<p class="chip warn">Closed {{ j.closed_at.strftime('%Y-%m-%d') }}</p>{% endif %}
     <div class="d-chips">
+      <span class="pillchip score s{{ (j.job_score | int) }}" title="How well this fits your profile (title, skills, years, location, industry)">Fit {{ '%g' % j.job_score }}/10</span>
       {% if j.remote_type | work_mode %}<span class="pillchip">{{ j.remote_type | work_mode }}</span>{% endif %}
       {% if j.employment_type | emp_label %}<span class="pillchip">{{ j.employment_type | emp_label }}</span>{% else %}<span class="pillchip quiet">type not stated</span>{% endif %}
       {% if j.visa_status == 'offered' %}<span class="pillchip good">Offers sponsorship</span>{% endif %}

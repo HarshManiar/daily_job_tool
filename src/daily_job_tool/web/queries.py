@@ -22,10 +22,20 @@ FEED_COLS = """
     j.first_seen_at, j.salary_min_usd, j.salary_max_usd, j.match_tier, j.match_status,
     j.match_reasons, j.visa_status, j.visa_evidence, j.years_min, j.years_max, j.fit_score,
     j.apply_url, j.location_rank, j.industry_rank, j.last_seen_at, j.salary_min, j.salary_max,
-    j.salary_period, j.employment_type, 
+    j.salary_period, j.employment_type, {SCORE} AS job_score,
     (SELECT s.viewed_at FROM job_state s WHERE s.job_id = j.id) AS viewed_at,
     (SELECT s.dismissed_at FROM job_state s WHERE s.job_id = j.id) AS dismissed_at
 """
+# Fit score out of 10, from columns the match engine already stores: title tier (0-4),
+# skills overlap (0-2), years required vs 2-6 (0-2), location priority (0-1), industry (0-1).
+SCORE_SQL = """LEAST(10, (
+    CASE j.match_tier WHEN 1 THEN 4 WHEN 2 THEN 3 WHEN 3 THEN 2 ELSE 0 END
+  + LEAST(2, GREATEST(0, j.fit_score) / 2.0)
+  + CASE WHEN j.years_min IS NULL THEN 1 WHEN j.years_min >= 7 THEN 0
+         WHEN j.years_min BETWEEN 2 AND 6 THEN 2 ELSE 1 END
+  + CASE j.location_rank WHEN 0 THEN 1 WHEN 1 THEN 0.75 WHEN 2 THEN 0.5 ELSE 0 END
+  + CASE WHEN j.industry_rank = 0 THEN 1 ELSE 0 END))::numeric(4,1)"""
+FEED_COLS = FEED_COLS.replace("{SCORE}", SCORE_SQL)
 FEED_FROM = "jobs j JOIN companies co ON co.id = j.company_id"
 
 
@@ -70,7 +80,7 @@ class FeedFilters(BaseModel):
     show_dismissed: bool = False
     posted24: bool = False
     posted48: bool = False
-    sort: Literal["best", "newest"] = "best"
+    sort: Literal["best", "score", "newest"] = "best"
     reason: str = Field(default="", max_length=64)  # /filtered only
     offset: int = Field(default=0, ge=0, le=1_000_000)
     limit: int = Field(default=PAGE_SIZE, ge=1, le=200)
@@ -328,7 +338,12 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
     if f.reason:
         where.append("j.match_reasons @> ARRAY[:reason]::text[]")
         p["reason"] = f.reason
-    order = BEST_ORDER if f.sort == "best" else "j.freshness_at DESC, j.id DESC"
+    if f.sort == "best":
+        order = BEST_ORDER
+    elif f.sort == "score":
+        order = f"{SCORE_SQL} DESC, j.freshness_at DESC, j.id DESC"
+    else:
+        order = "j.freshness_at DESC, j.id DESC"
     if f.q:
         where.append(
             "(j.search_tsv @@ websearch_to_tsquery('english', :q) "
@@ -460,7 +475,8 @@ async def reason_counts(conn: AsyncConnection, f: FeedFilters) -> list[tuple[str
 
 
 JOB_DETAIL = """
-SELECT j.*, (SELECT s.viewed_at FROM job_state s WHERE s.job_id = j.id) AS viewed_at,
+SELECT j.*, {SCORE} AS job_score,
+       (SELECT s.viewed_at FROM job_state s WHERE s.job_id = j.id) AS viewed_at,
        (SELECT s.dismissed_at FROM job_state s WHERE s.job_id = j.id) AS dismissed_at,
        co.name AS company_name, co.slug AS company_slug, co.industry AS company_industry,
        co.domain AS company_domain, p.url AS posting_url, s.adapter AS source_adapter,
@@ -470,6 +486,7 @@ LEFT JOIN postings p ON p.id = j.primary_posting_id
 LEFT JOIN sources s ON s.id = p.source_id
 WHERE j.id = :id AND co.status <> 'removed'
 """
+JOB_DETAIL = JOB_DETAIL.replace("{SCORE}", SCORE_SQL)
 
 
 async def fetch_job(conn: AsyncConnection, job_id: int) -> dict[str, Any] | None:

@@ -220,3 +220,7 @@ table.manual td{vertical-align:top}table.manual form{margin:0;display:flex;gap:8
   .d-title{font-size:1.5rem}
   .pop.fx{max-width:calc(100vw - 16px)}
 }
+
+.score{display:inline-block;margin-left:6px;font-size:.78rem;font-weight:600;padding:0 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.score.s7,.score.s8,.score.s9,.score.s10{color:var(--green);border-color:var(--green);background:var(--good-bg)}
+.score.s5,.score.s6{color:var(--link);border-color:var(--link)}

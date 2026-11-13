@@ -188,6 +188,30 @@ def _print_summaries(summaries: list[Any]) -> None:
     typer.echo(f"{len(summaries)} source(s) crawled")
 
 
+def _mark_stale_due(hours: float) -> None:
+    """Make active sources not crawled for `hours` due now (used by the Refresh button)."""
+    from sqlalchemy import text
+
+    from daily_job_tool.db.session import get_engine
+
+    async def run() -> None:
+        engine = get_engine()
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(
+                    text(
+                        "UPDATE sources SET next_crawl_at = now() WHERE status = 'active' "
+                        "AND next_crawl_at > now() AND (last_crawled_at IS NULL "
+                        "OR last_crawled_at < now() - make_interval(secs => :s))"
+                    ),
+                    {"s": hours * 3600},
+                )
+        finally:
+            await engine.dispose()
+
+    asyncio.run(run())
+
+
 def _run_worker(*, once: bool, limit: int | None, adapter: str | None, source: int | None) -> None:
     from daily_job_tool.db.session import get_engine
     from daily_job_tool.normalize import NormContext
@@ -280,10 +304,19 @@ def crawl(
     source: Annotated[int | None, typer.Option("--source")] = None,
     adapter: Annotated[str | None, typer.Option("--adapter")] = None,
     limit: Annotated[int | None, typer.Option("--limit")] = None,
+    stale_hours: Annotated[
+        float | None,
+        typer.Option(
+            "--stale-hours",
+            help="Also crawl active sources whose last crawl is older than this many hours",
+        ),
+    ] = None,
 ) -> None:
     """Crawl all due sources once and print a summary (use `worker` for the daemon)."""
     if not once:
         raise typer.BadParameter("pass --once (or use `daily_job_tool worker` for the daemon)")
+    if stale_hours is not None:
+        _mark_stale_due(stale_hours)
     _run_worker(once=True, limit=limit, adapter=adapter, source=source)
 
 
