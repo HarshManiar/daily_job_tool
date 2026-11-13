@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Check these by hand · Daily Job Tool{% endblock %}
+{% block content %}
+<h1>Check these by hand</h1>
+<p>These employers' sites forbid or block automated reading, so their jobs never show up in your matches. Open their careers page now and then and mark them checked. Priority 1 companies are in your priority industries.</p>
+<form method="get" action="/manual" class="filters" role="search">
+  <label class="grow">Filter by company or industry
+    <input type="search" name="q" value="{{ q }}" maxlength="100">
+  </label>
+  <button class="btn" type="submit">Filter</button>
+</form>
+<p class="count">{{ n }} compan{{ 'y' if n == 1 else 'ies' }}</p>
+{% for prio, items in groups %}
+<h2>{{ 'Priority 1: priority industries' if prio == 1 else 'Priority ' ~ prio ~ ': other industries' }}</h2>
+<div class="scroll"><table class="manual">
+  <thead><tr><th>Company</th><th>Industry</th><th>Why it is here</th><th>Careers page</th><th>Checked</th></tr></thead>
+  <tbody>{% for it in items %}{% include "_manual_row.html" %}{% endfor %}</tbody>
+</table></div>
+{% else %}
+<p class="empty">Nothing matches.</p>
+{% endfor %}
+{% endblock %}

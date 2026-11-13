@@ -1,0 +1,13 @@
+<tr id="m-{{ it.r.key | replace(':', '-') | replace('.', '-') }}">
+  <td>{{ it.r.name }}</td>
+  <td>{{ it.r.industry }}</td>
+  <td>{{ it.r.reason }}</td>
+  <td>{% if it.r.url %}<a href="{{ it.r.url }}" rel="noopener noreferrer" target="_blank">Open careers page &#8599;<span class="sr"> ({{ it.r.name }})</span></a>{% if it.r.guessed %} <span class="chip quiet" title="We guessed this address; it may not be exact">guessed link</span>{% endif %}{% else %}<span class="muted">no link</span>{% endif %}</td>
+  <td>
+    <form method="post" action="/manual/check" hx-post="/manual/check" hx-target="closest tr" hx-swap="outerHTML">
+      <input type="hidden" name="key" value="{{ it.r.key }}">
+      <button class="btn {{ '' if it.checked else 'ghost' }}" type="submit" aria-pressed="{{ 'true' if it.checked else 'false' }}">{{ 'Checked' if it.checked else 'Mark checked' }}<span class="sr"> for {{ it.r.name }}</span></button>
+      {% if it.checked %}<span class="muted small">{{ it.text }}</span>{% endif %}
+    </form>
+  </td>
+</tr>

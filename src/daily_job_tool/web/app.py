@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
@@ -16,8 +18,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from daily_job_tool.db.session import make_engine
+from daily_job_tool.ops.heartbeat import default_heartbeat_path
+from daily_job_tool.web import refresh
 from daily_job_tool.web.cache import TTLCache
 from daily_job_tool.web.deps import HERE, templates
+from daily_job_tool.web.refresh import Spawner
 
 log = logging.getLogger("daily_job_tool.web")
 
@@ -128,9 +133,16 @@ def create_app(
     engine: AsyncEngine | None = None,
     rw_engine: AsyncEngine | None = None,
     clock: Callable[[], datetime] | None = None,
+    spawner: Spawner | None = None,
+    pid_path: Path | None = None,
+    heartbeat_path: Path | None = None,
+    refresh_log_path: Path | None = None,
+    manual_csv: Path | None = None,
 ) -> FastAPI:
     """`engine` is the read-only query engine; `rw_engine` is a SEPARATE small engine used only
-    by the app_state / saved_searches routes. `clock` is injectable for tests."""
+    by the app_state / saved_searches / removal routes. `clock`, `spawner` (starts the refresh
+    crawler: `(argv, log_path) -> pid`) and the pid/heartbeat/log paths are injectable for tests.
+    With DAILY_JOB_TOOL_REFRESH_DRYRUN=1 the default spawner only logs the would-be argv."""
     owns_engine = engine is None
 
     @asynccontextmanager
@@ -152,12 +164,20 @@ def create_app(
         app.state.engine = engine
         app.state.rw_engine = rw_engine or engine
     app.state.clock = clock or (lambda: datetime.now(UTC))
+    app.state.spawner = spawner or refresh.default_spawner()
+    app.state.refresh_pid_path = pid_path or refresh.default_pid_path()
+    app.state.heartbeat_path = heartbeat_path or default_heartbeat_path()
+    app.state.refresh_log_path = refresh_log_path or refresh.default_log_path()
+    app.state.manual_csv = manual_csv
+    app.state.refresh_lock = asyncio.Lock()
+    app.state.refresh_cache = TTLCache(15)  # latest crawl_runs.finished_at
     app.state.count_cache = TTLCache(30)  # 24h/48h box counts
     app.state.option_cache = TTLCache(300)  # function dropdown values
 
-    from daily_job_tool.web.routes import api, companies, feed, health, jobs, state
+    from daily_job_tool.web.routes import api, companies, feed, health, jobs, pages, state
+    from daily_job_tool.web.routes import refresh as refresh_routes
 
-    for mod in (feed, jobs, companies, health, api, state):
+    for mod in (feed, jobs, companies, health, api, state, pages, refresh_routes):
         app.include_router(mod.router)
     app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
 

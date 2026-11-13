@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Request removal · Daily Job Tool{% endblock %}
+{% block content %}
+<h1>Request removal</h1>
+<p>This is a personal job-matching tool. It reads only jobs that employers publicly post. If you are an employer and would rather not be listed, ask {% if contact %}via <strong>{{ contact }}</strong>{% else %}the site owner{% endif %}. A company that asks to be removed is taken out promptly: its jobs disappear, it is no longer read, and importing it again is refused.</p>
+
+<section class="panel" aria-labelledby="owner-h">
+  <h2 id="owner-h">Remove a company now</h2>
+  <p class="muted">For the site owner. Nothing is changed until you confirm.</p>
+  {% if done %}
+    <p class="good-box" role="status">{% if done.already_removed %}<strong>{{ done.company }}</strong> was already removed.{% else %}<strong>{{ done.company }}</strong> has been removed.{% endif %}
+      Closed {{ done.sources_removed }} source{{ '' if done.sources_removed == 1 else 's' }}, {{ done.postings_closed }} posting{{ '' if done.postings_closed == 1 else 's' }} and {{ done.jobs_closed }} job{{ '' if done.jobs_closed == 1 else 's' }}{% if done.domain %}; {{ done.domain }} is now blocked{% endif %}.</p>
+  {% endif %}
+  <form method="get" action="/remove" class="save">
+    <label>Domain or company name
+      <input type="text" name="target" value="{{ target }}" required maxlength="200" autocomplete="off">
+    </label>
+    <button class="btn ghost" type="submit">Look up</button>
+  </form>
+  {% if info %}
+    <h3>Confirm</h3>
+    {% if info.status == 'removed' %}
+      <p><strong>{{ info.name }}</strong> is already removed.</p>
+    {% endif %}
+    <dl>
+      <dt>Company</dt><dd>{{ info.name }}{% if info.domain %} ({{ info.domain }}){% endif %}</dd>
+      <dt>Sources</dt><dd>{{ info.sources }}</dd>
+      <dt>Open jobs</dt><dd>{{ info.open_jobs }}</dd>
+    </dl>
+    <form method="post" action="/remove/confirm" class="save">
+      <input type="hidden" name="target" value="{{ target }}">
+      <label>Reason (recorded)
+        <input type="text" name="reason" maxlength="300" value="employer request">
+      </label>
+      <button class="btn danger" type="submit">Remove {{ info.name }}</button>
+    </form>
+  {% elif missing %}
+    <p class="muted">No company matches &ldquo;{{ target }}&rdquo;.</p>
+  {% endif %}
+</section>
+{% endblock %}

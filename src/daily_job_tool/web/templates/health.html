@@ -7,6 +7,20 @@
   · oldest due source:
   {% if d.oldest_due %}<strong>#{{ d.oldest_due.id }} {{ d.oldest_due.adapter }}/{{ d.oldest_due.token }}</strong> ({{ d.oldest_due.next_crawl_at.strftime('%Y-%m-%d %H:%M') }} UTC){% else %}none{% endif %}</p>
 
+{% if st %}
+<h2>Worker and backups</h2>
+<dl>
+  <dt>Worker</dt><dd>{{ worker_line }}{% if st.worker_state != 'alive' %} <span class="muted">(use Refresh now, or start the launchd worker)</span>{% endif %}</dd>
+  <dt>Last backup</dt><dd>{{ backup_age }}</dd>
+  <dt>Last crawl finished</dt><dd>{{ human_age(st.last_crawl_age_seconds) }}</dd>
+</dl>
+{% else %}<p class="muted">Worker and backup status is unavailable right now.</p>{% endif %}
+<p>Sites we cannot read automatically are listed on <a href="/manual">Check these by hand</a>.</p>
+
+<h2>Blocked or paused sources</h2>
+{% if d.held_sources %}<div class="scroll"><table><tr><th>Company</th><th>Source</th><th>Status</th><th>Reason</th></tr>
+{% for r in d.held_sources %}<tr><td>{{ r.company }}</td><td>{{ r.adapter }}/{{ r.token }}</td><td>{{ r.status }}</td><td class="err">{{ (r.reason or '-')[:200] }}</td></tr>{% endfor %}</table></div>{% else %}<p class="muted">None.</p>{% endif %}
+
 <h2>Sources by status</h2>
 {% if d.sources_by_status %}<table><tr><th>Status</th><th class="num">Sources</th></tr>
 {% for r in d.sources_by_status %}<tr><td>{{ r.status }}</td><td class="num">{{ r.n }}</td></tr>{% endfor %}</table>{% else %}<p class="muted">No sources.</p>{% endif %}

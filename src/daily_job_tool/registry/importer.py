@@ -176,7 +176,8 @@ async def _import_row(
 
     sel = (
         "SELECT id, slug::text AS slug, domain::text AS domain, name, careers_url, hq_country, "
-        "size_bucket, tags, industry, is_staffing, exclude_reason FROM companies WHERE "
+        "size_bucket, tags, industry, is_staffing, exclude_reason, status::text AS status "
+        "FROM companies WHERE "
     )
     existing = None
     if domain:
@@ -185,6 +186,9 @@ async def _import_row(
         existing = (
             await conn.execute(text(sel + "slug = :s AND domain IS NULL"), {"s": slug})
         ).first()
+    if existing is not None and existing.status == "removed":
+        # removal requests are honored permanently: never update or reactivate
+        raise ValueError(f"company {existing.name!r} was removed on request")
     if existing is None:
         taken = (
             await conn.execute(

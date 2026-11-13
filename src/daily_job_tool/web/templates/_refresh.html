@@ -1,0 +1,17 @@
+<div id="refresh" class="refresh" role="status" aria-live="polite"
+  {% if poll %}hx-get="/refresh/status?poll=1" hx-trigger="every 5s" hx-swap="outerHTML"{% endif %}>
+  {% if state == 'running' %}
+    <span>Refreshing&hellip; {{ done }} source{{ '' if done == 1 else 's' }} done, {{ in_flight }} in flight</span>
+  {% elif state == 'done' %}
+    <span>Done: {{ new_jobs }} new job{{ '' if new_jobs == 1 else 's' }}</span>
+  {% else %}
+    <span class="muted">Last refreshed {{ last }}</span>
+  {% endif %}
+  {% if notice %}<span class="notice">{{ notice }}</span>{% endif %}
+  {% if worker %}<span class="muted">Worker running ({{ worker_text }}); it refreshes automatically.</span>{% endif %}
+  {% if state != 'running' %}
+  <form method="post" action="/refresh" hx-post="/refresh" hx-target="#refresh" hx-swap="outerHTML">
+    <button class="btn ghost" type="submit">Refresh now</button>
+  </form>
+  {% endif %}
+</div>

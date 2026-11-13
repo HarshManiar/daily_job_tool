@@ -340,6 +340,37 @@ def registry_verify(
     typer.echo(f"{ok}/{len(rows)} ok")
 
 
+@registry_app.command("remove")
+def registry_remove(
+    domain: Annotated[str, typer.Argument(help="Company domain (or exact name)")],
+    reason: Annotated[str, typer.Option("--reason", help="Why (recorded)")],
+    requester: Annotated[str | None, typer.Option("--requester", help="Requester email")] = None,
+) -> None:
+    """Honor a removal request: close its jobs, stop crawling, block re-seeding."""
+    from daily_job_tool.db.session import get_engine
+    from daily_job_tool.registry.removal import CompanyNotFound, remove_company
+
+    async def run() -> Any:
+        engine = get_engine()
+        try:
+            return await remove_company(engine, domain, reason, requester)
+        finally:
+            await engine.dispose()
+
+    try:
+        r = asyncio.run(run())
+    except CompanyNotFound as exc:
+        typer.echo(f"error: no company matches {domain!r}", err=True)
+        raise typer.Exit(1) from exc
+    if r.already_removed:
+        typer.echo(f"{r.company}: already removed (nothing changed beyond re-applying closes)")
+    typer.echo(
+        f"removed {r.company} ({r.domain or 'no domain'}): {r.sources_removed} source(s), "
+        f"{r.postings_closed} posting(s), {r.jobs_closed} job(s) closed"
+        + ("; domain blocked" if r.domain else "")
+    )
+
+
 @registry_app.command("blocked")
 def registry_blocked() -> None:
     """List sources marked blocked (403/challenge/robots) for manual review."""

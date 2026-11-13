@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Privacy · Daily Job Tool{% endblock %}
+{% block content %}
+<h1>Privacy</h1>
+<div class="prose">
+<p>The tool keeps its data in a database on the owner's own computer.</p>
+<ul>
+  <li>It stores public job data (titles, companies, locations, descriptions, links) plus the owner's saved searches, "checked" marks and last-visit time.</li>
+  <li>No accounts, no cookies, no analytics or tracking.</li>
+  <li>This web page makes no requests to any third party: no external fonts, scripts or images.</li>
+  <li>It does not collect personal data about recruiters or employees.</li>
+</ul>
+<h2>Deleting everything</h2>
+<p>Drop the <code>daily_job_tool</code> PostgreSQL database (for example <code>dropdb daily_job_tool</code>) and delete the project folder, the <code>~/.daily_job_tool</code> folder and the backups in <code>~/Backups/daily_job_tool</code>. To delete just the personal parts, delete your saved searches on the matches page.</p>
+</div>
+{% endblock %}

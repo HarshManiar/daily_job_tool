@@ -16,12 +16,16 @@
   <nav>
     <a href="/" {% if page == 'feed' %}aria-current="page"{% endif %}>My matches</a>
     <a href="/filtered" {% if page == 'filtered' %}aria-current="page"{% endif %}>Filtered out</a>
+    <a href="/manual" {% if page == 'manual' %}aria-current="page"{% endif %}>Check by hand</a>
     <a href="/health" {% if page == 'health' %}aria-current="page"{% endif %}>Health</a>
   </nav>
+  <div id="refresh" class="refresh" hx-get="/refresh/status" hx-trigger="load" hx-swap="outerHTML">
+    <form method="post" action="/refresh"><button class="btn ghost" type="submit">Refresh now</button></form>
+  </div>
 </header>
 <main>
 {% block content %}{% endblock %}
 </main>
-<footer class="foot"><a href="/bot">About DailyJobToolBot</a> · local, single-user</footer>
+<footer class="foot"><a href="/about">About</a> · <a href="/privacy">Privacy</a> · <a href="/bot">About DailyJobToolBot</a> · <a href="/remove">Request removal</a> · local, single-user</footer>
 </body>
 </html>

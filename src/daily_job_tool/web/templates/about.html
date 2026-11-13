@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}About · Daily Job Tool{% endblock %}
+{% block content %}
+<h1>About</h1>
+<div class="prose">
+<p>Daily Job Tool is a personal job-matching tool for one person. It reads only publicly posted jobs, straight from employers' career pages and public job boards, and ranks them against one person's search.</p>
+<ul>
+  <li>It respects each site's <code>robots.txt</code> and skips anything a site asks automated tools not to read. Those employers are listed on <a href="/manual">Check these by hand</a>.</li>
+  <li>Every job links out to the employer to apply. Applications never go through this tool.</li>
+  <li>It runs only on one computer and is not reachable from the internet. Nothing is published or shared.</li>
+  <li>Employers can ask to be removed: see <a href="/remove">Request removal</a> and <a href="/bot">DailyJobToolBot</a>.</li>
+</ul>
+</div>
+{% endblock %}

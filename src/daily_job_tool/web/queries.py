@@ -180,9 +180,15 @@ BEST_ORDER = (
 )
 
 
+# Compliance: jobs of companies that asked to be removed are never shown anywhere.
+NOT_REMOVED = (
+    "NOT EXISTS (SELECT 1 FROM companies rc WHERE rc.id = j.company_id AND rc.status = 'removed')"
+)
+
+
 def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dict[str, Any]]:
     """Return (where_sql, order_sql, params). Only fixed SQL fragments are concatenated."""
-    where = ["j.closed_at IS NULL"]
+    where = ["j.closed_at IS NULL", NOT_REMOVED]
     p: dict[str, Any] = {}
     where.append("j.match_status = 'excluded'" if excluded else "j.match_status <> 'excluded'")
     hours = f.window_hours
@@ -375,7 +381,7 @@ SELECT j.*, co.name AS company_name, co.slug AS company_slug, co.industry AS com
 FROM jobs j JOIN companies co ON co.id = j.company_id
 LEFT JOIN postings p ON p.id = j.primary_posting_id
 LEFT JOIN sources s ON s.id = p.source_id
-WHERE j.id = :id
+WHERE j.id = :id AND co.status <> 'removed'
 """
 
 
@@ -388,9 +394,16 @@ async def fetch_job(conn: AsyncConnection, job_id: int) -> dict[str, Any] | None
     return d
 
 
+FETCH_COMPANY = "SELECT * FROM companies WHERE slug = :s AND status <> 'removed'"
+
+
 async def fetch_company(conn: AsyncConnection, slug: str) -> dict[str, Any] | None:
     row = (
-        (await conn.execute(text("SELECT * FROM companies WHERE slug = :s"), {"s": slug}))
+        (
+            await conn.execute(
+                text("SELECT * FROM companies WHERE slug = :s AND status <> 'removed'"), {"s": slug}
+            )
+        )
         .mappings()
         .first()
     )
@@ -403,7 +416,8 @@ async def company_jobs(
     op = "=" if excluded else "<>"
     sql = (
         f"SELECT {FEED_COLS}, now() AS _now FROM jobs j JOIN companies co ON co.id = j.company_id "
-        f"WHERE j.company_id = :c AND j.closed_at IS NULL AND j.match_status {op} 'excluded' "
+        f"WHERE j.company_id = :c AND j.closed_at IS NULL AND co.status <> 'removed' "
+        f"AND j.match_status {op} 'excluded' "
         "ORDER BY j.match_tier NULLS LAST, j.location_rank, j.industry_rank, j.fit_score DESC, "
         "j.freshness_at DESC, j.id DESC LIMIT 500"
     )
@@ -441,8 +455,18 @@ async def health_data(conn: AsyncConnection) -> dict[str, Any]:
         " (SELECT cr.error FROM crawl_runs cr WHERE cr.source_id = s.id AND cr.error IS NOT NULL"
         "  ORDER BY cr.started_at DESC LIMIT 1) AS last_error "
         "FROM sources s JOIN companies co ON co.id = s.company_id "
-        "WHERE s.consecutive_failures > 0 OR s.status IN ('broken','blocked') "
+        "WHERE (s.consecutive_failures > 0 OR s.status IN ('broken','blocked')) "
+        "AND co.status <> 'removed' "
         "ORDER BY s.consecutive_failures DESC, s.id LIMIT 200"
+    )
+    d["held_sources"] = await rows(
+        "SELECT s.id, co.name AS company, s.adapter, s.token, s.status::text AS status,"
+        " coalesce((SELECT cr.error FROM crawl_runs cr WHERE cr.source_id = s.id"
+        "  AND cr.error IS NOT NULL ORDER BY cr.started_at DESC LIMIT 1),"
+        "  s.last_outcome::text, 'no reason recorded') AS reason "
+        "FROM sources s JOIN companies co ON co.id = s.company_id "
+        "WHERE s.status IN ('blocked','paused') AND co.status <> 'removed' "
+        "ORDER BY s.status, co.name LIMIT 200"
     )
     d["adapter_success"] = await rows(
         "SELECT adapter, "
