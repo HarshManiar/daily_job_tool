@@ -14,6 +14,27 @@ uv sync
 make test
 ```
 
+## Make it yours
+
+The matching is driven by a private profile, so anyone can use this for their own field.
+
+1. `cp data/profile.example.yaml data/profile.yaml` (gitignored) and edit it: target titles in three
+   tiers, filters, location and industry priority, skills. Also set `skill_aliases` and
+   `crawl.detail_title_regex` for your field.
+2. `make rescore` to apply it to jobs already in the database.
+3. Open http://127.0.0.1:8000/context to see the profile the app is actually using.
+4. Add your own companies in `data/seeds.local.csv` (gitignored; same columns as `data/seeds.csv`;
+   rows override same-domain rows there), then `make seeds`. Employers named in
+   `hard_filters.exclude_companies` are excluded automatically at import.
+
+Using Claude Code? Ask it to "set this up for me"; it follows [docs/ONBOARDING.md](docs/ONBOARDING.md).
+
+## Sharing this project
+
+Share a clean copy of the tracked code with `git archive --format=zip -o job-tool.zip HEAD`.
+Run `make check-private` first. Never share `data/profile.yaml`, `data/seeds.local.csv`, `.env` or
+database backups (`~/Backups/daily_job_tool`); they contain personal data.
+
 ## Docs
 
 See [docs/](docs/) for architecture, plan, and endpoint notes.
