@@ -5,7 +5,7 @@ from daily_job_tool.normalize.models import NORMALIZER_VERSION
 from daily_job_tool.pipeline.renormalize import renormalize, rescore
 from tests.pipeline.helpers import CTX, FakeAdapter, crawl, job, rows, scalar, seed
 
-PROFILE = load_profile("data/profile.example.yaml")
+PROFILE = load_profile("tests/fixtures/profile.pharma.yaml")
 
 
 async def test_visa_exclusion_stored_not_dropped(db_clean):

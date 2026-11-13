@@ -9,3 +9,8 @@ data/geonames/
 dist/
 data/profile.yaml
 logs/
+data/seeds.local.csv
+data/*.local.*
+*.dump
+*.sql.gz
+ec*.json

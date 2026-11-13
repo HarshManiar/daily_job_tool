@@ -1,4 +1,4 @@
-"""Title tier goldens against data/profile.example.yaml: (title_norm, tier, reason)."""
+"""Title tier goldens against tests/fixtures/profile.pharma.yaml: (title_norm, tier, reason)."""
 
 T: list[tuple[str, int | None, str | None]] = [
     # --- tier 1: every owner target title

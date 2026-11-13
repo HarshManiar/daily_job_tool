@@ -1,0 +1,93 @@
+# Test fixture: pharma-flavoured profile. Not a user template; see data/profile.example.yaml.
+target_titles:
+  tier1:   # highest odds
+    - Senior Associate, Commercial Analytics
+    - Consultant / Senior Consultant, Commercial Analytics
+    - Commercial Analytics Analyst / Senior Analyst
+    - Brand Analytics Analyst
+    - Patient Analytics Analyst
+    - Real-World Evidence (RWE) Analyst
+    - Market Access Analytics Analyst
+    - Trade & Channel Analytics Analyst
+    - Senior Analyst, Healthcare Analytics
+    - Pharmacy / Claims Data Analyst
+  tier2:   # good odds
+    - Analytics Engineer (healthcare)
+    - Data Engineer (Databricks / AWS)
+    - Senior Data Analyst
+    - Business Insights Analyst
+    - Commercial Data Analyst
+    - Field Analytics / Sales Operations Analyst
+    - Client Solutions / Data Solutions Consultant
+    - Forward Deployed Analyst / Data Analyst
+  generic_data_roles:   # ALL data analyst / data engineering roles at any company (tier 2 unless a tier-1 title matches)
+    title_regex:
+      - data\s+analyst
+      - (senior|sr\.?)\s+data\s+analyst
+      - data\s+engineer
+      - analytics\s+engineer
+      - (bi|business\s+intelligence)\s+(analyst|developer|engineer)
+      - (business|insights?|reporting|decision\s+science|marketing|sales|operations|healthcare|clinical)\s+analytics?\s+(analyst|consultant)
+      - (business|insights?|reporting|quantitative)\s+analyst
+      - data\s+(solutions|platform|pipeline)\s+(engineer|analyst|consultant)
+      - market\s+access\s+analyst
+      - analytics\s+consultant
+      - sales\s+analyst
+      - forecasting\s+analyst
+      - claims\s+analyst
+      - pharmacy\s+analyst
+      - heor\s+analyst
+      - data\s+analytics\s+specialist
+      - etl\s+(developer|engineer)
+      - data\s+scientist
+    exclude_title_regex: [intern, director, vice\s+president, \bvp\b, principal, staff, head\s+of, manager]   # levels outside 2-6 yrs; "Associate Manager, Commercial Analytics" stays via tier3 list
+  tier3:   # stretch, only if the description strongly matches skills
+    - Associate Manager, Commercial Analytics
+    - Product Analyst / Product Analytics
+    - Forward Deployed Engineer
+    - GenAI / AI Analytics Product Owner
+hard_filters:
+  employment: full_time_only        # exclude contract, C2C, W2-contract, temp
+  max_age_days: 14                  # posted within; posting must still be open
+  years_required: {min: 2, max: 6}  # exclude roles whose MINIMUM required years >= 7
+  exclude_companies: [YourCurrentEmployer]       # current employer
+  exclude_staffing_reposts: true
+  visa:
+    status: h1b_transfer_needed
+    exclude_if_phrases:             # case-insensitive regex
+      - no\s+(visa\s+)?sponsorship
+      - (will\s+)?not\s+(be\s+able\s+to\s+)?(provide\s+|offer\s+)?(visa\s+)?sponsor
+      - sponsorship\s+(is\s+)?not\s+(available|offered|provided)
+      - visa\s+sponsorship\s*:\s*(not\s+available|no)
+      - without\s+(the\s+need\s+for\s+)?(visa\s+)?sponsorship
+      - must\s+be\s+(legally\s+)?authorized\s+to\s+work.{0,60}without\s+(visa\s+)?sponsorship
+      - (u\.?s\.?\s+citizens?|green\s*card)\s+(only|required)
+      - citizens?\s+or\s+(permanent\s+residents?|green\s*card)\s+only
+      - without\s+(?:[\w-]+\s+){0,8}sponsorship
+      - requir\w*\s+(?:\w+\s+){0,3}sponsorship[^.]{0,40}(?:not|won't)\s+be\s+considered
+      - not\s+open\s+to\s+(?:[\w-]+\s+){0,5}sponsorship
+      - (?:does\s+not|doesn't)\s+support\s+(?:\w+\s+)?sponsorship
+      - must\s+not\s+(?:[^.]{0,50}?\s)?require\s+(?:\w+\s+){0,2}sponsorship
+      - (?:not|n't)\s+(?:able\s+to\s+)?offer\s+(?:\w+\s+(?:or|and)\s+)?(?:visa\s+)?sponsorship
+    flag_if_phrases:
+      - (we\s+)?(will\s+)?(provide|offer)s?\s+(visa\s+)?sponsorship
+      - sponsorship\s+(is\s+)?(available|offered|provided)
+      - h-?1b\s+(transfer|sponsorship)\s+(is\s+)?(available|supported|accepted)
+      - \b(open|able)\s+to\s+sponsor(?!ed)
+location_priority:   # order of preference; everything else still shown, ranked lower
+  - {name: nj,        states: [NJ]}
+  - {name: nyc,       cities: [New York, Brooklyn, Queens, Bronx, Manhattan, Jersey City, Hoboken]}
+  - {name: us_remote, remote_regions: [US, NA, AMER, WORLD]}
+industry_priority:   # RANKING BOOST ONLY — jobs at any other industry are still included
+  - pharma/biotech
+  - pharma consulting
+  - health tech
+  - pbm/health plan
+  - specialty pharmacy
+  - healthcare data        # Komodo, Definitive, etc.
+profile:
+  data: [iqvia, xpo, laad, ddd, px/rx claims, sp data, edi 867, edi 852, 340b, payer mix]
+  strong_skills: [sql, python, pyspark, databricks, power bi, git, aws, llm, text-to-sql, genai, forecasting, cohort, anova, decision tree]
+  gap_skills: [tableau, snowflake, dbt, airflow, gcp, azure, veeva, salesforce, a/b testing]   # penalize, never exclude
+  treat_as_match: [aws]
+  min_base_usd: 120000   # roles with stated max below this are flagged "low pay"; unknown pay is kept

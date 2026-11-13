@@ -41,3 +41,8 @@ backup:
 # usage: make restore DUMP=~/Backups/daily_job_tool/<file>.dump INTO=daily_job_tool_restored
 restore:
 	uv run daily_job_tool restore "$(DUMP)" --into "$(INTO)"
+
+.PHONY: check-private
+
+check-private:
+	./scripts/check_private.sh

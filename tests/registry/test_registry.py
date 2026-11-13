@@ -43,7 +43,7 @@ def test_slugify():
 SEEDS = (
     "Acme Bio,https://www.acmebio.com/jobs,,fake_t1,acmebio,us,201-1000,biotech;oncology,pharma/biotech,,,\n"
     'Beta Data,betadata.com,,fake_t1,betadata,US,,,healthcare data,,,"{""region"": ""eu""}"\n'
-    "Axtria,axtria.com,,,,US,,,pharma consulting,,current employer,\n"
+    "ExampleCorp,examplecorp.com,,,,US,,,pharma consulting,,current employer,\n"
     "Temp Staff,tempstaff.com,,,,US,,,,true,,\n"
     "Linked,linkedin.com,,fake_t1,li,US,,,,,,\n"
     "Careers on blocked,ok.com,https://jobs.indeed.com/x,,,US,,,,,,\n"
@@ -69,8 +69,8 @@ async def test_import_idempotent_and_rejections(db_clean, tmp_path):
     assert (r2.sources_new, r2.sources_updated, r2.sources_unchanged) == (0, 0, 2)
     assert await rows(db_clean, "SELECT id, updated_at FROM companies ORDER BY id") == before
 
-    ax = (await rows(db_clean, "SELECT * FROM companies WHERE slug='axtria'"))[0]
-    assert ax.exclude_reason == "current employer" and ax.domain == "axtria.com"
+    ax = (await rows(db_clean, "SELECT * FROM companies WHERE slug='examplecorp'"))[0]
+    assert ax.exclude_reason == "current employer" and ax.domain == "examplecorp.com"
     acme = (await rows(db_clean, "SELECT * FROM companies WHERE slug='acme-bio'"))[0]
     assert acme.domain == "acmebio.com" and acme.tags == ["biotech", "oncology"]
     assert acme.hq_country == "US" and acme.industry == "pharma/biotech"

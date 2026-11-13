@@ -2,7 +2,7 @@
 
 Probed 2026-11-12 through `CrawlClient` only (robots enforced, <=1 req/s/host, no retries around 403). About 105 content requests plus about 25 robots.txt fetches in total, none over 25 per company. Scope: the 76 `status=detected` rows in `data/rejected_classified.csv`, systems listed below. P = priority industry (pharma/biotech, pharma consulting, health tech, pbm/health plan, specialty pharmacy, healthcare data). Weighted = non-priority + 3 x priority, counted over companies that actually work.
 
-Probe scripts and raw responses: `/private/tmp/claude-501/-Users-harshmaniar-Documents-Side-Projects/515776c6-8c7f-41ce-bc86-88fbc759a985/scratchpad/ats_next/` (`h.py`, `ld.py`, `out/`).
+Probe scripts and raw responses: `<scratchpad>/ats_next/` (`h.py`, `ld.py`, `out/`).
 
 ## Summary
 

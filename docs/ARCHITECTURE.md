@@ -15,9 +15,9 @@ Config `US_ONLY=true` (default). Effects:
 - **Normalization:** salary currency is expected to be USD, so FX is a safety net only; geocoding can use a US-only gazetteer (all US cities >15k + states) instead of worldwide GeoNames in Phase 4; filters drop the country selector in favor of US state / metro.
 - Not US-only for *crawling*: we can't know a board's countries before fetching it, so boards are still fetched whole.
 
-## 0.2 Personal match profile (owner decision)
+## 0.2 Match profile (owner decision)
 
-This is a personal job-hunt tool for data analyst / data engineering / commercial-analytics roles **at any company or industry**; pharma/health industries get a ranking boost only (`industry_priority`), never a restriction. `data/profile.yaml` (gitignored; template `data/profile.example.yaml`) holds target titles in 3 tiers, hard filters, location/industry priority and the owner's skills. A pure `match(job, company, profile) -> MatchResult` runs at ingest (and on `renormalize`) and stores results on `jobs`:
+This is a personal job-hunt tool for data analyst / data engineering / commercial-analytics roles **at any company or industry**; industries listed in `industry_priority` get a ranking boost only (`industry_priority`), never a restriction. `data/profile.yaml` (gitignored; template `data/profile.example.yaml`) holds target titles in 3 tiers, hard filters, location/industry priority and the candidate's skills. The committed example is generic; keep real values in the gitignored copy. A pure `match(job, company, profile) -> MatchResult` runs at ingest (and on `renormalize`) and stores results on `jobs`:
 
 | Column | Meaning |
 |---|---|
@@ -26,8 +26,8 @@ This is a personal job-hunt tool for data analyst / data engineering / commercia
 | `match_reasons` text[] | machine-readable, e.g. `visa:no_sponsorship`, `years:min_7`, `employment:contract`, `company:excluded`, `staffing`, `stale`, `pay:below_min` |
 | `visa_status` text | `offered` / `not_available` / `not_stated` (regex phrases in profile) |
 | `years_min`, `years_max` smallint null | parsed from description ("3+ years", "2-5 years of experience"); null = not stated (kept) |
-| `industry_rank` smallint | 0 = priority industry (pharma/biotech, pharma consulting, health tech, PBM/health plan, specialty pharmacy, healthcare data), 1 = everything else |
-| `location_rank` smallint | 0 NJ, 1 NYC, 2 US-remote, 3 other US |
+| `industry_rank` smallint | 0 = listed in `industry_priority`, 1 = everything else |
+| `location_rank` smallint | position in `location_priority` (0 = first entry); unlisted = last |
 | `fit_score` smallint | skills overlap − gap-skill penalty; ranks within a tier; never excludes |
 
 Hard exclusions set `match_status='excluded'` with reasons rather than dropping rows, so a **“Filtered out” view lets the owner audit mistakes** (a wrongly excluded visa phrase is the costly failure). Employment type unknown stays included, flagged. Company columns added: `industry text`, `is_staffing bool`. Default feed = `match_status<>'excluded' AND freshness_at > now()-14d AND closed_at IS NULL`, ordered tier, location_rank, industry_rank, fit_score, freshness. “Still accepting applications” = job still open in the source (closing rules §7). Posted-within-14-days uses `freshness_at` (source `posted_at` when given; otherwise first seen, so a newly added board's undated jobs look new on day one: shown, flagged `date:first_crawl`).

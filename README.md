@@ -49,5 +49,5 @@ newest 14 kept; override with `--dir` or `DAILY_JOB_TOOL_BACKUP_DIR`). Restore i
 
 **Logs.** `~/Library/Logs/daily_job_tool/{web,worker,backup}.{out,err}.log`; `make logs` tails them.
 
-**BOT_CONTACT.** Put `BOT_CONTACT=you@example.com` (or an https URL) in `.env` in the project root, then
+**BOT_CONTACT.** Put `BOT_CONTACT=<your-contact-email-or-https-url>` in `.env` in the project root, then
 reload the agents (`make uninstall-agent install-agent`). It is appended to the crawler User-Agent.

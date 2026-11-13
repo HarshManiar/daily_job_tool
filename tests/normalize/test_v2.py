@@ -9,7 +9,7 @@ from tests.normalize.golden_employment import CONFLICTS, EMPLOYMENT, NO_CONFLICT
 from tests.normalize.golden_visa import EXPORT, FLAGS, VISA
 from tests.normalize.golden_years import POOLS, YEARS
 
-with open("data/profile.example.yaml", encoding="utf-8") as _f:
+with open("tests/fixtures/profile.pharma.yaml", encoding="utf-8") as _f:
     _v = yaml.safe_load(_f)["hard_filters"]["visa"]
 PHRASES = VisaPhrases(tuple(_v["exclude_if_phrases"]), tuple(_v["flag_if_phrases"]))
 
