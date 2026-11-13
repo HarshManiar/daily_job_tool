@@ -320,7 +320,7 @@ Press Ganey,pressganey.com,,workday,pressganey/Careers,US,,healthcare-data,healt
 Lumeris,lumeris.com,,workday,lumeris/LC,US,,health-tech,health tech,,,"{""host"":""lumeris.wd1.myworkdayjobs.com"",""tenant"":""lumeris"",""site"":""LC""}"
 Premier Inc,premierinc.com,,workday,premierinc/External_Professional,US,,healthcare-data,healthcare data,,,"{""host"":""premierinc.wd1.myworkdayjobs.com"",""tenant"":""premierinc"",""site"":""External_Professional""}"
 Veradigm,veradigm.com,,workday,veradigm/VR,US,,healthcare-data,healthcare data,,,"{""host"":""veradigm.wd12.myworkdayjobs.com"",""tenant"":""veradigm"",""site"":""VR""}"
-GoodRx,goodrx.com,,workday,goodrx/careers,US,,payer;health-plan,pbm/health plan,,,"{""host"":""goodrx.wd1.myworkdayjobs.com"",""tenant"":""goodrx"",""site"":""careers""}"
+GoodRx,goodrx.com,,ashby,goodrx,US,,payer;health-plan,pbm/health plan,,,
 Prime Therapeutics,primetherapeutics.com,,workday,primetherapeutics/PrimeTherapeuticsCareers,US,,payer;health-plan,pbm/health plan,,,"{""host"":""primetherapeutics.wd1.myworkdayjobs.com"",""tenant"":""primetherapeutics"",""site"":""PrimeTherapeuticsCareers""}"
 Alto Pharmacy,alto.com,,workday,alto/FuzeHealthCareerSite,US,,pharmacy,specialty pharmacy,,,"{""host"":""alto.wd1.myworkdayjobs.com"",""tenant"":""alto"",""site"":""FuzeHealthCareerSite""}"
 Devoted Health,devoted.com,,workday,devoted/Devoted,US,,payer;health-plan,pbm/health plan,,,"{""host"":""devoted.wd1.myworkdayjobs.com"",""tenant"":""devoted"",""site"":""Devoted""}"
