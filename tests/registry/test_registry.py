@@ -149,3 +149,44 @@ async def test_company_edit_rescores_open_jobs(db_clean, tmp_path):
         db_clean, write(tmp_path, head.format(ind="", stf="", exc="competitor"))
     )
     assert rep.rescored_companies == set()
+
+
+async def test_local_overlay_overrides_same_domain(db_clean, tmp_path):
+    base = write(tmp_path, "Acme,acme.com,,,,US,,,software,,,\nBeta,beta.com,,,,US,,,fintech,,,\n")
+    local = tmp_path / "seeds.local.csv"
+    local.write_text(
+        HEADER + "Acme Renamed,www.acme.com,,,,US,,,biotech,,,\nGamma,gamma.com,,,,US,,,,,,\n"
+    )
+    rep = await import_seeds(db_clean, base, local_path=local)
+    assert rep.companies_new == 3
+    got = {
+        r.domain: r
+        for r in await rows(
+            db_clean, "SELECT domain::text AS domain, name, industry FROM companies"
+        )
+    }
+    assert got["acme.com"].name == "Acme Renamed" and got["acme.com"].industry == "biotech"
+    assert set(got) == {"acme.com", "beta.com", "gamma.com"}
+
+
+async def test_missing_local_file_is_fine(db_clean, tmp_path):
+    base = write(tmp_path, "Acme,acme.com,,,,US,,,software,,,\n")
+    rep = await import_seeds(db_clean, base, local_path=tmp_path / "seeds.local.csv")
+    assert rep.companies_new == 1
+
+
+async def test_profile_exclude_companies_marks_excluded(db_clean, tmp_path):
+    base = write(tmp_path, "Acme Inc.,acme.com,,,,US,,,software,,,\nBeta,beta.com,,,,US,,,,,,\n")
+    await import_seeds(db_clean, base, exclude_companies=["ACME"])
+    got = {
+        r.slug: r.exclude_reason
+        for r in await rows(db_clean, "SELECT slug::text AS slug, exclude_reason FROM companies")
+    }
+    assert got["acme-inc"] and got["beta"] is None
+    # dropping the profile entry clears the exclusion on the next import
+    await import_seeds(db_clean, base)
+    got = {
+        r.slug: r.exclude_reason
+        for r in await rows(db_clean, "SELECT slug::text AS slug, exclude_reason FROM companies")
+    }
+    assert got["acme-inc"] is None

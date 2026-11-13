@@ -53,3 +53,10 @@ check-private:
 # after editing data/profile.yaml. No HTTP; takes a while on a big DB.
 rescore:
 	uv run daily_job_tool match rescore
+
+.PHONY: seeds
+
+# Import data/seeds.csv plus the optional private data/seeds.local.csv, then check the boards.
+seeds:
+	uv run daily_job_tool registry import
+	uv run daily_job_tool registry verify

@@ -4,6 +4,7 @@ import csv
 import json
 import re
 import unicodedata
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from daily_job_tool.adapters import registry as adapter_registry
 from daily_job_tool.http.blocklist import is_blocked_host
+from daily_job_tool.match.engine import _co_key
 
 COLUMNS = (
     "name,domain,careers_url,adapter,token,hq_country,size_bucket,tags,industry,"
@@ -84,16 +86,55 @@ def _split_tags(v: str) -> list[str]:
     return [t.strip() for t in v.split(";") if t.strip()]
 
 
-async def import_seeds(engine: AsyncEngine, csv_path: str | Path) -> ImportReport:
-    report = ImportReport()
-    with open(csv_path, newline="", encoding="utf-8") as fh:
+def _read_rows(path: str | Path) -> list[tuple[int, dict[str, str]]]:
+    with open(path, newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         missing = {"name"} - set(reader.fieldnames or [])
         if missing:
-            raise ValueError(f"{csv_path}: missing required column(s) {sorted(missing)}")
-        rows = [
+            raise ValueError(f"{path}: missing required column(s) {sorted(missing)}")
+        return [
             (i, {k: (v or "").strip() for k, v in r.items() if k}) for i, r in enumerate(reader, 2)
         ]
+
+
+def _row_key(row: dict[str, str]) -> str:
+    return normalize_domain(row.get("domain", "")) or "name:" + slugify(row.get("name", ""))
+
+
+def _merge_local(
+    base: list[tuple[int, dict[str, str]]], local: list[tuple[int, dict[str, str]]]
+) -> list[tuple[int, dict[str, str]]]:
+    """Local rows replace base rows with the same domain (or same name when no domain)."""
+    local_keys = {_row_key(r) for _, r in local if r.get("name")}
+    kept = [(ln, r) for ln, r in base if not r.get("name") or _row_key(r) not in local_keys]
+    return kept + local
+
+
+async def import_seeds(
+    engine: AsyncEngine,
+    csv_path: str | Path,
+    *,
+    local_path: str | Path | None = None,
+    exclude_companies: Sequence[str] = (),
+) -> ImportReport:
+    """Import seeds.csv, then merge an optional local CSV (missing file is fine).
+
+    `exclude_companies` (profile hard_filters.exclude_companies): matching companies get an
+    exclude_reason unless the row already has one, so no employer name has to live in the CSV.
+    """
+    report = ImportReport()
+    rows = _read_rows(csv_path)
+    if local_path is not None and Path(local_path).exists():
+        rows = _merge_local(rows, _read_rows(local_path))
+    excluded_keys = {_co_key(c) for c in exclude_companies if c and _co_key(c)}
+    if excluded_keys:
+        for _, row in rows:
+            if (
+                row.get("name")
+                and not row.get("exclude_reason")
+                and _co_key(row["name"]) in excluded_keys
+            ):
+                row["exclude_reason"] = "excluded by profile (current employer)"
     async with engine.begin() as conn:
         db_blocked = await _blocked_in_db(conn)
         for line, row in rows:

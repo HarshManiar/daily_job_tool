@@ -325,15 +325,29 @@ app.add_typer(registry_app, name="registry")
 
 
 @registry_app.command("import")
-def registry_import(path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)]) -> None:
-    """Idempotently import a seeds CSV into companies and sources."""
+def registry_import(
+    path: Annotated[Path, typer.Argument(exists=True, dir_okay=False)] = Path("data/seeds.csv"),
+    local: Annotated[
+        Path | None,
+        typer.Option("--local", help="Private overlay CSV (default: seeds.local.csv beside PATH)"),
+    ] = None,
+) -> None:
+    """Idempotently import a seeds CSV (plus seeds.local.csv if present) into the registry."""
     from daily_job_tool.db.session import get_engine
+    from daily_job_tool.match.profile import load_profile
     from daily_job_tool.registry.importer import import_seeds
+
+    local_path = local or path.with_name("seeds.local.csv")
+    excluded = load_profile().hard_filters.exclude_companies
+    if local_path.exists():
+        typer.echo(f"merging {local_path}")
 
     async def run() -> Any:
         engine = get_engine()
         try:
-            return await import_seeds(engine, path)
+            return await import_seeds(
+                engine, path, local_path=local_path, exclude_companies=excluded
+            )
         finally:
             await engine.dispose()
 
