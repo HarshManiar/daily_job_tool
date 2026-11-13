@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Context · Daily Job Tool{% endblock %}
+{% block content %}
+{% macro chips(items, empty='None.') %}{% if items %}<div class="chips">{% for x in items %}<span class="chip">{{ x }}</span>{% endfor %}</div>{% else %}<p class="muted">{{ empty }}</p>{% endif %}{% endmacro %}
+<h1>Context</h1>
+<p class="muted">What the ranking is based on: the active profile, read-only.</p>
+
+{% if no_profile %}
+<p class="chip warn">No profile file found. Matching uses empty defaults: every title is a non-target and nothing is boosted.</p>
+{% elif is_example %}
+<p class="chip warn">Using the example profile (profile.example.yaml). Copy it to data/profile.yaml and edit it to make it yours.</p>
+{% endif %}
+<dl>
+  <dt>Profile file</dt><dd><code>{{ path or 'none' }}</code></dd>
+  {% if p.profile.summary %}<dt>Summary</dt><dd>{{ p.profile.summary }}</dd>{% endif %}
+</dl>
+
+<h2>Target titles</h2>
+{% for tier, titles in [('Tier 1 (best fit)', p.target_titles.tier1), ('Tier 2', p.target_titles.tier2), ('Tier 3 (stretch, needs strong skill fit)', p.target_titles.tier3)] %}
+<h3>{{ tier }}</h3>
+{% if titles %}<ul>{% for t in titles %}<li>{{ t }}</li>{% endfor %}</ul>{% else %}<p class="muted">None.</p>{% endif %}
+{% endfor %}
+{% set g = p.target_titles.generic_data_roles %}
+<details class="excluded-box"><summary>Generic role patterns ({{ g.title_regex | length }} match as tier 2, {{ g.exclude_title_regex | length }} excluded levels)</summary>
+  <h3>Title patterns</h3>
+  {% if g.title_regex %}<ul>{% for r in g.title_regex %}<li><code>{{ r }}</code></li>{% endfor %}</ul>{% else %}<p class="muted">None.</p>{% endif %}
+  <h3>Excluded levels</h3>
+  {% if g.exclude_title_regex %}<ul>{% for r in g.exclude_title_regex %}<li><code>{{ r }}</code></li>{% endfor %}</ul>{% else %}<p class="muted">None.</p>{% endif %}
+</details>
+<p class="small muted">Words that mark a level outside your band: {{ p.target_titles.blocked_levels | join(', ') or 'none' }}.</p>
+
+<h2>Hard filters</h2>
+{% set hf = p.hard_filters %}
+<dl>
+  <dt>Employment</dt><dd>{{ hf.employment }}</dd>
+  <dt>Max age</dt><dd>{{ hf.max_age_days }} days</dd>
+  <dt>Years required</dt><dd>{{ hf.years_required.min }} to {{ hf.years_required.max }} (roles asking {{ hf.years_required.max + 1 }}+ are filtered out)</dd>
+  <dt>Excluded companies</dt><dd>{{ hf.exclude_companies | join(', ') or 'none' }}</dd>
+  <dt>Staffing reposts</dt><dd>{{ 'excluded' if hf.exclude_staffing_reposts else 'kept' }}</dd>
+  <dt>Minimum base pay</dt><dd>{% if p.profile.min_base_usd %}${{ '{:,}'.format(p.profile.min_base_usd) }} (lower stated maximums are flagged){% else %}not set{% endif %}</dd>
+</dl>
+
+<h2>Visa</h2>
+<p>Status: <strong>{{ hf.visa.status }}</strong>{% if hf.visa.status == 'none' %} <span class="muted">(visa filters are off)</span>{% endif %}</p>
+<details class="excluded-box"><summary>Phrases ({{ hf.visa.exclude_if_phrases | length }} exclude, {{ hf.visa.flag_if_phrases | length }} flag)</summary>
+  <h3>Exclude when the posting says</h3>
+  {% if hf.visa.exclude_if_phrases %}<ul>{% for r in hf.visa.exclude_if_phrases %}<li><code>{{ r }}</code></li>{% endfor %}</ul>{% else %}<p class="muted">None.</p>{% endif %}
+  <h3>Flag when the posting says</h3>
+  {% if hf.visa.flag_if_phrases %}<ul>{% for r in hf.visa.flag_if_phrases %}<li><code>{{ r }}</code></li>{% endfor %}</ul>{% else %}<p class="muted">None.</p>{% endif %}
+</details>
+
+<h2>Location priority</h2>
+{% if p.location_priority %}<ol>
+{% for e in p.location_priority %}<li><strong>{{ e.display_label }}</strong> <span class="muted small">({{ e.name }}{% if e.states %}; states {{ e.states | join(', ') }}{% endif %}{% if e.cities %}; cities {{ e.cities | join(', ') }}{% endif %}{% if e.remote_regions %}; remote regions {{ e.remote_regions | join(', ') }}{% endif %})</span></li>{% endfor %}
+<li>Other US</li></ol>{% else %}<p class="muted">No location preference: nothing is boosted.</p>{% endif %}
+
+<h2>Industry priority</h2>
+{{ chips(p.industry_priority, 'No priority industries.') }}
+
+<h2>Skills</h2>
+<h3>Strong</h3>{{ chips(p.profile.strong_skills) }}
+<h3>Gaps (penalised, never excluded)</h3>{{ chips(p.profile.gap_skills) }}
+
+<h2>Scoring weights</h2>
+<dl>{% for k, v in score_rows %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}</dl>
+
+<p class="muted small">Edit data/profile.yaml then run <code>make rescore</code>, then restart the web app.</p>
+{% endblock %}

@@ -26,6 +26,7 @@
       <a href="/" {% if page in ('feed', 'filtered') %}aria-current="page"{% endif %}>Matches</a>
       <a href="/manual" {% if page == 'manual' %}aria-current="page"{% endif %}>Manual check</a>
       <a href="/health" {% if page == 'health' %}aria-current="page"{% endif %}>Health</a>
+      <a href="/context" {% if page == 'context' %}aria-current="page"{% endif %}>Context</a>
     </nav>
     <div id="refresh" class="refresh" hx-get="/refresh/status" hx-trigger="load" hx-swap="outerHTML">
       <form method="post" action="/refresh"><button class="btn ghost" type="submit">Refresh now</button></form>

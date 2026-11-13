@@ -46,3 +46,10 @@ restore:
 
 check-private:
 	./scripts/check_private.sh
+
+.PHONY: rescore
+
+# Recompute match columns (tier, score inputs, location rank, visa) for all open jobs
+# after editing data/profile.yaml. No HTTP; takes a while on a big DB.
+rescore:
+	uv run daily_job_tool match rescore

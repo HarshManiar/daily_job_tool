@@ -174,10 +174,10 @@ def create_app(
     app.state.count_cache = TTLCache(30)  # 24h/48h box counts
     app.state.option_cache = TTLCache(300)  # function dropdown values
 
-    from daily_job_tool.web.routes import api, companies, feed, health, jobs, pages, state
+    from daily_job_tool.web.routes import api, companies, context, feed, health, jobs, pages, state
     from daily_job_tool.web.routes import refresh as refresh_routes
 
-    for mod in (feed, jobs, companies, health, api, state, pages, refresh_routes):
+    for mod in (feed, jobs, companies, health, context, api, state, pages, refresh_routes):
         app.include_router(mod.router)
     app.mount("/static", StaticFiles(directory=str(HERE / "static")), name="static")
 
