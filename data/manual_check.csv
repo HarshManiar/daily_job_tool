@@ -1,0 +1,66 @@
+name,industry,priority,careers_url,reason,source_note
+Amerita,specialty pharmacy,1,https://ameritarx.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Apixio,healthcare data,1,https://apixio.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Arcellx,pharma/biotech,1,https://arcellx.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Atomwise,pharma/biotech,1,https://atomwise.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Caribou Biosciences,pharma/biotech,1,https://cariboutx.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Certara,pharma consulting,1,https://careers-certara.icims.com,robots.txt forbids crawling,"icims_candidates:blocked_robots; rejected_classified:detected; rejected_classified URL is an IdP login on login.icims.com, so host from icims_candidates used"
+Conifer Health Solutions,health tech,1,https://coniferhealth.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Denali Therapeutics,pharma/biotech,1,https://denalitx.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Evaluate,healthcare data,1,https://evaluate.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+EVERSANA,pharma consulting,1,https://careers.smartrecruiters.com/EVERSANA1,vendor API forbids crawlers; public pages not used,rejected_classified:detected; SmartRecruiters group
+Evidation,healthcare data,1,https://evidation.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Guardant Health,pharma/biotech,1,https://guardanthealth.com,vendor API forbids crawlers; public pages not used,"rejected_classified:detected; SmartRecruiters group; careers_url column is the company homepage, no board found"
+Hippocratic AI,health tech,1,https://hippocraticai.com/careers/,owner decided not to build,rejected_classified:custom_page; owner-dropped set (docs/CUSTOM_PAGES.md)
+Illumina,pharma/biotech,1,https://illumina.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Intellia,pharma/biotech,1,https://intellia.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+IQVIA,pharma consulting,1,https://iqvia.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+KMK Consulting,pharma consulting,1,https://kmkconsulting.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Lumiata,healthcare data,1,https://lumiata.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Mark Cuban Cost Plus Drug,specialty pharmacy,1,https://costplusdrugs.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Medpace,pharma consulting,1,https://uscareers-medpace.icims.com/jobs/login?loginOnly=1,robots.txt forbids crawling,icims_candidates:blocked_robots; rejected_classified:detected
+ODAIA,pharma consulting,1,https://odaia.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Ontrak,health tech,1,https://ontrak.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Parexel,pharma consulting,1,https://parexel.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Privia Health,health tech,1,https://privia.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Qualified Health,health tech,1,https://qualifiedhealth.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+R1 RCM,health tech,1,https://r1rcm.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Ribbon Health,healthcare data,1,https://ribbonhealth.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Sarepta Therapeutics,pharma/biotech,1,https://sarepta.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Sharecare,health tech,1,https://sharecare.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+SingleCare,pbm/health plan,1,https://singlecare.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Spring Health,health tech,1,https://www.springhealth.com/careers,owner decided not to build,rejected_classified:custom_page; owner-dropped set (docs/CUSTOM_PAGES.md)
+Syneos Health,pharma consulting,1,https://syneoshealth.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Tempus,healthcare data,1,https://tempus.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Thirty Madison,health tech,1,https://thirtymadison.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Thoughtful AI,health tech,1,https://www.accesshealthcare.com/careers,owner decided not to build,rejected_classified:custom_page; owner-dropped set (docs/CUSTOM_PAGES.md)
+Trilliant Health,healthcare data,1,https://www.linkedin.com/company/trillianthealth/jobs,jobs only listed on LinkedIn,rejected_classified:linkedin_only
+Waystar,health tech,1,https://careers.waystar.com/?vs=4980&utm_source=waystar.com-DE&utm_medium=Other&utm_campaign=waystar.com,owner decided not to build,rejected_classified:custom_page; owner-dropped set (docs/CUSTOM_PAGES.md)
+ZS Associates,pharma consulting,1,https://careers-zs.icims.com/connect,robots.txt forbids crawling,icims_candidates:blocked_robots; rejected_classified:detected
+Blue Apron,e-commerce,2,https://blueapron.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+BlueMountain Capital,consulting,2,https://bluemountain.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Boxed,e-commerce,2,https://boxed.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Cornerstone Research,consulting,2,https://ug-chire.icims.com/jobs/search?ss=1,robots.txt forbids crawling,icims_candidates:blocked_robots; rejected_classified:detected
+Corvus Insurance,insurance,2,https://corvusinsurance.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Domo,software,2,https://domo.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+DoorDash,other,2,https://doordash.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+EPAM,consulting,2,https://epam.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Etsy,e-commerce,2,https://etsy.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Guidehouse,consulting,2,https://guidehouse.wd1.myworkdayjobs.com/External,source marked blocked in DB,"DB sources.status=blocked (adapter workday, token guidehouse/External); rejected_classified shows detected; cause not recorded"
+HashiCorp,software,2,https://hashicorp.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Huron Consulting,consulting,2,https://huron.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Increase,fintech,2,https://increase.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Klarna,fintech,2,https://klarna.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+M1 Finance,fintech,2,https://jobs.smartrecruiters.com/M1Finance/3420000902643216,vendor API forbids crawlers; public pages not used,"rejected_classified:detected; SmartRecruiters group; URL is a single posting, not the board root"
+New York Times,media,2,https://nytco.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Nielsen,media,2,https://careers.smartrecruiters.com/TheNielsenCompany,vendor API forbids crawlers; public pages not used,rejected_classified:detected; SmartRecruiters group
+Quizlet,media,2,https://quizlet.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Revolve,e-commerce,2,https://revolve.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Rivian,other,2,https://us-careers-rivian.icims.com/jobs/login?loginOnly=1,robots.txt forbids crawling,icims_candidates:blocked_robots; rejected_classified:detected
+RTI International,consulting,2,https://rti.org/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Skillshare,media,2,https://skillshare.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+ThredUp,e-commerce,2,https://thredup.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
+Ulta Beauty,retail,2,https://fdcnmcareers-ulta.icims.com/jobs/login?loginOnly=1,robots.txt forbids crawling,icims_candidates:blocked_robots; rejected_classified:detected
+Veho,logistics,2,https://veho.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Vroom,e-commerce,2,https://vroom.com/careers,robots.txt forbids crawling,rejected_classified:blocked_by_robots; guessed path (no careers_url in source)
+Warby Parker,e-commerce,2,https://warbyparker.com/careers,bot protection blocks automated visitors,rejected_classified:bot_wall; guessed path (no careers_url in source)
