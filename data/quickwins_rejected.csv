@@ -1,0 +1,20 @@
+name,domain,adapter,token,reason
+Athelas,athelas.com,ashby,Commure,duplicate: same board already in seeds (commure)
+Dagster Labs,dagster.io,ashby,,no token
+ShipBob,shipbob.com,greenhouse,,no token
+Deel,deel.com,ashby,,no token
+Clari,clari.com,greenhouse,,no token
+Stride Health,stridehealth.com,greenhouse,,no token
+Tecton,tecton.ai,greenhouse,,no token
+Cerebral,cerebral.com,greenhouse,cerebral,verify: greenhouse board 404 not_found
+Particle Health,particlehealth.com,greenhouse,particlehealth,verify: greenhouse board 404 not_found
+MoneyLion,moneylion.com,ashby,gen-digital,"verify: board belongs to a different company (Gen Digital, Mountain View) not MoneyLion"
+Bestow,bestow.com,ashby,bestow,verify: ok but 0 jobs
+Vouch,vouch.us,rippling,en-GB,verify: rippling board 404 not_found (token is a locale code; Vouch board is likely vouch-inc)
+Honest Company,honest.com,greenhouse,phxpreview,verify: ok but 0 jobs (board named The Honest Company)
+Innovid,innovid.com,greenhouse,innovid,verify: greenhouse board 404 not_found
+Grammarly,grammarly.com,greenhouse,grammarly,verify: greenhouse board 404 not_found
+Apogee Therapeutics,apogeetherapeutics.com,greenhouse,apogeetherapeutics,verify: ok but 0 jobs
+Kyruus Health,kyruus.com,lever,kyruushealth,verify: lever board 404 not_found
+Fiddler AI,fiddler.ai,ashby,fiddler-ai,verify: ok but 0 jobs
+Striim,striim.com,greenhouse,striiminc,verify: ok but 0 jobs
