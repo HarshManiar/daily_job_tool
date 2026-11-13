@@ -14,14 +14,18 @@ the example data.
 > Read docs/HANDOFF_FOR_CLAUDE.md and docs/ONBOARDING.md, then set this job search tool up for me.
 > I am not a developer, so explain things simply and ask me questions a few at a time.
 
-## What you need to have BEFORE starting
-| Need | Where it comes from |
-|---|---|
-| The project folder (code) | The owner sends a zip made with `git archive` (no private files inside) or a private GitHub clone. Unzip anywhere, open that folder in Claude Code. |
-| A Mac with internet | The user. Windows or Linux is not covered by these instructions. |
-| Homebrew, PostgreSQL 17, `uv` | You install them (ONBOARDING step A). Homebrew itself needs the user to run its one-line installer from https://brew.sh. |
-| A name for her private database | Ask the user (suggest `job_search`). |
-| Her real contact (email or https URL) | Ask the user. It goes in `.env` as `BOT_CONTACT`, so employers can see who is crawling. Never invent one. |
+## Who does what before the interview
+She has a MacBook, so these are YOURS to do, without asking her (tell her briefly what you are doing):
+- Install Homebrew if missing. Its installer asks for her Mac password, which you cannot type: if
+  `brew --version` fails, show her the one-line command from https://brew.sh, ask her to run it in Terminal
+  and tell you when it finishes, then continue.
+- Install PostgreSQL 17 and `uv` with Homebrew, start Postgres, run `brew link --force postgresql@17`.
+- Choose the database name yourself: `job_search` (and `job_search_test`). Do not ask her.
+- Run `uv sync`, create `.env`, `make migrate`, `make test`.
+- The code is already on her Mac: she opens the unzipped project folder in Claude Code.
+
+You MUST ASK HER (never guess or invent): her real contact email or https page for `BOT_CONTACT`, and
+every interview answer below. Anything not on the list above is a question for her.
 
 ## What you need FROM THE USER (the interview, ONBOARDING step B)
 Current role and years of experience; target job titles in three tiers; broad roles to include

@@ -15,7 +15,7 @@ or `.env`. Never overwrite an existing file of theirs without asking. Never push
 Check each; install only what is missing, and tell the user what you are installing.
 
 ```sh
-brew --version                       # if missing: install Homebrew from https://brew.sh (needs the user)
+brew --version                       # if missing: Homebrew needs her Mac password, which you cannot type; give her the one-line installer from https://brew.sh, ask her to run it in Terminal, then continue
 brew list postgresql@17 >/dev/null 2>&1 || brew install postgresql@17
 command -v uv >/dev/null || brew install uv
 brew services start postgresql@17    # Postgres must be running
@@ -29,8 +29,7 @@ uv sync                              # installs Python (via uv) and dependencies
 cp -n .env.example .env              # -n: never overwrite an existing .env
 ```
 
-Ask: "What should we call your private database?" (suggest `job_search`, letters/digits/underscores).
-Use it as `<DB>` below.
+Do not ask about the database name: use `job_search` as `<DB>` below (override only if it already exists).
 
 ```sh
 createdb <DB>
