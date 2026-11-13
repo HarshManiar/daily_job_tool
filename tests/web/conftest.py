@@ -32,6 +32,12 @@ JOB_DEFAULTS: dict[str, Any] = {
     "age_days": 1.0,
     "closed": False,
     "locations": "[]",
+    "seniority": "unknown",
+    "function": "other",
+    "employment_type": "unknown",
+    "tech_tags": [],
+    "first_seen_age_days": None,  # default: same as age_days
+    "closed_age_days": None,  # when set, closed_at = now - that many days
 }
 
 
@@ -56,6 +62,11 @@ class Factory:
         p = {**JOB_DEFAULTS, **kw}
         p["key"] = f"k{next(_seq)}"
         p["cid"] = company_id
+        p["fs_age"] = (
+            p["age_days"] if p["first_seen_age_days"] is None else p["first_seen_age_days"]
+        )
+        p["closed_age"] = p.pop("closed_age_days")
+        p.pop("first_seen_age_days")
         async with self.engine.begin() as c:
             return (
                 await c.execute(
@@ -65,15 +76,19 @@ class Factory:
                         industry_rank, fit_score, visa_status, visa_evidence, years_min, years_max,
                         salary_min_usd, salary_max_usd, apply_url, description_html,
                         description_text, first_seen_at, last_seen_at, freshness_at, closed_at,
-                        normalizer_version, locations)
+                        normalizer_version, locations, seniority, function, employment_type, tech_tags)
                         VALUES (:cid, :key, :title, lower(:title), :remote_type, :match_status,
                         :match_tier, :match_reasons, :location_rank, :industry_rank, :fit_score,
                         :visa_status, :visa_evidence, :years_min, :years_max, :salary_min_usd,
                         :salary_max_usd, :apply_url, :description_html, :description_text,
+                        now() - make_interval(secs => :fs_age * 86400),
                         now() - make_interval(secs => :age_days * 86400),
                         now() - make_interval(secs => :age_days * 86400),
-                        now() - make_interval(secs => :age_days * 86400),
-                        CASE WHEN :closed THEN now() END, 1, CAST(:locations AS jsonb))
+                        CASE WHEN CAST(:closed_age AS float8) IS NOT NULL
+                             THEN now() - make_interval(secs => CAST(:closed_age AS float8) * 86400)
+                             WHEN :closed THEN now() END,
+                        1, CAST(:locations AS jsonb), CAST(:seniority AS seniority), :function,
+                        CAST(:employment_type AS emp_type), :tech_tags)
                         RETURNING id"""
                     ),
                     p,
@@ -86,7 +101,9 @@ async def db(engine: AsyncEngine) -> AsyncIterator[Factory]:
     async def wipe() -> None:
         async with engine.begin() as c:
             await c.execute(
-                text("TRUNCATE companies, sources, crawl_runs RESTART IDENTITY CASCADE")
+                text(
+                    "TRUNCATE companies, sources, crawl_runs, app_state, saved_searches RESTART IDENTITY CASCADE"
+                )
             )
 
     await wipe()

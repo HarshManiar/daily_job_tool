@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from daily_job_tool.web import format as fmt
+from daily_job_tool.web.visits import since_text
 
 HERE = Path(__file__).parent
 
@@ -29,6 +30,7 @@ _env.filters.update(
     exclusion_reasons=fmt.exclusion_reasons,
     location_text=fmt.location_text,
     tier_label=fmt.tier_label,
+    since_text=since_text,
 )
 _env.globals.update(
     LOCATION_RANK_TEXT=fmt.LOCATION_RANK_TEXT,
@@ -52,4 +54,16 @@ async def get_conn(request: Request) -> AsyncIterator[AsyncConnection]:
         yield conn
 
 
+async def get_rw_conn(request: Request) -> AsyncIterator[AsyncConnection]:
+    """Read-write transaction on the SEPARATE engine; only app_state / saved_searches routes
+    depend on this (commits on success)."""
+    async with request.app.state.rw_engine.begin() as conn:
+        yield conn
+
+
+def now_utc(request: Request):
+    return request.app.state.clock()
+
+
 Conn = Annotated[AsyncConnection, Depends(get_conn)]
+RWConn = Annotated[AsyncConnection, Depends(get_rw_conn)]

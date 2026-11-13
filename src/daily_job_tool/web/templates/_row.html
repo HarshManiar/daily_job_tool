@@ -1,7 +1,7 @@
-{% macro row(r, now, show_reasons=False) %}
+{% macro row(r, now, show_reasons=False, since=None) %}
 <li class="job {% if r.match_status == 'excluded' %}is-excluded{% endif %}">
   <div class="job-main">
-    <a class="job-title" href="/jobs/{{ r.id }}">{{ r.title }}</a>
+    <a class="job-title" href="/jobs/{{ r.id }}">{{ r.title }}</a>{% if since and r.first_seen_at > since %} <span class="chip new">New</span>{% endif %}
     <div class="job-sub">
       <a href="/companies/{{ r.company_slug }}">{{ r.company_name }}</a>
       <span class="dot">·</span><span>{{ r.locations | location_text(r.remote_type) }}</span>

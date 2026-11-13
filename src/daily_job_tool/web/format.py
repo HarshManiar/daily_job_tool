@@ -156,3 +156,39 @@ def exclusion_reasons(reasons: Sequence[str] | None) -> list[str]:
 
 def tier_label(tier: int | None) -> str:
     return f"T{tier}" if tier else ""
+
+
+def trend_chart(trend: list[dict], width: int = 520, height: int = 120) -> dict:
+    """Geometry for the server-rendered weekly opened-vs-closed bar chart (inline SVG).
+
+    Returns {"w","h","bars":[{x,w,y,h,kind,label}], "max", "summary"}; pure so it is testable.
+    """
+    n = max(len(trend), 1)
+    top = max([int(t["opened"]) for t in trend] + [int(t["closed"]) for t in trend] + [1])
+    pad_b, pad_t = 4, 4
+    plot_h = height - pad_b - pad_t
+    slot = width / n
+    bw = max(slot * 0.38, 1.0)
+    bars = []
+    for i, t in enumerate(trend):
+        for j, kind in enumerate(("opened", "closed")):
+            v = int(t[kind])
+            h = round(v / top * plot_h, 1)
+            bars.append(
+                {
+                    "x": round(i * slot + slot * 0.08 + j * (bw + 1), 1),
+                    "y": round(height - pad_b - h, 1),
+                    "w": round(bw, 1),
+                    "h": h,
+                    "kind": kind,
+                    "label": f"week of {t['week']}: {v} {kind}",
+                }
+            )
+    so, sc = sum(int(t["opened"]) for t in trend), sum(int(t["closed"]) for t in trend)
+    return {
+        "w": width,
+        "h": height,
+        "bars": bars,
+        "max": top,
+        "summary": f"{so} opened and {sc} closed over the last {len(trend)} weeks",
+    }

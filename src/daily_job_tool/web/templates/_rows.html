@@ -1,5 +1,5 @@
 {% from "_row.html" import row %}
-{% for r in rows %}{{ row(r, now, show_reasons=excluded) }}{% endfor %}
+{% for r in rows %}{{ row(r, now, show_reasons=excluded, since=(None if excluded else since)) }}{% endfor %}
 {% if has_more %}
 <li class="more"><button class="btn ghost" hx-get="{{ base_path }}?{{ next_qs }}" hx-target="closest li" hx-swap="outerHTML" hx-push-url="false">Load more</button></li>
 {% endif %}

@@ -1,0 +1,13 @@
+<figure class="trend">
+  <svg viewBox="0 0 {{ chart.w }} {{ chart.h }}" role="img" aria-labelledby="trend-t trend-d" preserveAspectRatio="none">
+    <title id="trend-t">Hiring trend, last 90 days</title>
+    <desc id="trend-d">Jobs opened versus closed per week. {{ chart.summary }}. Peak week count {{ chart.max }}. Full data in the table below.</desc>
+    <line class="axis" x1="0" y1="{{ chart.h - 4 }}" x2="{{ chart.w }}" y2="{{ chart.h - 4 }}"/>
+    {% for b in chart.bars %}{% if b.h > 0 %}<rect class="bar-{{ b.kind }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}"><title>{{ b.label }}</title></rect>{% endif %}{% endfor %}
+  </svg>
+  <figcaption class="muted"><span class="key key-opened" aria-hidden="true"></span>opened (first seen) <span class="key key-closed" aria-hidden="true"></span>closed · per week, last 13 weeks · {{ chart.summary }}. A company's first crawl counts all its roles as opened.</figcaption>
+  <details><summary>Weekly numbers</summary>
+    <div class="scroll"><table><thead><tr><th>Week of</th><th class="num">Opened</th><th class="num">Closed</th></tr></thead>
+    <tbody>{% for t in trend %}<tr><td>{{ t.week }}</td><td class="num">{{ t.opened }}</td><td class="num">{{ t.closed }}</td></tr>{% endfor %}</tbody></table></div>
+  </details>
+</figure>

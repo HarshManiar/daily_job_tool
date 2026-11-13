@@ -42,15 +42,15 @@ async def test_excluded_and_filtered_view(client, db):
         visa_status="not_available",
         visa_evidence="We cannot sponsor visas now",
     )
-    await db.job(c, title="Senior", match_status="excluded", match_reasons=["years:min_7+"])
+    await db.job(c, title="SevenYrJob", match_status="excluded", match_reasons=["years:min_7+"])
     home = (await client.get("/")).text
-    assert "Visible" in home and "NoVisa" not in home and "Senior" not in home
+    assert "Visible" in home and "NoVisa" not in home and "SevenYrJob" not in home
     f = (await client.get("/filtered")).text
     assert "NoVisa" in f and "Visible" not in f
     assert "No visa sponsorship" in f and "We cannot sponsor visas now" in f
     assert "Requires 7+ years" in f
     only = (await client.get("/filtered", params={"reason": "years:min_7+"})).text
-    assert "Senior" in only and "NoVisa" not in only
+    assert "SevenYrJob" in only and "NoVisa" not in only
 
 
 async def test_days_filter_and_closed(client, db):

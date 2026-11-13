@@ -1,5 +1,13 @@
-<form class="filters" action="{{ base_path }}" method="get" hx-get="{{ base_path }}" hx-target="#results" hx-push-url="true" hx-trigger="change, submit, keyup changed delay:400ms from:#f-q">
-  <input id="f-q" type="search" name="q" value="{{ f.q }}" placeholder="Search title, skills, text…" autocomplete="off">
+{% from "_counts.html" import cnt %}
+{% set adv = f.company or f.remote != 'any' or f.hide_no_pay or f.max_years is not none or f.seniority or f.function or f.tags or f.emp != 'any' or f.clean_only or f.min_pay is not none or f.pay_unknown != 'include' or f.industry_only or f.visa_only %}
+<form class="filters" action="{{ base_path }}" method="get" hx-get="{{ base_path }}" hx-target="#results" hx-push-url="true" hx-trigger="change, submit, keyup changed delay:400ms from:#f-q, keyup changed delay:600ms from:#f-company, keyup changed delay:600ms from:#f-tags" aria-label="Filter jobs">
+  <label class="grow">Search
+    <input id="f-q" type="search" name="q" value="{{ f.q }}" placeholder="Title, skills, text…" autocomplete="off"></label>
+  <label>Sort
+    <select name="sort">
+      <option value="best" {% if f.sort == 'best' %}selected{% endif %}>Best match</option>
+      <option value="newest" {% if f.sort == 'newest' %}selected{% endif %}>Newest first</option>
+    </select></label>
   <label>Tier
     <select name="tier">
       {% for v, l in [('any','Any'),('targets','Targets only'),('1','Tier 1'),('2','Tier 2'),('3','Tier 3')] %}
@@ -10,20 +18,59 @@
       {% for v, l in [('any','Anywhere'),('nj','New Jersey'),('nyc','NYC area'),('remote','US remote'),('other','Other US')] %}
       <option value="{{ v }}" {% if f.place == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
     </select></label>
-  <label>Posted
-    <select name="days">
+  <label>Posted within
+    <select name="days" {% if f.window_hours %}aria-describedby="days-note"{% endif %}>
       {% for v, l in [('7','7 days'),('14','14 days'),('30','30 days'),('all','All')] %}
       <option value="{{ v }}" {% if f.days == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
     </select></label>
-  <label>Min pay ($/yr)
-    <input type="number" name="min_pay" min="0" step="5000" value="{{ f.min_pay if f.min_pay is not none else '' }}" placeholder="120000"></label>
-  <label>Unknown pay
-    <select name="pay_unknown">
-      <option value="include" {% if f.pay_unknown == 'include' %}selected{% endif %}>Include</option>
-      <option value="exclude" {% if f.pay_unknown == 'exclude' %}selected{% endif %}>Exclude</option>
-    </select></label>
-  <label class="check"><input type="checkbox" name="industry_only" value="1" {% if f.industry_only %}checked{% endif %}> Priority industry</label>
-  <label class="check"><input type="checkbox" name="visa_only" value="1" {% if f.visa_only %}checked{% endif %}> Offers visa</label>
+  <div class="fresh" role="group" aria-label="Posted recently">
+    <label class="check"><input type="checkbox" name="posted24" value="1" {% if f.posted24 %}checked{% endif %}> Posted last 24 hours {{ cnt(posted_counts.h24, "cnt24") }}</label>
+    <label class="check"><input type="checkbox" name="posted48" value="1" {% if f.posted48 %}checked{% endif %}> Posted last 48 hours {{ cnt(posted_counts.h48, "cnt48") }}</label>
+    {% if f.window_hours %}<span id="days-note" class="muted small">overrides the days menu ({{ f.window_hours }} h)</span>{% endif %}
+  </div>
+  <details class="adv" {% if adv %}open{% endif %}>
+    <summary>More filters</summary>
+    <div class="adv-grid">
+      <label>Company
+        <input id="f-company" type="search" name="company" value="{{ f.company }}" placeholder="name contains…" autocomplete="off"></label>
+      <label>Remote type
+        <select name="remote">
+          {% for v, l in [('any','Any'),('remote','Remote'),('hybrid','Hybrid'),('onsite','On-site')] %}
+          <option value="{{ v }}" {% if f.remote == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+        </select></label>
+      <label>Function
+        <select name="function">
+          <option value="">Any</option>
+          {% for fn in functions %}<option value="{{ fn }}" {% if f.function == fn %}selected{% endif %}>{{ fn | replace('_', ' ') }}</option>{% endfor %}
+          {% if f.function and f.function not in functions %}<option value="{{ f.function }}" selected>{{ f.function }}</option>{% endif %}
+        </select></label>
+      <label>Employment
+        <select name="emp">
+          {% for v, l in [('any','Any'),('full_time','Full-time only'),('full_time_unknown','Full-time or unstated')] %}
+          <option value="{{ v }}" {% if f.emp == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+        </select></label>
+      <label>Max years required
+        <input type="number" name="max_years" min="0" max="60" value="{{ f.max_years if f.max_years is not none else '' }}" placeholder="6 (unstated ok)"></label>
+      <label>Tech tags (any of)
+        <input id="f-tags" type="text" name="tags" value="{{ f.tags | join(', ') }}" placeholder="python, sql" autocomplete="off"></label>
+      <label>Min pay ($/yr)
+        <input type="number" name="min_pay" min="0" step="5000" value="{{ f.min_pay if f.min_pay is not none else '' }}" placeholder="120000"></label>
+      <label>Unknown pay
+        <select name="pay_unknown">
+          <option value="include" {% if f.pay_unknown == 'include' %}selected{% endif %}>Include</option>
+          <option value="exclude" {% if f.pay_unknown == 'exclude' %}selected{% endif %}>Exclude</option>
+        </select></label>
+      <fieldset class="sen"><legend>Seniority</legend>
+        {% for s in seniorities %}<label class="check"><input type="checkbox" name="seniority" value="{{ s }}" {% if s in f.seniority %}checked{% endif %}> {{ s }}</label>{% endfor %}
+      </fieldset>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="hide_no_pay" value="1" {% if f.hide_no_pay %}checked{% endif %}> Hide jobs without stated pay</label>
+        <label class="check"><input type="checkbox" name="industry_only" value="1" {% if f.industry_only %}checked{% endif %}> Priority industry</label>
+        <label class="check"><input type="checkbox" name="visa_only" value="1" {% if f.visa_only %}checked{% endif %}> Offers visa</label>
+        <label class="check"><input type="checkbox" name="clean_only" value="1" {% if f.clean_only %}checked{% endif %}> Only clean (hide flagged)</label>
+      </div>
+    </div>
+  </details>
   {% if f.reason %}<input type="hidden" name="reason" value="{{ f.reason }}">{% endif %}
   <noscript><button class="btn" type="submit">Apply filters</button></noscript>
 </form>

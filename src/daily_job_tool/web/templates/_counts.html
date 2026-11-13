@@ -1,0 +1,1 @@
+{% macro cnt(n, id, oob=False) %}<span class="cnt" id="{{ id }}"{% if oob %} hx-swap-oob="true"{% endif %} title="{{ n }} matching jobs">{{ n }}</span>{% endmacro %}

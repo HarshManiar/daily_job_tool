@@ -12,8 +12,9 @@ from tests.conftest import alembic_config
 TABLES = {
     "companies", "sources", "blocked_domains", "removal_requests", "postings", "jobs",
     "crawl_runs", "company_daily_stats", "robots_cache", "fx_rates",
+    "app_state", "saved_searches",
 }  # fmt: skip
-ABSENT = {"llm_extractions", "plans", "users", "auth_tokens", "sessions", "saved_searches"}
+ABSENT = {"llm_extractions", "plans", "users", "auth_tokens", "sessions"}
 INDEXES = {
     "sources_due", "postings_open", "jobs_feed", "jobs_tsv", "jobs_title_trg", "jobs_tags",
     "jobs_countries", "jobs_salary", "jobs_company", "crawl_runs_recent", "companies_name_trg",
@@ -127,3 +128,28 @@ def test_migration_up_down_up(migrated_db):
             await eng.dispose()
 
     assert asyncio.run(count_tables()) == len(TABLES)
+
+
+def test_migration_0005_up_down_up(migrated_db):
+    cfg = alembic_config(migrated_db)
+    new = {"app_state", "saved_searches"}
+
+    async def present() -> set[str]:
+        eng = create_async_engine(migrated_db, poolclass=NullPool)
+        try:
+            async with eng.connect() as c:
+                rows = await c.execute(
+                    text(
+                        "SELECT table_name FROM information_schema.tables "
+                        "WHERE table_schema='public' AND table_name = ANY(:t)"
+                    ),
+                    {"t": sorted(new)},
+                )
+                return {r[0] for r in rows}
+        finally:
+            await eng.dispose()
+
+    command.downgrade(cfg, "0004_match_checks")
+    assert asyncio.run(present()) == set()
+    command.upgrade(cfg, "head")
+    assert asyncio.run(present()) == new

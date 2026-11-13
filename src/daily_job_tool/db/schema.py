@@ -260,3 +260,19 @@ fx_rates = Table(
     Column("currency", CHAR(3), primary_key=True),
     Column("usd_per_unit", Numeric, nullable=False),
 )
+
+app_state = Table(
+    "app_state",
+    metadata,
+    Column("key", Text, primary_key=True),
+    Column("value", Text, nullable=False),
+)
+
+saved_searches = Table(
+    "saved_searches",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("name", Text, nullable=False),
+    Column("query", JSONB, nullable=False),
+    _ts("created_at", nullable=False, server_default=_now),
+)

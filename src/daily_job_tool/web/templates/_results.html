@@ -1,3 +1,12 @@
+{% from "_counts.html" import cnt %}
+{% if oob %}{{ cnt(posted_counts.h24, "cnt24", True) }}{{ cnt(posted_counts.h48, "cnt48", True) }}
+{% if save_qs is defined %}<input type="hidden" id="save-qs" name="qs" value="{{ save_qs }}" hx-swap-oob="true">{% endif %}{% endif %}
+{% if since and not excluded %}
+<div class="newbar" role="status">
+  <span>{% if new_count %}<strong>{{ new_count }}</strong> new since {{ since | since_text }}{% else %}Nothing new since {{ since | since_text }}{% endif %}</span>
+  {% if new_count %}<form action="/visit/seen" method="post"><input type="hidden" name="next" value="{{ base_path }}?{{ f.query_string() }}"><button class="btn ghost" type="submit">Mark all seen</button></form>{% endif %}
+</div>
+{% endif %}
 <p class="count"><strong>{{ total }}</strong> {{ 'filtered out' if excluded else 'matches' }} · <span id="showing">showing {{ shown_to }}</span></p>
 {% if excluded and reasons %}
 <p class="reasons">

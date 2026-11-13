@@ -3,5 +3,40 @@
 {% block content %}
 <h1>My matches</h1>
 {% include "_filters.html" %}
+<div class="savebar">
+  <form class="save" action="/saved" method="post">
+    <input type="hidden" id="save-qs" name="qs" value="{{ save_qs }}">
+    <label>Save this search as
+      <input type="text" name="name" maxlength="80" required placeholder="e.g. NJ analyst roles"></label>
+    <button class="btn ghost" type="submit">Save this search</button>
+  </form>
+  {% if saved %}
+  <section class="saved" aria-labelledby="saved-h">
+    <h2 id="saved-h">Saved searches</h2>
+    <ul>
+      {% for s in saved %}
+      <li>
+        {% if s.filters %}
+        <a href="{{ s.href }}">{{ s.name }}</a>
+        <span class="muted small">{{ s.matches }} match{{ 'es' if s.matches != 1 }}{% if since %} · {{ s.new }} new{% endif %}</span>
+        {% else %}
+        <span>{{ s.name }}</span> <span class="chip warn" title="{{ s.error }}">skipped: {{ s.error }}</span>
+        {% endif %}
+        <details class="inline"><summary>Edit</summary>
+          <form action="/saved/{{ s.id }}/rename" method="post">
+            <label>Rename <input type="text" name="name" maxlength="80" required value="{{ s.name }}"></label>
+            <button class="btn ghost" type="submit">Rename</button>
+          </form>
+          <form action="/saved/{{ s.id }}/delete" method="post">
+            <button class="btn ghost danger" type="submit" aria-label="Delete saved search {{ s.name }}">Delete</button>
+          </form>
+        </details>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+<span hx-post="/visit/touch" hx-trigger="load" hx-swap="none" hidden></span>
 <section id="results" aria-live="polite">{% include "_results.html" %}</section>
 {% endblock %}

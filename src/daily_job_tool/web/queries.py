@@ -5,6 +5,7 @@ All SQL is parameterized; user-controlled enums are whitelisted by pydantic Lite
 
 from __future__ import annotations
 
+import re
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -23,53 +24,160 @@ FEED_COLS = """
 """
 
 
+SENIORITY = (
+    "intern entry mid senior staff principal lead manager director vp exec unknown"
+).split()
+_TAG_RE = re.compile(r"^[a-z0-9][a-z0-9+#.\-_/ ]{0,39}$")
+_FUNC_RE = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
+_LIST_FIELDS = ("seniority", "tags")
+
+
 class FeedFilters(BaseModel):
-    """Querystring <-> SQL source of truth for the feed (Phase 3 extends this)."""
+    """Querystring <-> SQL source of truth for the feed and the saved searches.
+
+    Unknown fields are ignored (so old saved searches keep loading). Enums are whitelisted by
+    Literals / allowed-value checks; everything reaches SQL as a bind parameter.
+    """
 
     q: str = Field(default="", max_length=200)
+    company: str = Field(default="", max_length=100)
     tier: Literal["any", "1", "2", "3", "targets"] = "any"
     place: Literal["any", "nj", "nyc", "remote", "other"] = "any"
+    remote: Literal["any", "remote", "hybrid", "onsite"] = "any"
     industry_only: bool = False
     visa_only: bool = False
     min_pay: int | None = Field(default=None, ge=0, le=10_000_000)
     pay_unknown: Literal["include", "exclude"] = "include"
+    hide_no_pay: bool = False
+    max_years: int | None = Field(default=None, ge=0, le=60)
+    seniority: list[str] = Field(default_factory=list, max_length=12)
+    function: str = Field(default="", max_length=32)
+    tags: list[str] = Field(default_factory=list, max_length=10)
+    emp: Literal["any", "full_time", "full_time_unknown"] = "any"
+    clean_only: bool = False
     days: Literal["7", "14", "30", "all"] = "14"
+    posted24: bool = False
+    posted48: bool = False
+    sort: Literal["best", "newest"] = "best"
     reason: str = Field(default="", max_length=64)  # /filtered only
     offset: int = Field(default=0, ge=0, le=1_000_000)
     limit: int = Field(default=PAGE_SIZE, ge=1, le=200)
 
-    @field_validator("q", "reason", mode="before")
+    @field_validator("q", "reason", "company", "function", mode="before")
     @classmethod
     def _strip(cls, v: Any) -> Any:
         return v.strip() if isinstance(v, str) else (v or "")
 
-    @field_validator("min_pay", "industry_only", "visa_only", mode="before")
+    @field_validator("function")
     @classmethod
-    def _blank(cls, v: Any) -> Any:
+    def _func(cls, v: str) -> str:
+        v = v.lower()
+        if v and not _FUNC_RE.match(v):
+            raise ValueError("bad function")
+        return v
+
+    @field_validator("min_pay", "max_years", mode="before")
+    @classmethod
+    def _blank_int(cls, v: Any) -> Any:
         return None if v == "" else v
 
-    @field_validator("industry_only", "visa_only", mode="before")
+    @field_validator(
+        "industry_only", "visa_only", "hide_no_pay", "clean_only", "posted24", "posted48",
+        mode="before",
+    )  # fmt: skip
     @classmethod
     def _bool(cls, v: Any) -> Any:
-        return False if v is None else v
+        return False if v in (None, "") else v
+
+    @field_validator("seniority", "tags", mode="before")
+    @classmethod
+    def _listify(cls, v: Any) -> Any:
+        if v in (None, ""):
+            return []
+        return [v] if isinstance(v, str) else v
+
+    @field_validator("seniority")
+    @classmethod
+    def _sen(cls, v: list[str]) -> list[str]:
+        out = [x.strip().lower() for x in v if x and x.strip()]
+        bad = [x for x in out if x not in SENIORITY]
+        if bad:
+            raise ValueError(f"unknown seniority {bad[0]!r}")
+        return sorted(set(out))
+
+    @field_validator("tags")
+    @classmethod
+    def _tags(cls, v: list[str]) -> list[str]:
+        out: list[str] = []
+        for item in v:  # a text box may carry "python, sql"
+            for t in item.split(","):
+                t = t.strip().lower()
+                if t:
+                    if not _TAG_RE.match(t):
+                        raise ValueError(f"bad tag {t!r}")
+                    if t not in out:
+                        out.append(t)
+        return out
+
+    @property
+    def window_hours(self) -> int | None:
+        """24/48 h boxes override the days dropdown; both checked behaves as 48 h."""
+        if self.posted48:
+            return 48
+        return 24 if self.posted24 else None
+
+    def non_default(self) -> dict[str, Any]:
+        """Only the fields that differ from defaults (JSON-able); no paging, no /filtered reason."""
+        d = self.model_dump(mode="json", exclude={"limit", "offset", "reason"})
+        return {k: v for k, v in d.items() if v != type(self).model_fields[k].get_default(
+            call_default_factory=True
+        )}  # fmt: skip
+
+    @classmethod
+    def from_pairs(cls, pairs: list[tuple[str, str]]) -> FeedFilters:
+        d: dict[str, Any] = {}
+        for k, v in pairs:
+            if k in _LIST_FIELDS:
+                d.setdefault(k, []).append(v)
+            else:
+                d[k] = v
+        return cls.model_validate(d)
+
+    @classmethod
+    def from_qs(cls, qs: str) -> FeedFilters:
+        from urllib.parse import parse_qsl
+
+        return cls.from_pairs(parse_qsl(qs, keep_blank_values=True))
 
     def query_string(self, **over: Any) -> str:
         from urllib.parse import urlencode
 
-        d = self.model_dump(exclude={"limit"})
+        d = self.non_default()
+        for k in ("reason",):
+            if getattr(self, k):
+                d[k] = getattr(self, k)
+        if self.offset:
+            d["offset"] = self.offset
         d.update(over)
-        d = {
-            k: ("1" if v is True else v)
-            for k, v in d.items()
-            if v not in (None, "", False) and not (k == "offset" and v == 0)
-        }
-        defaults = {"tier": "any", "place": "any", "pay_unknown": "include", "days": "14"}
-        d = {k: v for k, v in d.items() if defaults.get(k) != v}
-        return urlencode(d)
+        pairs: list[tuple[str, Any]] = []
+        for k, v in d.items():
+            if v in (None, "", False, []) or (k == "offset" and v == 0):
+                continue
+            if isinstance(v, list):
+                pairs.extend((k, x) for x in v)
+            else:
+                pairs.append((k, "1" if v is True else v))
+        return urlencode(pairs)
 
 
 def _like_escape(s: str) -> str:
     return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+BEST_ORDER = (
+    "j.match_tier NULLS LAST, j.location_rank, j.industry_rank, j.fit_score DESC, "
+    "j.freshness_at DESC, j.id DESC"
+)
 
 
 def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dict[str, Any]]:
@@ -77,7 +185,11 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
     where = ["j.closed_at IS NULL"]
     p: dict[str, Any] = {}
     where.append("j.match_status = 'excluded'" if excluded else "j.match_status <> 'excluded'")
-    if f.days != "all":
+    hours = f.window_hours
+    if hours is not None:
+        where.append("j.freshness_at > now() - make_interval(hours => :hours)")
+        p["hours"] = hours
+    elif f.days != "all":
         where.append("j.freshness_at > now() - make_interval(days => :days)")
         p["days"] = int(f.days)
     if f.tier in ("1", "2", "3"):
@@ -88,23 +200,46 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
     if f.place != "any":
         where.append("j.location_rank = :lrank")
         p["lrank"] = PLACE_RANK[f.place]
+    if f.remote != "any":
+        where.append("j.remote_type = CAST(:remote AS remote_type)")
+        p["remote"] = f.remote
     if f.industry_only:
         where.append("j.industry_rank = 0")
     if f.visa_only:
         where.append("j.visa_status = 'offered'")
+    if f.company:
+        where.append("j.company_id IN (SELECT c.id FROM companies c WHERE c.name ILIKE :co)")
+        p["co"] = f"%{_like_escape(f.company)}%"
     if f.min_pay is not None:
         cond = "coalesce(j.salary_max_usd, j.salary_min_usd) >= :min_pay"
-        if f.pay_unknown == "include":
+        if f.pay_unknown == "include" and not f.hide_no_pay:
             cond = f"({cond} OR (j.salary_max_usd IS NULL AND j.salary_min_usd IS NULL))"
         where.append(cond)
         p["min_pay"] = f.min_pay
+    if f.hide_no_pay:
+        where.append("(j.salary_max_usd IS NOT NULL OR j.salary_min_usd IS NOT NULL)")
+    if f.max_years is not None:
+        where.append("(j.years_min IS NULL OR j.years_min <= :max_years)")
+        p["max_years"] = f.max_years
+    if f.seniority:
+        where.append("j.seniority::text = ANY(CAST(:sen AS text[]))")
+        p["sen"] = f.seniority
+    if f.function:
+        where.append("j.function = :func")
+        p["func"] = f.function
+    if f.tags:
+        where.append("j.tech_tags && CAST(:tags AS text[])")
+        p["tags"] = f.tags
+    if f.emp == "full_time":
+        where.append("j.employment_type = 'full_time'")
+    elif f.emp == "full_time_unknown":
+        where.append("j.employment_type IN ('full_time', 'unknown')")
+    if f.clean_only and not excluded:
+        where.append("j.match_status = 'include'")
     if f.reason:
         where.append("j.match_reasons @> ARRAY[:reason]::text[]")
         p["reason"] = f.reason
-    order = (
-        "j.match_tier NULLS LAST, j.location_rank, j.industry_rank, j.fit_score DESC, "
-        "j.freshness_at DESC, j.id DESC"
-    )
+    order = BEST_ORDER if f.sort == "best" else "j.freshness_at DESC, j.id DESC"
     if f.q:
         where.append(
             "(j.search_tsv @@ websearch_to_tsquery('english', :q) "
@@ -139,6 +274,84 @@ async def fetch_feed(
         ).scalar_one()
     now = rows[0]["_now"] if rows else (await conn.execute(text("SELECT now()"))).scalar_one()
     return rows, has_more, total, now
+
+
+async def posted_counts(
+    conn: AsyncConnection, f: FeedFilters, *, excluded: bool = False
+) -> dict[str, int]:
+    """Counts for the 'Posted last 24/48 hours' boxes: all other filters apply, the days
+    dropdown and the two boxes themselves do not."""
+    base = f.model_copy(update={"days": "all", "posted24": False, "posted48": False})
+    where, _, p = build_feed(base, excluded=excluded)
+    row = (
+        await conn.execute(
+            text(
+                "SELECT count(*) FILTER (WHERE j.freshness_at > now() - interval '24 hours')"
+                " AS h24,"
+                " count(*) FILTER (WHERE j.freshness_at > now() - interval '48 hours') AS h48 "
+                f"FROM jobs j WHERE {where}"
+            ),
+            p,
+        )
+    ).one()
+    return {"h24": row.h24, "h48": row.h48}
+
+
+async def match_and_new_counts(
+    conn: AsyncConnection, f: FeedFilters, since: Any
+) -> tuple[int, int]:
+    """(matches, matches first seen after `since`); since=None -> 0 new."""
+    where, _, p = build_feed(f)
+    row = (
+        await conn.execute(
+            text(
+                "SELECT count(*) AS n, count(*) FILTER (WHERE j.first_seen_at > "
+                f"CAST(:since AS timestamptz)) AS new FROM jobs j WHERE {where}"
+            ),
+            {**p, "since": since},
+        )
+    ).one()
+    return row.n, row.new
+
+
+async def company_trend(conn: AsyncConnection, company_id: int, weeks: int = 13) -> list[dict]:
+    """Jobs opened (first_seen_at) vs closed (closed_at) per ISO week, last `weeks` weeks."""
+    res = await conn.execute(
+        text(
+            "SELECT w.wk::date AS week,"
+            " (SELECT count(*) FROM jobs j WHERE j.company_id = :c AND j.first_seen_at >= w.wk"
+            "   AND j.first_seen_at < w.wk + interval '1 week') AS opened,"
+            " (SELECT count(*) FROM jobs j WHERE j.company_id = :c AND j.closed_at >= w.wk"
+            "   AND j.closed_at < w.wk + interval '1 week') AS closed "
+            "FROM generate_series(date_trunc('week', now()) - make_interval(weeks => :w - 1),"
+            " date_trunc('week', now()), interval '1 week') AS w(wk) ORDER BY w.wk"
+        ),
+        {"c": company_id, "w": weeks},
+    )
+    return [dict(r) for r in res.mappings()]
+
+
+async def company_tier_counts(conn: AsyncConnection, company_id: int) -> dict[str, int]:
+    """Open (non-excluded) roles by match tier; key 'other' = not a target title."""
+    res = await conn.execute(
+        text(
+            "SELECT match_tier, count(*) AS n FROM jobs WHERE company_id = :c "
+            "AND closed_at IS NULL AND match_status <> 'excluded' GROUP BY 1"
+        ),
+        {"c": company_id},
+    )
+    out = {"1": 0, "2": 0, "3": 0, "other": 0}
+    for r in res:
+        out[str(r.match_tier) if r.match_tier else "other"] = r.n
+    out["open"] = sum(out.values())
+    return out
+
+
+async def function_options(conn: AsyncConnection) -> list[str]:
+    res = await conn.execute(
+        text("SELECT function FROM jobs WHERE closed_at IS NULL GROUP BY 1 ORDER BY count(*) DESC")
+    )
+    return [r[0] for r in res if _FUNC_RE.match(r[0] or "")]
 
 
 async def reason_counts(conn: AsyncConnection, f: FeedFilters) -> list[tuple[str, int]]:
