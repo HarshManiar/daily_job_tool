@@ -52,6 +52,7 @@ class FeedFilters(BaseModel):
     industry_only: bool = False
     visa_only: bool = False
     min_pay: int | None = Field(default=None, ge=0, le=10_000_000)
+    max_pay: int | None = Field(default=None, ge=0, le=10_000_000)
     pay_unknown: Literal["include", "exclude"] = "include"
     hide_no_pay: bool = False
     max_years: int | None = Field(default=None, ge=0, le=60)
@@ -60,7 +61,7 @@ class FeedFilters(BaseModel):
     tags: list[str] = Field(default_factory=list, max_length=10)
     emp: Literal["any", "full_time", "full_time_unknown"] = "any"
     clean_only: bool = False
-    days: Literal["1", "2", "7", "14", "30", "all"] = "14"
+    days: Literal["h6", "h12", "1", "2", "7", "14", "30", "all"] = "14"
     sponsorship: Literal["1", "0"] = "1"  # "1" (default): hide jobs that say no sponsorship
     experience: Literal["any", "0-2", "3-5", "5+"] = "any"
     only_stated_years: bool = False
@@ -87,7 +88,7 @@ class FeedFilters(BaseModel):
             raise ValueError("bad function")
         return v
 
-    @field_validator("min_pay", "max_years", mode="before")
+    @field_validator("min_pay", "max_pay", "max_years", mode="before")
     @classmethod
     def _blank_int(cls, v: Any) -> Any:
         return None if v == "" else v
@@ -154,7 +155,7 @@ class FeedFilters(BaseModel):
             return 48
         if self.posted24:
             return 24
-        return {"1": 24, "2": 48}.get(self.days)
+        return {"h6": 6, "h12": 12, "1": 24, "2": 48}.get(self.days)
 
     @property
     def hide_no_sponsor(self) -> bool:
@@ -298,6 +299,12 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
             cond = f"({cond} OR (j.salary_max_usd IS NULL AND j.salary_min_usd IS NULL))"
         where.append(cond)
         p["min_pay"] = f.min_pay
+    if f.max_pay is not None:
+        cond = "coalesce(j.salary_min_usd, j.salary_max_usd) <= :max_pay"
+        if f.pay_unknown == "include" and not f.hide_no_pay:
+            cond = f"({cond} OR (j.salary_max_usd IS NULL AND j.salary_min_usd IS NULL))"
+        where.append(cond)
+        p["max_pay"] = f.max_pay
     if f.hide_no_pay:
         where.append("(j.salary_max_usd IS NOT NULL OR j.salary_min_usd IS NOT NULL)")
     if f.max_years is not None:

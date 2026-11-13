@@ -1,7 +1,7 @@
 {% from "_icons.html" import caret, pin %}
 {% macro clear(href) %}<a class="link" href="{{ href }}" hx-get="{{ href }}" hx-target="#browse" hx-swap="outerHTML" hx-push-url="true">Clear</a>{% endmacro %}
 {% set bp = base_path %}
-{% set n_adv = [f.place != 'any', f.remote != 'any', f.min_pay is not none, f.hide_no_pay, f.pay_unknown != 'include', (f.seniority | length > 0), f.function != '', (f.tags | length > 0), f.emp != 'any', f.industry_only, f.visa_only, f.clean_only, f.show_dismissed, f.sort != 'best'] | select | list | length %}
+{% set n_adv = [f.place != 'any', f.remote != 'any', f.hide_no_pay, f.pay_unknown != 'include', (f.seniority | length > 0), f.function != '', (f.tags | length > 0), f.emp != 'any', f.industry_only, f.visa_only, f.clean_only, f.show_dismissed, f.sort != 'best'] | select | list | length %}
 <div id="browse" class="browse">
 <form id="filters" class="filters" action="{{ bp }}" method="get" hx-get="{{ bp }}" hx-target="#browse" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#browse" aria-label="Filter jobs">
   {% if not f.hide_no_sponsor %}<input type="hidden" name="sponsorship" value="0">{% endif %}
@@ -35,7 +35,7 @@
           <label class="check"><input type="checkbox" name="posted48" value="1" {% if f.posted48 %}checked{% endif %}> Posted last 48 hours <span class="cnt" id="cnt48" title="{{ posted_counts.h48 }} matching jobs">{{ posted_counts.h48 }}</span></label>
           <p class="muted small">These override the choices below (both checked means 48 hours).</p>
         </div>
-        {% for v, l in [('all','Any time'),('1','Past 24 hours'),('2','Past 48 hours'),('7','Past week'),('14','Past 2 weeks'),('30','Past month')] %}
+        {% for v, l in [('all','Any time'),('h6','Past 6 hours'),('h12','Past 12 hours'),('1','Past 24 hours'),('2','Past 48 hours'),('7','Past week'),('14','Past 2 weeks'),('30','Past month')] %}
         <label class="check"><input type="radio" name="days" value="{{ v }}" {% if f.days == v %}checked{% endif %}> {{ l }}</label>{% endfor %}
         <div class="pop-actions">{{ clear(bp ~ '?' ~ f.query_string(days='14', posted24=False, posted48=False, offset=0)) }}<button class="btn-primary sm" type="submit">Apply</button></div>
       </div>
@@ -67,6 +67,18 @@
         <p class="muted small">Jobs that don't state years are included.</p>
         <label class="check"><input type="checkbox" name="only_stated_years" value="1" {% if f.only_stated_years %}checked{% endif %}> Only jobs that state years</label>
         <div class="pop-actions">{{ clear(bp ~ '?' ~ f.query_string(experience='any', only_stated_years=False, offset=0)) }}<button class="btn-primary sm" type="submit">Apply</button></div>
+      </div>
+    </details>
+
+    <details class="pw" data-pop>
+      <summary class="pill {% if f.min_pay is not none or f.max_pay is not none %}on{% endif %}"><span>Pay range</span>{{ caret() }}</summary>
+      <div class="pop" role="group" aria-label="Pay range">
+        <label class="stack">Minimum ($ per year)
+          <input type="number" name="min_pay" min="0" step="5000" value="{{ f.min_pay if f.min_pay is not none else '' }}" placeholder="120000"></label>
+        <label class="stack">Maximum ($ per year)
+          <input type="number" name="max_pay" min="0" step="5000" value="{{ f.max_pay if f.max_pay is not none else '' }}" placeholder="200000"></label>
+        <p class="muted small">Jobs without stated pay are kept unless you hide them in All filters.</p>
+        <div class="pop-actions">{{ clear(bp ~ '?' ~ f.query_string(min_pay=None, max_pay=None, offset=0)) }}<button class="btn-primary sm" type="submit">Apply</button></div>
       </div>
     </details>
 
@@ -119,8 +131,6 @@
       </fieldset>
       <label class="stack">Remote type
         <select name="remote">{% for v, l in [('any','Any'),('remote','Remote'),('hybrid','Hybrid'),('onsite','On-site')] %}<option value="{{ v }}" {% if f.remote == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></label>
-      <label class="stack">Minimum pay ($ per year)
-        <input type="number" name="min_pay" min="0" step="5000" value="{{ f.min_pay if f.min_pay is not none else '' }}" placeholder="120000"></label>
       <label class="stack">Jobs with no stated pay
         <select name="pay_unknown"><option value="include" {% if f.pay_unknown == 'include' %}selected{% endif %}>Include</option><option value="exclude" {% if f.pay_unknown == 'exclude' %}selected{% endif %}>Exclude when a minimum is set</option></select></label>
       <label class="check"><input type="checkbox" name="hide_no_pay" value="1" {% if f.hide_no_pay %}checked{% endif %}> Hide jobs without stated pay</label>
