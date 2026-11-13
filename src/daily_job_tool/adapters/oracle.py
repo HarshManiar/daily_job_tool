@@ -54,7 +54,7 @@ from urllib.parse import urlsplit
 from daily_job_tool.adapters.base import Adapter, FetchResult, RawJob, SalaryRaw, SourceRef
 from daily_job_tool.adapters.html_list import ConfigError
 from daily_job_tool.adapters.registry import register
-from daily_job_tool.adapters.workday import DEFAULT_DETAIL_TITLE_REGEX
+from daily_job_tool.adapters.workday import default_detail_title_regex
 from daily_job_tool.http.errors import FetchError, NotFound
 
 if TYPE_CHECKING:
@@ -179,7 +179,7 @@ class OracleAdapter(Adapter):
         size = max(1, int(c.get("page_size", PAGE_SIZE)))
         max_jobs = int(c.get("max_jobs", MAX_JOBS))
         max_pages = int(c.get("max_pages", MAX_PAGES))
-        detail_re = re.compile(c.get("detail_title_regex") or DEFAULT_DETAIL_TITLE_REGEX, re.I)
+        detail_re = re.compile(c.get("detail_title_regex") or default_detail_title_regex(), re.I)
         warnings: list[str] = []
         us_id: Any = None
 

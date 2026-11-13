@@ -46,7 +46,7 @@ from selectolax.lexbor import SelectolaxError
 from daily_job_tool.adapters.base import Adapter, FetchResult, RawJob, SalaryRaw, SourceRef
 from daily_job_tool.adapters.html_list import ConfigError
 from daily_job_tool.adapters.registry import register
-from daily_job_tool.adapters.workday import DEFAULT_DETAIL_TITLE_REGEX
+from daily_job_tool.adapters.workday import default_detail_title_regex
 
 if TYPE_CHECKING:
     from daily_job_tool.http.client import CrawlClient
@@ -267,7 +267,7 @@ class IcimsAdapter(Adapter):
 
     @staticmethod
     def _detail_re(src: SourceRef) -> re.Pattern[str]:
-        pattern = src.config.get("detail_title_regex") or DEFAULT_DETAIL_TITLE_REGEX
+        pattern = src.config.get("detail_title_regex") or default_detail_title_regex()
         return re.compile(pattern, DEFAULT_RE_FLAGS)
 
     async def fetch_jobs(self, src: SourceRef, http: "CrawlClient") -> FetchResult:

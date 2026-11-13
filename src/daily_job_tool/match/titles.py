@@ -4,21 +4,18 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 
-from daily_job_tool.match.profile import Profile, compile_rx
+from daily_job_tool.match.profile import DEFAULT_BLOCKED_LEVELS, Profile, compile_rx
 
 _STOP = {"and", "of", "the", "for", "in", "a"}
 _MODIFIERS = {"senior", "junior", "i", "ii", "iii", "iv", "1", "2", "3", "4", "sr", "jr"}
 _SOFT_EXTRA = _MODIFIERS | {"associate"}  # tolerated as extra tokens in a job title
-_BLOCK = {
-    "manager", "director", "vp", "vice", "president", "head", "principal", "staff", "intern",
-    "internship", "chief", "executive", "svp", "evp",
-}  # fmt: skip
 _HEAD_NOUNS = {
     "analyst", "engineer", "consultant", "developer", "scientist", "owner", "manager",
     "specialist", "architect",
 }  # fmt: skip
 _ALIASES = {"engineering": "engineer", "rwe": "real world evidence"}
 _MAX_GAP = 2
+_BLOCK = frozenset(DEFAULT_BLOCKED_LEVELS)  # default; a profile's blocked_levels overrides
 
 
 def _stem(t: str) -> str:
@@ -75,18 +72,20 @@ def _targets(titles: tuple[str, ...]) -> tuple[tuple[tuple[str, ...], ...], ...]
     return tuple(out)
 
 
-def _span_match(job: list[str], tgt: tuple[str, ...]) -> bool:
+def _span_match(
+    job: list[str], tgt: tuple[str, ...], block: frozenset[str] | set[str] = _BLOCK
+) -> bool:
     def rec(ti: int, start: int, first: int | None) -> bool:
         if ti == len(tgt):
             last = start - 1
             outside = job[:first] + job[last + 1 :]
-            return not any(x in _BLOCK for x in outside)
+            return not any(x in block for x in outside)
         lo = start
         hi = len(job) if ti == 0 else min(len(job), start + _MAX_GAP + 1)
         for i in range(lo, hi):
             if job[i] != tgt[ti]:
                 continue
-            if ti > 0 and any(x in _BLOCK for x in job[start:i]):
+            if ti > 0 and any(x in block for x in job[start:i]):
                 continue
             if rec(ti + 1, i + 1, i if first is None else first):
                 return True
@@ -146,11 +145,12 @@ def _exclude_rx(profile: Profile) -> list[re.Pattern[str]]:
 def classify_title(title_norm: str, profile: Profile) -> TitleMatch:
     """Tier from target lists (best wins) or generic regexes. Tier 3 weak-fit is applied later."""
     jobs = _job_variants(title_norm)
+    block = frozenset(profile.target_titles.blocked_levels)
     best: int | None = None
     for tier, titles in ((1, profile.target_titles.tier1), (2, profile.target_titles.tier2),
                          (3, profile.target_titles.tier3)):  # fmt: skip
         for tgt in _targets(tuple(titles)):
-            if any(_span_match(j, tgt) for j in jobs):
+            if any(_span_match(j, tgt, block) for j in jobs):
                 best = tier
                 break
         if best:

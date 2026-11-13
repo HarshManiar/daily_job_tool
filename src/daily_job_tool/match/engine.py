@@ -10,7 +10,6 @@ from daily_job_tool.normalize.models import CompanyInfo, NormalizedJob
 from daily_job_tool.normalize.text import fold, html_to_lines
 
 CONTRACT_LIKE = {"contract", "temporary"}
-US_REMOTE = {"US", "NA", "NORTH_AMERICA", "AMER", "WORLD"}
 
 
 @dataclass
@@ -30,20 +29,22 @@ def _co_key(name: str) -> str:
 
 
 def location_rank(job: NormalizedJob, profile: Profile) -> int:
-    nj = profile.location("nj")
-    nyc = profile.location("nyc")
-    rem = profile.location("us_remote")
-    states = {s.upper() for s in (nj.states if nj else ["NJ"])}
-    cities = {fold(c) for c in (nyc.cities if nyc else [])}
-    regions = {r.upper() for r in (rem.remote_regions if rem else US_REMOTE)} | {"NORTH_AMERICA"}
+    """Index of the first matching `location_priority` entry; no match = len(list)."""
     locs = [loc for loc in job.locations if loc.get("country") == "US"]
-    if any((loc.get("admin1") or "").upper() in states for loc in locs):
-        return 0
-    if any(fold(loc.get("city") or "") in cities for loc in locs):
-        return 1
-    if job.remote_type == "remote" and regions & {r.upper() for r in job.remote_regions}:
-        return 2
-    return 3
+    job_regions = {r.upper() for r in job.remote_regions}
+    for i, entry in enumerate(profile.location_priority):
+        states = {s.upper() for s in entry.states}
+        cities = {fold(c) for c in entry.cities}
+        regions = {r.upper() for r in entry.remote_regions}
+        if regions:
+            regions.add("NORTH_AMERICA")
+        if states and any((loc.get("admin1") or "").upper() in states for loc in locs):
+            return i
+        if cities and any(fold(loc.get("city") or "") in cities for loc in locs):
+            return i
+        if regions and job.remote_type == "remote" and regions & job_regions:
+            return i
+    return len(profile.location_priority)
 
 
 def match(job: NormalizedJob, company: CompanyInfo, profile: Profile) -> MatchResult:
@@ -55,7 +56,7 @@ def match(job: NormalizedJob, company: CompanyInfo, profile: Profile) -> MatchRe
 
     if job.employment_type in CONTRACT_LIKE:
         excl.append("employment:contract")
-    if job.visa_status == "not_available":
+    if profile.visa_filters_on and job.visa_status == "not_available":
         excl.append("visa:not_available")
     thr = hf.years_required.max + 1
     over = job.years_min is not None and job.years_min >= thr
@@ -69,7 +70,7 @@ def match(job: NormalizedJob, company: CompanyInfo, profile: Profile) -> MatchRe
     if company.is_staffing and hf.exclude_staffing_reposts:
         excl.append("company:staffing")
 
-    if job.visa_status == "offered":
+    if profile.visa_filters_on and job.visa_status == "offered":
         info.append("visa:offered")
     for f in ("visa:export_control", "visa:opt_only", "employment:conflict"):
         if f in nf:

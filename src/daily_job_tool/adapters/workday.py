@@ -64,6 +64,7 @@ from daily_job_tool.adapters.base import Adapter, FetchResult, RawJob, SourceRef
 from daily_job_tool.adapters.html_list import ConfigError
 from daily_job_tool.adapters.registry import register
 from daily_job_tool.http.errors import FetchError, NotFound
+from daily_job_tool.match.profile import DEFAULT_DETAIL_TITLE_REGEX
 
 if TYPE_CHECKING:
     from daily_job_tool.http.client import CrawlClient
@@ -73,15 +74,18 @@ MAX_JOBS = 5000
 MAX_PAGES = 300
 US_COUNTRY_ID = "bc33aa3152ec42d4995f4791a106ed09"
 US_NAMES = {"united states of america", "united states", "usa", "us"}
-DEFAULT_DETAIL_TITLE_REGEX = (
-    r"data|analy|insight|report|intelligence|\bBI\b|scien|engineer|machine learning|\bML\b|\bAI\b"
-    r"|statistic|forecast|commercial|real.world|\bRWE\b|\bHEOR\b|claims|market access|pricing"
-    r"|operations research|decision|consult|solutions|product analyst|sales operations|field"
-    r"|econom|epidem|access|planner|planning|\bops\b|operations|revops|research|informatics"
-    r"|actuar|programmer|strategy|engagement|evidence|tableau|incentive|gross.to.net|outcomes"
-    r"|value|population health|performance|measurement|quantitative|risk adjustment|biostat"
-    r"|clinical data|medical affairs"
-)
+
+
+def default_detail_title_regex() -> str:
+    """Profile's crawl.detail_title_regex; the built-in default when no profile is readable."""
+    try:
+        from daily_job_tool.match.profile import get_profile
+
+        return get_profile().crawl.detail_title_regex
+    except Exception:  # noqa: BLE001 - a broken/missing profile must never break a crawl
+        return DEFAULT_DETAIL_TITLE_REGEX
+
+
 HOST_RE = re.compile(r"^([a-z0-9][a-z0-9-]*)\.(wd\d+)\.myworkdayjobs\.com$")
 IMPL_RE = re.compile(r"\.(impl-wd\d+|wd\d+-impl)\.myworkdayjobs\.com$")
 LA = ZoneInfo("America/Los_Angeles")
@@ -234,7 +238,7 @@ class WorkdayAdapter(Adapter):
         max_jobs = int(src.config.get("max_jobs", MAX_JOBS))
         max_pages = int(src.config.get("max_pages", MAX_PAGES))
         detail_re = re.compile(
-            src.config.get("detail_title_regex") or DEFAULT_DETAIL_TITLE_REGEX, re.IGNORECASE
+            src.config.get("detail_title_regex") or default_detail_title_regex(), re.IGNORECASE
         )
         today = self._today()
         url = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
