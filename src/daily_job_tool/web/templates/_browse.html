@@ -92,7 +92,7 @@
     <details class="pw loc" data-pop>
       <summary class="loc-btn">{{ pin() }}<span>{{ place_label }}</span>{{ caret() }}</summary>
       <div class="pop" role="group" aria-label="Location">
-        {% for v, l in [('any','Anywhere in US'),('nj','New Jersey'),('nyc','NYC area'),('remote','US remote'),('other','Other US')] %}
+        {% for v, l in place_options() %}
         <label class="check"><input type="radio" name="place" value="{{ v }}" {% if f.place == v %}checked{% endif %}> {{ l }}</label>{% endfor %}
         <div class="pop-actions">{{ clear(bp ~ '?' ~ f.query_string(place='any', offset=0)) }}<button class="btn-primary sm" type="submit">Apply</button></div>
       </div>
@@ -105,7 +105,7 @@
           <p>With “Best match” the list is sorted in this order:</p>
           <ol>
             <li>Jobs that look like the roles you want come first.</li>
-            <li>Then closer locations: New Jersey, then the NYC area, then US remote, then anywhere else in the US.</li>
+            {% if ranking_text() %}<li>Then closer locations: {{ ranking_text() }}.</li>{% endif %}
             <li>Then employers in your priority industries.</li>
             <li>Then how well the posting's skills fit yours.</li>
             <li>Then the newest postings.</li>
@@ -126,7 +126,7 @@
     <div class="drawer-head"><h2 id="af-h">All filters</h2><button class="x-btn" type="button" data-close-dialog aria-label="Close filters"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
     <div class="drawer-body">
       <fieldset><legend>Location</legend>
-        {% for v, l in [('any','Anywhere in US'),('nj','New Jersey'),('nyc','NYC area'),('remote','US remote'),('other','Other US')] %}
+        {% for v, l in place_options() %}
         <label class="check"><input type="radio" name="place" value="{{ v }}" {% if f.place == v %}checked{% endif %}> {{ l }}</label>{% endfor %}
       </fieldset>
       <label class="stack">Remote type

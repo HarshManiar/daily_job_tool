@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from daily_job_tool.web import format as fmt
+from daily_job_tool.web import queries
 from daily_job_tool.web.visits import since_text
 
 HERE = Path(__file__).parent
@@ -42,7 +43,9 @@ _env.filters.update(
     since_text=since_text,
 )
 _env.globals.update(
-    LOCATION_RANK_TEXT=fmt.LOCATION_RANK_TEXT,
+    location_rank_text=fmt.location_rank_text,
+    place_options=queries.place_options,
+    ranking_text=fmt.ranking_text,
     INDUSTRY_RANK_TEXT=fmt.INDUSTRY_RANK_TEXT,
     TIER_TEXT=fmt.TIER_TEXT,
 )

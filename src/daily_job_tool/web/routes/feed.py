@@ -12,14 +12,6 @@ from daily_job_tool.web.queries import FeedFilters
 router = APIRouter()
 NO_CACHE = {"Vary": "HX-Request, HX-Target", "Cache-Control": "no-store"}
 
-PLACE_LABEL = {
-    "any": "United States",
-    "nj": "New Jersey",
-    "nyc": "NYC area",
-    "remote": "US remote",
-    "other": "Other US",
-}
-
 
 async def _render(
     request: Request, conn: AsyncConnection, f: FeedFilters, *, excluded: bool, page: str
@@ -47,7 +39,7 @@ async def _render(
         "shown_to": f.offset + len(rows),
         "since": None if excluded else since,
         "here": base_path + ("?" + f.query_string() if f.query_string() else ""),
-        "place_label": PLACE_LABEL[f.place],
+        "place_label": queries.place_label(f.place),
         "selected_id": None,
         "j": None,
     }

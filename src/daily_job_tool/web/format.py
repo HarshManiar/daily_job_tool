@@ -37,7 +37,25 @@ INFO_TEXT = {
     "location_unknown": "Location could not be parsed",
 }
 
-LOCATION_RANK_TEXT = {0: "New Jersey", 1: "NYC area", 2: "US remote", 3: "Other US"}
+
+def ranking_text() -> str | None:
+    """'A, then B, then anywhere else in the US' from location_priority (None if empty)."""
+    from daily_job_tool.match.profile import get_profile
+
+    names = [e.display_label for e in get_profile().location_priority]
+    return ", then ".join([*names, "anywhere else in the US"]) if names else None
+
+
+def location_rank_text(rank: int | None) -> str | None:
+    """Label for a stored location_rank, from the profile's location_priority."""
+    from daily_job_tool.match.profile import get_profile
+
+    entries = get_profile().location_priority
+    if rank is None or rank < 0 or rank > len(entries):
+        return None
+    return "Other US" if rank == len(entries) else entries[rank].display_label
+
+
 INDUSTRY_RANK_TEXT = {0: "Priority industry", 1: "Other industry"}
 TIER_TEXT = {1: "Tier 1 target title", 2: "Tier 2 target title", 3: "Tier 3 target title"}
 
@@ -330,7 +348,7 @@ def why_matched(j: Mapping[str, Any]) -> list[str]:
         j.get("salary_min"), j.get("salary_max"),
     )  # fmt: skip
     out.append(f"Pay: {pay}." if pay else "Pay is not stated.")
-    loc = LOCATION_RANK_TEXT.get(j.get("location_rank"))  # type: ignore[arg-type]
+    loc = location_rank_text(j.get("location_rank"))
     if loc:
         out.append(f"Location counts as: {loc}.")
     ind = j.get("industry_rank")

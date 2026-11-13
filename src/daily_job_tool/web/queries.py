@@ -12,9 +12,60 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from daily_job_tool.match.profile import Profile, get_profile
+
 PAGE_SIZE = 25
 MAX_COMPANIES = 20
-PLACE_RANK = {"nj": 0, "nyc": 1, "remote": 2, "other": 3}
+
+
+def place_options(profile: Profile | None = None) -> list[tuple[str, str]]:
+    """(value, label) for the location filter: any, one per location_priority entry, other."""
+    p = profile or get_profile()
+    return [
+        ("any", "Anywhere in US"),
+        *[(e.key, e.display_label) for e in p.location_priority],
+        ("other", "Other US"),
+    ]
+
+
+def place_rank(value: str, profile: Profile | None = None) -> int:
+    """location_rank for a ?place= value (entry index; 'other' = len(list))."""
+    p = profile or get_profile()
+    for i, e in enumerate(p.location_priority):
+        if value in (e.key, e.name):
+            return i
+    return len(p.location_priority)
+
+
+def place_label(value: str, profile: Profile | None = None) -> str:
+    if value == "any":
+        return "United States"
+    return dict(place_options(profile)).get(value, "United States")
+
+
+def _num(x: float) -> str:
+    return format(float(x), ".4f")  # validated numbers only: never user strings in SQL
+
+
+def build_score_sql(profile: Profile | None = None) -> str:
+    """The /10 job score as SQL, from the profile's `scoring` block and years window."""
+    p = profile or get_profile()
+    sc, yr = p.scoring, p.hard_filters.years_required
+    tiers = " ".join(f"WHEN {i} THEN {_num(v)}" for i, v in enumerate(sc.tier_points, 1))
+    n_loc = len(p.location_priority) + 1
+    pts = (list(sc.location_points) + [0.0] * n_loc)[:n_loc]
+    locs = " ".join(f"WHEN {i} THEN {_num(v)}" for i, v in enumerate(pts))
+    lo, hi = int(yr.min), int(yr.max)
+    return f"""LEAST(10, (
+    CASE j.match_tier {tiers} ELSE 0 END
+  + LEAST({_num(sc.skills_max)}, GREATEST(0, j.fit_score) / 2.0)
+  + CASE WHEN j.years_min IS NULL THEN {_num(sc.years_unknown_or_low)}
+         WHEN j.years_min >= {hi + 1} THEN {_num(sc.years_over_max)}
+         WHEN j.years_min BETWEEN {lo} AND {hi} THEN {_num(sc.years_in_range)}
+         ELSE {_num(sc.years_unknown_or_low)} END
+  + CASE j.location_rank {locs} ELSE 0 END
+  + CASE WHEN j.industry_rank = 0 THEN {_num(sc.industry)} ELSE 0 END))::numeric(4,1)"""
+
 
 FEED_COLS = """
     j.id, j.title, j.company_id, co.name AS company_name, co.slug AS company_slug,
@@ -26,15 +77,8 @@ FEED_COLS = """
     (SELECT s.viewed_at FROM job_state s WHERE s.job_id = j.id) AS viewed_at,
     (SELECT s.dismissed_at FROM job_state s WHERE s.job_id = j.id) AS dismissed_at
 """
-# Fit score out of 10, from columns the match engine already stores: title tier (0-4),
-# skills overlap (0-2), years required vs 2-6 (0-2), location priority (0-1), industry (0-1).
-SCORE_SQL = """LEAST(10, (
-    CASE j.match_tier WHEN 1 THEN 4 WHEN 2 THEN 3 WHEN 3 THEN 2 ELSE 0 END
-  + LEAST(2, GREATEST(0, j.fit_score) / 2.0)
-  + CASE WHEN j.years_min IS NULL THEN 1 WHEN j.years_min >= 7 THEN 0
-         WHEN j.years_min BETWEEN 2 AND 6 THEN 2 ELSE 1 END
-  + CASE j.location_rank WHEN 0 THEN 1 WHEN 1 THEN 0.75 WHEN 2 THEN 0.5 ELSE 0 END
-  + CASE WHEN j.industry_rank = 0 THEN 1 ELSE 0 END))::numeric(4,1)"""
+# Fit score out of 10 from columns the match engine already stores (weights: profile `scoring`).
+SCORE_SQL = build_score_sql()
 FEED_COLS = FEED_COLS.replace("{SCORE}", SCORE_SQL)
 FEED_FROM = "jobs j JOIN companies co ON co.id = j.company_id"
 
@@ -57,7 +101,7 @@ class FeedFilters(BaseModel):
     q: str = Field(default="", max_length=200)
     company: str = Field(default="", max_length=100)
     tier: Literal["any", "1", "2", "3", "targets"] = "any"
-    place: Literal["any", "nj", "nyc", "remote", "other"] = "any"
+    place: str = "any"  # any | other | a location_priority key (validated against the profile)
     remote: Literal["any", "remote", "hybrid", "onsite"] = "any"
     industry_only: bool = False
     visa_only: bool = False
@@ -96,6 +140,17 @@ class FeedFilters(BaseModel):
         v = v.lower()
         if v and not _FUNC_RE.match(v):
             raise ValueError("bad function")
+        return v
+
+    @field_validator("place", mode="before")
+    @classmethod
+    def _place(cls, v: Any) -> Any:
+        v = (v or "any").strip() if isinstance(v, str) else (v or "any")
+        for e in get_profile().location_priority:
+            if v == e.name:
+                return e.key
+        if v not in {k for k, _ in place_options()}:
+            raise ValueError("unknown place")
         return v
 
     @field_validator("min_pay", "max_pay", "max_years", mode="before")
@@ -254,7 +309,7 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
     p: dict[str, Any] = {}
     if excluded:
         where.append("j.match_status = 'excluded'")
-    elif f.hide_no_sponsor:
+    elif f.hide_no_sponsor and get_profile().visa_filters_on:
         where.append("j.match_status <> 'excluded'")
         where.append("j.visa_status <> 'not_available'")
     else:
@@ -277,7 +332,7 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
         where.append("j.match_tier IS NOT NULL")
     if f.place != "any":
         where.append("j.location_rank = :lrank")
-        p["lrank"] = PLACE_RANK[f.place]
+        p["lrank"] = place_rank(f.place)
     if f.remote != "any":
         where.append("j.remote_type = CAST(:remote AS remote_type)")
         p["remote"] = f.remote
