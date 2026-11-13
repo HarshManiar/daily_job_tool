@@ -1,0 +1,26 @@
+{
+  "adapter": "adp",
+  "token": "4b9cd2ac-91a0-403a-8081-1c5a825120fc",
+  "config": {},
+  "recorded_at": "2026-11-13T04:24:49.719067+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions?cid=4b9cd2ac-91a0-403a-8081-1c5a825120fc&ccId=19000101_000001&lang=en_US&$top=20&$skip=0",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://workforcenow.adp.com/mascsr/default/careercenter/public/events/staffing/v1/job-requisitions/9207256660929_1?cid=4b9cd2ac-91a0-403a-8081-1c5a825120fc&ccId=19000101_000001&lang=en_US",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "001.json"
+    }
+  ]
+}

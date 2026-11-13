@@ -1,0 +1,58 @@
+{
+  "adapter": "html_list",
+  "token": "sutrobio",
+  "config": {
+    "list_url": "https://jobs.jobvite.com/sutrobio/jobs",
+    "job_link_selector": "td.jv-job-list-name a",
+    "base_url": "https://jobs.jobvite.com",
+    "id_from": "/job/([^/?#]+)",
+    "detail": {
+      "title": "h2.jv-header",
+      "location": "p.jv-job-detail-meta",
+      "description": "div.jv-job-detail-description",
+      "posted_at": {
+        "selector": "jsonld"
+      }
+    }
+  },
+  "recorded_at": "2026-11-13T05:33:08.898374+00:00",
+  "trimmed": "list reduced to 4 job rows (original markup selectors kept); job pages reduced to <title>, JSON-LD and key fragment",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://jobs.jobvite.com/sutrobio/jobs",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "000.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://jobs.jobvite.com/sutrobio/job/oBq0Afwl",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://jobs.jobvite.com/sutrobio/job/ozFWAfwu",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://jobs.jobvite.com/sutrobio/job/oajWAfwJ",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "003.html"
+    }
+  ]
+}

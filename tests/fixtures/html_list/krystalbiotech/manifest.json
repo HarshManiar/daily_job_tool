@@ -1,0 +1,57 @@
+{
+  "adapter": "html_list",
+  "token": "krystalbiotech",
+  "config": {
+    "list_url": "https://krystalbiotech.applytojob.com/apply",
+    "job_link_selector": "li.list-group-item a",
+    "link_filter_regex": "/apply/[A-Za-z0-9]+(/|$)",
+    "base_url": "https://krystalbiotech.applytojob.com",
+    "id_from": "/apply/([A-Za-z0-9]+)",
+    "detail": {
+      "title": "h1",
+      "posted_at": {
+        "selector": "jsonld"
+      }
+    }
+  },
+  "recorded_at": "2026-11-13T05:33:08.905094+00:00",
+  "trimmed": "list reduced to 7 job rows (original markup selectors kept); job pages reduced to <title>, JSON-LD and key fragment",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://krystalbiotech.applytojob.com/apply",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "000.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://krystalbiotech.applytojob.com/apply/knU7AEd5Op/Business-Operations-Manager-Spain",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://krystalbiotech.applytojob.com/apply/A6SdZul7Hs/Quality-Assurance-Associate",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://krystalbiotech.applytojob.com/apply/OC059FU4Pi/Quality-Control-Analyst-I",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "003.html"
+    }
+  ]
+}

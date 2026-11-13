@@ -1,0 +1,11 @@
+name,host,status,reason,jobs
+ZS Associates,careers-zs.icims.com,blocked_robots,robots.txt Disallow: / for all agents,0
+Navitus,careers-navitus.icims.com,seeded,robots allow /jobs/; 2 pages (85 jobs); JSON-LD datePosted,85
+Ulta Beauty,fdcnmcareers-ulta.icims.com,blocked_robots,robots.txt Disallow: /,0
+Cornerstone Research,ug-chire.icims.com,blocked_robots,robots.txt Disallow: / (campus portal),0
+Analysis Group,datasciencecareers-analysisgroup.icims.com,seeded,robots allow; 3 jobs; JSON-LD datePosted,3
+Rivian,us-careers-rivian.icims.com,blocked_robots,robots.txt Disallow: /,0
+Rocket Pharmaceuticals,careers-rocketpharma.icims.com,seeded,robots allow; 9 jobs; JSON-LD datePosted,9
+Certara,careers-certara.icims.com,blocked_robots,detected host was login.icims.com; guessed careers-certara host exists but robots Disallow: /,0
+Cotiviti,careers-cotiviti.icims.com,seeded,robots allow; 2 pages; JSON-LD datePosted,76
+Medpace,uscareers-medpace.icims.com,blocked_robots,robots.txt Disallow: /,0

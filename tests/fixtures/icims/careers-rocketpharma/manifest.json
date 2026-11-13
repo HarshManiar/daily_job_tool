@@ -1,0 +1,64 @@
+{
+  "adapter": "icims",
+  "token": "careers-rocketpharma",
+  "config": {
+    "host": "careers-rocketpharma.icims.com"
+  },
+  "recorded_at": "2026-11-13T00:58:16.075373+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://careers-rocketpharma.icims.com/jobs/search?ss=1&in_iframe=1&pr=0",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "000.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers-rocketpharma.icims.com/jobs/search?ss=1&in_iframe=1&pr=1",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers-rocketpharma.icims.com/jobs/2161/senior-clinical-manufacturing-associate/job?in_iframe=1",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers-rocketpharma.icims.com/jobs/2160/director%2c-assistant-controller/job?in_iframe=1",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "003.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers-rocketpharma.icims.com/jobs/2143/senior-director%2c-heor-and-pricing/job?in_iframe=1",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "004.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers-rocketpharma.icims.com/jobs/9999999/nosuch/job?in_iframe=1",
+      "json": null,
+      "status": 410,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "005.html"
+    }
+  ]
+}

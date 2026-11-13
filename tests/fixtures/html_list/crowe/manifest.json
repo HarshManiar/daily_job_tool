@@ -1,0 +1,57 @@
+{
+  "adapter": "html_list",
+  "token": "crowe",
+  "config": {
+    "list_url": "https://careers.crowe.com/sitemap.xml",
+    "mode": "sitemap",
+    "link_filter_regex": "/job/[^/]+/[^/]+/?$",
+    "base_url": "https://careers.crowe.com",
+    "id_from": "/job/([^/]+)/",
+    "detail": {
+      "title": "h1",
+      "posted_at": {
+        "selector": "jsonld"
+      }
+    }
+  },
+  "recorded_at": "2026-11-13T05:33:08.891720+00:00",
+  "trimmed": "sitemap cut to 13 URLs (3 non-job); job pages reduced to <title>, JSON-LD and h1",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://careers.crowe.com/sitemap.xml",
+      "json": null,
+      "status": 200,
+      "content_type": "application/xml",
+      "headers": {},
+      "file": "000.xml"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers.crowe.com/job/CROCROUSR51654EXTERNALENUS/Identity-and-Access-Management-Manager",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers.crowe.com/job/CROCROUSR52535EXTERNALENUS/Tax-Transaction-Advisory-Project-Manager",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers.crowe.com/job/CROCROUSR51868EXTERNALENUS/Senior-Consultant-Technology-Risk-Internal-Controls",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "003.html"
+    }
+  ]
+}

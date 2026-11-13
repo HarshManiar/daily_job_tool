@@ -1,0 +1,109 @@
+{
+  "adapter": "oracle",
+  "token": "myriad",
+  "config": {
+    "host": "ekgn.fa.us6.oraclecloud.com",
+    "site": "CX_2001",
+    "page_size": 10
+  },
+  "recorded_at": "2026-11-13T05:34:02.123170+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=CX_2001,limit=1,offset=0,sortBy=POSTING_DATES_DESC",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitions>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitions\"",
+        "location": ""
+      },
+      "file": "000.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=CX_2001,limit=10,offset=0,sortBy=POSTING_DATES_DESC,selectedLocationsFacet=300000000306332",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitions>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitions\"",
+        "location": ""
+      },
+      "file": "001.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=CX_2001,limit=10,offset=10,sortBy=POSTING_DATES_DESC,selectedLocationsFacet=300000000306332",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitions>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitions\"",
+        "location": ""
+      },
+      "file": "002.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=CX_2001,limit=10,offset=20,sortBy=POSTING_DATES_DESC,selectedLocationsFacet=300000000306332",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitions>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitions\"",
+        "location": ""
+      },
+      "file": "003.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=CX_2001,limit=10,offset=24,sortBy=POSTING_DATES_DESC,selectedLocationsFacet=300000000306332",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitions>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitions\"",
+        "location": ""
+      },
+      "file": "004.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&onlyData=true&finder=ById;Id=%226352%22,siteNumber=CX_2001",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitionDetails>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitionDetails\"",
+        "location": ""
+      },
+      "file": "005.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&onlyData=true&finder=ById;Id=%226436%22,siteNumber=CX_2001",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitionDetails>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitionDetails\"",
+        "location": ""
+      },
+      "file": "006.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&onlyData=true&finder=ById;Id=%22999999999%22,siteNumber=CX_2001",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {
+        "link": "<https://ekgn.fa.us6.oraclecloud.com:443/hcmRestApi/resources/11.13.18.05/recruitingCEJobRequisitionDetails>;rel=\"self\";kind=\"collection\";name=\"recruitingCEJobRequisitionDetails\"",
+        "location": ""
+      },
+      "file": "007.json"
+    }
+  ],
+  "trimmed": "facet trees other than locationsFacet[:3] emptied; links removed"
+}

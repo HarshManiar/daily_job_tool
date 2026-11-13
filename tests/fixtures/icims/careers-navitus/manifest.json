@@ -1,0 +1,37 @@
+{
+  "adapter": "icims",
+  "token": "careers-navitus",
+  "config": {
+    "host": "careers-navitus.icims.com"
+  },
+  "recorded_at": "2026-11-13T00:58:16.078549+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://careers-navitus.icims.com/jobs/search?ss=1&in_iframe=1&pr=0",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "000.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers-navitus.icims.com/jobs/search?ss=1&in_iframe=1&pr=1",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://careers-navitus.icims.com/jobs/7011/bilingual-%28spanish%29-telehealth-pharmacist/job?in_iframe=1",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html;charset=UTF-8",
+      "headers": {},
+      "file": "002.html"
+    }
+  ]
+}

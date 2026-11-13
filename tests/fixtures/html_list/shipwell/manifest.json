@@ -1,0 +1,57 @@
+{
+  "adapter": "html_list",
+  "token": "shipwell",
+  "config": {
+    "list_url": "https://shipwell.applytojob.com/apply",
+    "job_link_selector": "li.list-group-item a",
+    "link_filter_regex": "/apply/[A-Za-z0-9]+(/|$)",
+    "base_url": "https://shipwell.applytojob.com",
+    "id_from": "/apply/([A-Za-z0-9]+)",
+    "detail": {
+      "title": "h1",
+      "posted_at": {
+        "selector": "jsonld"
+      }
+    }
+  },
+  "recorded_at": "2026-11-13T05:33:08.907917+00:00",
+  "trimmed": "list reduced to 3 job rows (original markup selectors kept); job pages reduced to <title>, JSON-LD and key fragment",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://shipwell.applytojob.com/apply",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "000.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://shipwell.applytojob.com/apply/w4w3QkT8L5/Implementation-Project-Manager",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "001.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://shipwell.applytojob.com/apply/NM9dqXR6yE/Staff-Software-Engineer",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "002.html"
+    },
+    {
+      "method": "GET",
+      "url": "https://shipwell.applytojob.com/apply/fwWHifE9jd/VP-Of-Engineering",
+      "json": null,
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "headers": {},
+      "file": "003.html"
+    }
+  ]
+}

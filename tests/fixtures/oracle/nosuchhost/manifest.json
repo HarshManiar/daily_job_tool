@@ -1,0 +1,21 @@
+{
+  "adapter": "oracle",
+  "token": "nosuchhost",
+  "config": {
+    "host": "ekgn.fa.us6.oraclecloud.com",
+    "site": "CX_2001"
+  },
+  "recorded_at": "2026-11-13T00:00:00+00:00",
+  "note": "hand-made 400 for first page",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://ekgn.fa.us6.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations&finder=findReqs;siteNumber=CX_2001,limit=1,offset=0,sortBy=POSTING_DATES_DESC",
+      "json": null,
+      "status": 400,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    }
+  ]
+}

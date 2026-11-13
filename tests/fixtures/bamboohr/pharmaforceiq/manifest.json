@@ -1,0 +1,35 @@
+{
+  "adapter": "bamboohr",
+  "token": "pharmaforceiq",
+  "config": {},
+  "recorded_at": "2026-11-13T04:18:56.450753+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://pharmaforceiq.bamboohr.com/careers/list",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://pharmaforceiq.bamboohr.com/careers/29/detail",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "001.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://pharmaforceiq.bamboohr.com/careers/999999/detail",
+      "json": null,
+      "status": 404,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "002.json"
+    }
+  ]
+}

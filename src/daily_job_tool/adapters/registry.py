@@ -15,6 +15,10 @@ ADAPTER_MODULES = [
     "pharmaace",
     "html_list",
     "workday",
+    "icims",
+    "adp",
+    "bamboohr",
+    "oracle",
 ]
 
 _REGISTRY: dict[str, type[Adapter]] = {}

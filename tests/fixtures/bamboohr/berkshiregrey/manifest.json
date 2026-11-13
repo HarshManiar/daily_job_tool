@@ -1,0 +1,26 @@
+{
+  "adapter": "bamboohr",
+  "token": "berkshiregrey",
+  "config": {},
+  "recorded_at": "2026-11-13T04:18:55.952991+00:00",
+  "exchanges": [
+    {
+      "method": "GET",
+      "url": "https://berkshiregrey.bamboohr.com/careers/list",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "000.json"
+    },
+    {
+      "method": "GET",
+      "url": "https://berkshiregrey.bamboohr.com/careers/689/detail",
+      "json": null,
+      "status": 200,
+      "content_type": "application/json",
+      "headers": {},
+      "file": "001.json"
+    }
+  ]
+}
