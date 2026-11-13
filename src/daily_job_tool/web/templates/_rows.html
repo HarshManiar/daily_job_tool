@@ -1,5 +1,5 @@
-{% from "_row.html" import row %}
-{% for r in rows %}{{ row(r, now, show_reasons=excluded, since=(None if excluded else since)) }}{% endfor %}
+{% from "_card.html" import card %}
+{% for r in rows %}{{ card(r, now, since, (r.id == selected_id), here, excluded) }}{% endfor %}
 {% if has_more %}
-<li class="more"><button class="btn ghost" hx-get="{{ base_path }}?{{ next_qs }}" hx-target="closest li" hx-swap="outerHTML" hx-push-url="false">Load more</button></li>
+<li class="more" hx-get="{{ base_path }}?{{ next_qs }}" hx-trigger="intersect once, click" hx-target="this" hx-swap="outerHTML" hx-push-url="false"><button class="btn ghost" type="button">Load more</button></li>
 {% endif %}

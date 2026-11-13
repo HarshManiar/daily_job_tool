@@ -1,42 +1,15 @@
 {% extends "base.html" %}
-{% block title %}My matches · Daily Job Tool{% endblock %}
-{% block content %}
-<h1>My matches</h1>
-{% include "_filters.html" %}
-<div class="savebar">
-  <form class="save" action="/saved" method="post">
-    <input type="hidden" id="save-qs" name="qs" value="{{ save_qs }}">
-    <label>Save this search as
-      <input type="text" name="name" maxlength="80" required placeholder="e.g. NJ analyst roles"></label>
-    <button class="btn ghost" type="submit">Save this search</button>
-  </form>
-  {% if saved %}
-  <section class="saved" aria-labelledby="saved-h">
-    <h2 id="saved-h">Saved searches</h2>
-    <ul>
-      {% for s in saved %}
-      <li>
-        {% if s.filters %}
-        <a href="{{ s.href }}">{{ s.name }}</a>
-        <span class="muted small">{{ s.matches }} match{{ 'es' if s.matches != 1 }}{% if since %} · {{ s.new }} new{% endif %}</span>
-        {% else %}
-        <span>{{ s.name }}</span> <span class="chip warn" title="{{ s.error }}">skipped: {{ s.error }}</span>
-        {% endif %}
-        <details class="inline"><summary>Edit</summary>
-          <form action="/saved/{{ s.id }}/rename" method="post">
-            <label>Rename <input type="text" name="name" maxlength="80" required value="{{ s.name }}"></label>
-            <button class="btn ghost" type="submit">Rename</button>
-          </form>
-          <form action="/saved/{{ s.id }}/delete" method="post">
-            <button class="btn ghost danger" type="submit" aria-label="Delete saved search {{ s.name }}">Delete</button>
-          </form>
-        </details>
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
+{% block title %}{{ 'Filtered out' if excluded else 'Matches' }} · Daily Job Tool{% endblock %}
+{% block bodyclass %}app{% endblock %}
+{% block mainclass %}browse-main{% endblock %}
+{% block search %}
+<div class="search" role="search">
+  <svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <input id="top-q" type="search" name="q" form="filters" value="{{ f.q }}" placeholder="Search title, company or description" aria-label="Search jobs" autocomplete="off"
+    hx-get="{{ base_path }}" hx-include="#filters" hx-trigger="input changed delay:400ms" hx-target="#browse" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#browse">
 </div>
+{% endblock %}
+{% block content %}
+{% include "_browse.html" %}
 <span hx-post="/visit/touch" hx-trigger="load" hx-swap="none" hidden></span>
-<section id="results" aria-live="polite">{% include "_results.html" %}</section>
 {% endblock %}

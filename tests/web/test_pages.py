@@ -79,9 +79,9 @@ async def test_filters(client, db):
         assert r.status_code == 200
         return set(titles(r.text))
 
-    assert await t("tier=1") == {"t1nj", "rich", "poor"}
-    assert await t("tier=3") == {"t3rem"}
-    assert await t("tier=targets") == {"t1nj", "t2nyc", "t3rem", "rich", "poor"}
+    everything = await t("")
+    assert await t("tier=1") == everything  # the tier filter is gone from the UI: ignored
+    assert await t("tier=targets") == everything
     assert await t("place=nj") == {"t1nj"}
     assert await t("place=nyc") == {"t2nyc"}
     assert await t("place=remote") == {"t3rem"}
@@ -110,20 +110,23 @@ async def test_pagination_no_duplicates(client, db):
     for i in range(120):
         await db.job(c, title=f"Job{i:03d}", fit_score=i % 7, age_days=0.01 * i)
     r1 = await client.get("/")
-    assert "<strong>120</strong>" in r1.text and "showing 50" in r1.text
+    assert "<strong>120</strong>" in r1.text and "showing 25" in r1.text
     seen = titles(r1.text)
-    assert len(seen) == 50
+    assert len(seen) == 25
     h = {"HX-Request": "true"}
-    r2 = await client.get("/?offset=50", headers=h)
-    assert "<html" not in r2.text and 'id="showing"' in r2.text and "Load more" in r2.text
-    page2 = titles(r2.text)
-    r3 = await client.get("/?offset=100", headers=h)
-    page3 = titles(r3.text)
-    assert (len(page2), len(page3)) == (50, 20) and "Load more" not in r3.text
-    assert len(set(seen + page2 + page3)) == 120
-    # filter swap returns only the results fragment
-    r4 = await client.get("/?tier=any", headers={**h, "HX-Target": "results"})
-    assert "<html" not in r4.text and "<strong>120</strong>" in r4.text
+    allt = list(seen)
+    for off in (25, 50, 75):
+        r = await client.get(f"/?offset={off}", headers=h)
+        assert "<html" not in r.text and 'id="showing"' in r.text and "Load more" in r.text
+        assert 'hx-trigger="intersect once, click"' in r.text
+        allt += titles(r.text)
+    r5 = await client.get("/?offset=100", headers=h)
+    last = titles(r5.text)
+    assert len(last) == 20 and "Load more" not in r5.text
+    assert len(set(allt + last)) == 120
+    # filter swap returns only the browse fragment
+    r4 = await client.get("/?days=all", headers={**h, "HX-Target": "browse"})
+    assert "<html" not in r4.text and "<strong>120</strong>" in r4.text and 'id="browse"' in r4.text
 
 
 async def test_row_chips_and_apply(client, db):
@@ -142,9 +145,10 @@ async def test_row_chips_and_apply(client, db):
     )
     await db.job(c, title="Evil", apply_url="javascript:alert(1)")
     html = (await client.get("/")).text
-    for s in ["T1", "$120–150K", "Offers sponsorship", "3–5 yrs", "type not stated", "undated",
-              "first seen", "remote"]:  # fmt: skip
+    for s in ["$120K–$150K/yr", "Offers sponsorship", "3–5 yrs", "type not stated", "undated",
+              "first seen", ">Remote<"]:  # fmt: skip
         assert s in html
+    assert "T1" not in html and "Tier" not in html
     assert 'href="https://example.com/apply" target="_blank" rel="noopener noreferrer"' in html
     assert "javascript:" not in html
 
@@ -169,7 +173,7 @@ async def test_job_detail_sanitizes(client, db):
     assert "<p>Hi</p>" in r.text
     assert "<script>alert" not in r.text and "onerror" not in r.text
     assert "javascript:" not in r.text
-    assert "salary:guess" in r.text and "no sponsorship" in r.text
+    assert "no sponsorship" in r.text and "Says no sponsorship" in r.text
     assert (await client.get("/jobs/999999")).status_code == 404
     assert (await client.get("/jobs/abc")).status_code == 422
 
@@ -234,7 +238,7 @@ async def test_security(client):
     csp = r.headers["content-security-policy"]
     assert "default-src 'self'" in csp and "frame-ancestors 'none'" in csp
     assert r.headers["x-content-type-options"] == "nosniff"
-    assert r.headers["referrer-policy"] == "no-referrer"
+    assert r.headers["referrer-policy"] == "same-origin"
     for host in ["evil.example", "127.0.0.1.evil.example", "localhost.evil.com:8000"]:
         assert (await client.get("/", headers={"Host": host})).status_code == 400
     for host in ["localhost:8000", "127.0.0.1", "[::1]:8000"]:

@@ -81,9 +81,9 @@ class Factory:
                         :match_tier, :match_reasons, :location_rank, :industry_rank, :fit_score,
                         :visa_status, :visa_evidence, :years_min, :years_max, :salary_min_usd,
                         :salary_max_usd, :apply_url, :description_html, :description_text,
-                        now() - make_interval(secs => :fs_age * 86400),
-                        now() - make_interval(secs => :age_days * 86400),
-                        now() - make_interval(secs => :age_days * 86400),
+                        now() - make_interval(secs => CAST(:fs_age AS float8) * 86400),
+                        now() - make_interval(secs => CAST(:age_days AS float8) * 86400),
+                        now() - make_interval(secs => CAST(:age_days AS float8) * 86400),
                         CASE WHEN CAST(:closed_age AS float8) IS NOT NULL
                              THEN now() - make_interval(secs => CAST(:closed_age AS float8) * 86400)
                              WHEN :closed THEN now() END,

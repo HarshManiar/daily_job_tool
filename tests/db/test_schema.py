@@ -12,7 +12,7 @@ from tests.conftest import alembic_config
 TABLES = {
     "companies", "sources", "blocked_domains", "removal_requests", "postings", "jobs",
     "crawl_runs", "company_daily_stats", "robots_cache", "fx_rates",
-    "app_state", "saved_searches",
+    "app_state", "saved_searches", "job_state",
 }  # fmt: skip
 ABSENT = {"llm_extractions", "plans", "users", "auth_tokens", "sessions"}
 INDEXES = {
@@ -153,3 +153,24 @@ def test_migration_0005_up_down_up(migrated_db):
     assert asyncio.run(present()) == set()
     command.upgrade(cfg, "head")
     assert asyncio.run(present()) == new
+
+
+def test_migration_0006_up_down_up(migrated_db):
+    cfg = alembic_config(migrated_db)
+
+    async def present() -> bool:
+        eng = create_async_engine(migrated_db, poolclass=NullPool)
+        try:
+            async with eng.connect() as c:
+                return bool(
+                    (
+                        await c.execute(text("SELECT to_regclass('public.job_state') IS NOT NULL"))
+                    ).scalar_one()
+                )
+        finally:
+            await eng.dispose()
+
+    command.downgrade(cfg, "0005_app_state_saved_searches")
+    assert asyncio.run(present()) is False
+    command.upgrade(cfg, "head")
+    assert asyncio.run(present()) is True

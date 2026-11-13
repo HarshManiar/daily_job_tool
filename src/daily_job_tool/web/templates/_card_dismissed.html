@@ -1,0 +1,7 @@
+<li class="card card-gone" id="card-{{ r.id }}" data-id="{{ r.id }}" data-gone="1">
+  <div class="card-main"><span class="muted">Dismissed <q>{{ r.title }}</q>.</span></div>
+  <form class="x" method="post" action="/jobs/{{ r.id }}/undismiss" hx-post="/jobs/{{ r.id }}/undismiss" hx-target="#card-{{ r.id }}" hx-swap="outerHTML">
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="link-btn" type="submit">Undo</button>
+  </form>
+</li>

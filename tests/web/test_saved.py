@@ -32,7 +32,9 @@ async def test_crud_flow_and_counts(client, db):
     await client.post("/saved", data={"name": "Remote", "qs": "remote=remote"}, headers=H)
     page = (await client.get("/")).text
     assert "Saved searches" in page and 'href="/?remote=remote"' in page
-    assert "2 matches" in page  # live count
+    assert 'title="matches">2<' in page  # live count in the Jobs popover
+    manage = (await client.get("/saved")).text
+    assert "2 matches" in manage
 
     sid = (await _rows(db))[1]["id"]
     r = await client.post(f"/saved/{sid}/rename", data={"name": "Renamed"}, headers=H)
@@ -82,7 +84,7 @@ async def test_create_validation(client, db):
         "/saved", data={"name": "y" * 79, "qs": "offset=50&reason=a&tier=1"}, headers=H
     )
     assert r.status_code == 303
-    assert (await _rows(db))[0]["query"] == {"tier": "1"}
+    assert (await _rows(db))[0]["query"] == {}  # tier is no longer a filter: never stored
 
 
 async def test_invalid_and_unknown_stored_queries(client, db):
@@ -99,13 +101,20 @@ async def test_invalid_and_unknown_stored_queries(client, db):
             )
     r = await client.get("/")
     assert r.status_code == 200
-    assert 'href="/?tier=1"' in r.text  # unknown field ignored
-    assert r.text.count("skipped:") == 3  # invalid ones skipped with a message
+    assert 'href="/"' in r.text  # tier and unknown fields ignored: "future" still loads
+    assert r.text.count("skipped:") == 2  # invalid ones skipped with a message
+    manage = (await client.get("/saved")).text
+    assert manage.count("skipped: tier is no longer a filter") == 2  # once per old query
+    assert manage.count("skipped:") == 4  # 2 invalid + 2 tier notes
 
 
 def test_parse_query_units():
-    f, err = saved.parse_query('{"tier": "2", "zzz": 1}')
-    assert f is not None and f.tier == "2" and err == ""
+    f, err, note = saved.parse_query_note('{"tier": "2", "targets_only": true, "zzz": 1}')
+    assert f is not None and f.tier == "any" and err == ""
+    assert note == "skipped: tier is no longer a filter"
+    assert saved.parse_query_note({"remote": "remote"})[2] == ""
+    f, err = saved.parse_query('{"zzz": 1}')
+    assert f is not None and err == ""
     assert saved.parse_query("{not json")[0] is None
     assert saved.parse_query('"str"')[0] is None
     f, err = saved.parse_query({"min_pay": -5})

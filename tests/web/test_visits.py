@@ -68,22 +68,22 @@ async def test_app_flow_with_clock(engine, db):
         await db.job(c, title="old-job", age_days=3)
 
         r = await cl.get("/")  # first visit: no banner, no badges
-        assert "new since" not in r.text and "chip new" not in r.text
+        assert "new since" not in r.text and "tag new" not in r.text
         assert (await cl.post("/visit/touch", headers=H)).status_code == 204
 
-        await db.job(c, title="fresh-job", age_days=0.0001)  # appears after the baseline
+        await db.job(c, title="fresh-job", age_days=0)  # appears after the baseline
         clock[0] = real + timedelta(minutes=30)
         for _ in range(2):  # reload twice: markers persist, nothing advances on GET
             r = await cl.get("/")
             assert "<strong>1</strong> new since" in r.text
-            assert r.text.count("chip new") == 1
+            assert r.text.count("tag new") == 1
             await cl.post("/visit/touch", headers=H)
 
         # next day: previous activity is the baseline; fresh-job predates it -> not new
         clock[0] = real + timedelta(days=1)
         r = await cl.get("/")
-        assert "chip new" not in r.text
-        await db.job(c, title="day2-job", age_days=0.0001)
+        assert "tag new" not in r.text
+        await db.job(c, title="day2-job", age_days=0)
         # day2-job's first_seen is "real now"; baseline (activity at real+30m) is later than it
         # on this timeline, so shift baseline via mark-all-seen semantics instead:
         async with engine.begin() as conn:
@@ -98,7 +98,7 @@ async def test_app_flow_with_clock(engine, db):
         seen = await cl.post("/visit/seen", data={"next": "/?tier=any"}, headers=H)
         assert seen.status_code == 303 and seen.headers["location"] == "/?tier=any"
         r = await cl.get("/")
-        assert "chip new" not in r.text and "Nothing new since" in r.text
+        assert "tag new" not in r.text and "Nothing new since" in r.text
         assert titles(r.text)  # feed still renders
 
 

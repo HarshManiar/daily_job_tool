@@ -2,7 +2,7 @@ import time
 
 from sqlalchemy import text
 
-from daily_job_tool.web.queries import FeedFilters, build_feed
+from daily_job_tool.web.queries import FEED_FROM, FeedFilters, build_feed
 
 
 async def test_feed_perf_20k(client, db):
@@ -50,7 +50,9 @@ async def test_feed_perf_20k(client, db):
         plan = "\n".join(
             row[0]
             for row in await conn.execute(
-                text(f"EXPLAIN SELECT j.id FROM jobs j WHERE {where} ORDER BY {order} LIMIT 51"),
+                text(
+                    f"EXPLAIN SELECT j.id FROM {FEED_FROM} WHERE {where} ORDER BY {order} LIMIT 51"
+                ),
                 p,
             )
         )
@@ -59,14 +61,15 @@ async def test_feed_perf_20k(client, db):
 
 
 COMBINED = (
-    "tier=targets&remote=remote&max_years=6&tags=sql&seniority=senior&seniority=mid"
+    "remote=remote&max_years=6&tags=sql&seniority=senior&seniority=mid"
     "&hide_no_pay=1&emp=full_time_unknown&clean_only=1&posted48=1&function=data&company=perf"
 )
 
 
 async def test_combined_and_variant_queries_fast(client, db):
     await test_feed_perf_20k(client, db)  # seeds 20k rows (and re-checks the default)
-    for qs in (COMBINED, "sort=newest", "tags=sql&sort=newest", "posted24=1", "q=analyst&days=30",
+    for qs in (COMBINED, "sponsorship=0", "experience=3-5&verified=1", "experience=5%2B&only_stated_years=1",
+               "companies=1&companies=2&days=all", "sort=newest", "tags=sql&sort=newest", "posted24=1", "q=analyst&days=30",
                "seniority=senior&function=data&remote=hybrid&days=all"):  # fmt: skip
         await client.get("/?" + qs)  # warm
         times = []

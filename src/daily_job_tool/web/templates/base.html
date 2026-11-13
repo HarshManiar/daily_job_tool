@@ -4,26 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="same-origin">
 <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false,"allowScriptTags":false,"selfRequestsOnly":true}'>
 <title>{% block title %}Daily Job Tool{% endblock %}</title>
 <link rel="stylesheet" href="/static/app.css">
 <script src="/static/htmx.min.js" defer></script>
+<script src="/static/app.js" defer></script>
 </head>
-<body>
+<body class="{% block bodyclass %}{% endblock %}">
+<a class="skip" href="#main">Skip to content</a>
 <header class="top">
-  <a class="brand" href="/">Daily Job Tool</a>
-  <nav>
-    <a href="/" {% if page == 'feed' %}aria-current="page"{% endif %}>My matches</a>
-    <a href="/filtered" {% if page == 'filtered' %}aria-current="page"{% endif %}>Filtered out</a>
-    <a href="/manual" {% if page == 'manual' %}aria-current="page"{% endif %}>Check by hand</a>
-    <a href="/health" {% if page == 'health' %}aria-current="page"{% endif %}>Health</a>
-  </nav>
-  <div id="refresh" class="refresh" hx-get="/refresh/status" hx-trigger="load" hx-swap="outerHTML">
-    <form method="post" action="/refresh"><button class="btn ghost" type="submit">Refresh now</button></form>
+  <div class="top-in">
+    <a class="brand" href="/">Daily Job Tool</a>
+    {% block search %}
+    <form class="search" role="search" action="/" method="get">
+      <svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="search" name="q" placeholder="Search title, company or description" aria-label="Search jobs" autocomplete="off">
+    </form>
+    {% endblock %}
+    <nav aria-label="Main">
+      <a href="/" {% if page in ('feed', 'filtered') %}aria-current="page"{% endif %}>Matches</a>
+      <a href="/manual" {% if page == 'manual' %}aria-current="page"{% endif %}>Manual check</a>
+      <a href="/health" {% if page == 'health' %}aria-current="page"{% endif %}>Health</a>
+    </nav>
+    <div id="refresh" class="refresh" hx-get="/refresh/status" hx-trigger="load" hx-swap="outerHTML">
+      <form method="post" action="/refresh"><button class="btn ghost" type="submit">Refresh now</button></form>
+    </div>
   </div>
 </header>
-<main>
+<main id="main" class="{% block mainclass %}page{% endblock %}">
 {% block content %}{% endblock %}
 </main>
 <footer class="foot"><a href="/about">About</a> · <a href="/privacy">Privacy</a> · <a href="/bot">About DailyJobToolBot</a> · <a href="/remove">Request removal</a> · local, single-user</footer>

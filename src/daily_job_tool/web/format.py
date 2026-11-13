@@ -192,3 +192,151 @@ def trend_chart(trend: list[dict], width: int = 520, height: int = 120) -> dict:
         "max": top,
         "summary": f"{so} opened and {sc} closed over the last {len(trend)} weeks",
     }
+
+
+# ---- two-pane job search presentation helpers -------------------------------------------------
+
+WORK_MODE = {"remote": "Remote", "hybrid": "Hybrid", "onsite": "On-site"}
+EMP_TEXT = {
+    "full_time": "Full-time",
+    "part_time": "Part-time",
+    "contract": "Contract",
+    "temporary": "Temporary",
+    "internship": "Internship",
+}
+
+
+def work_mode(remote_type: str | None) -> str:
+    return WORK_MODE.get(remote_type or "", "")
+
+
+def emp_label(emp: str | None) -> str:
+    return EMP_TEXT.get(emp or "", "")
+
+
+def card_location(locations: Sequence[Mapping[str, Any]] | None, remote_type: str | None) -> str:
+    """'New York, NY (Hybrid)'; the mode is omitted when unknown."""
+    base = location_text(locations, remote_type if remote_type != "remote" else None)
+    if remote_type == "remote" and base == "Location not stated":
+        return "Remote"
+    mode = work_mode(remote_type)
+    return (
+        f"{base} ({mode})"
+        if mode and remote_type != "remote"
+        else (f"{base} (Remote)" if mode and base != "Remote" else base)
+    )
+
+
+def _plural(n: int, unit: str) -> str:
+    return f"{n} {unit}{'' if n == 1 else 's'} ago"
+
+
+def ago(dt: datetime | None, now: datetime) -> str:
+    """'just now', '37 minutes ago', '3 hours ago', '2 days ago', '1 week ago', '3 months ago'."""
+    if dt is None:
+        return ""
+    secs = max((now - dt).total_seconds(), 0)
+    if secs < 60:
+        return "just now"
+    if secs < 3600:
+        return _plural(int(secs // 60), "minute")
+    if secs < 86400:
+        return _plural(int(secs // 3600), "hour")
+    days = int(secs // 86400)
+    if days < 7:
+        return _plural(days, "day")
+    if days < 30:
+        return _plural(days // 7, "week")
+    if days < 365:
+        return _plural(days // 30, "month")
+    return _plural(days // 365, "year")
+
+
+def posted_ago(posted_at: datetime | None, freshness_at: datetime | None, now: datetime) -> str:
+    if posted_at is not None:
+        return ago(posted_at, now)
+    if freshness_at is not None:
+        return f"first seen {ago(freshness_at, now)}"
+    return ""
+
+
+def _k(n: float) -> str:
+    if n >= 1000:
+        return "$" + f"{n / 1000:.1f}".rstrip("0").rstrip(".") + "K"
+    return f"${n:.0f}"
+
+
+def pay_line(
+    lo_usd: int | float | None,
+    hi_usd: int | float | None,
+    period: str | None = None,
+    raw_lo: Any = None,
+    raw_hi: Any = None,
+) -> str:
+    """'$89K–$150K/yr'; '$45–$60/hr' only when the posting is hourly and the raw numbers are
+    present, otherwise annualised from the USD columns ('est.' when the source was not yearly)."""
+    if period == "hour" and raw_lo is not None:
+        a = f"${float(raw_lo):.0f}"
+        b = f"${float(raw_hi):.0f}" if raw_hi is not None else None
+        return f"{a}–{b}/hr" if b and b != a else f"{a}/hr"
+    if lo_usd is None and hi_usd is None:
+        return ""
+    lo = lo_usd if lo_usd is not None else hi_usd
+    hi = hi_usd if hi_usd is not None else lo_usd
+    txt = _k(lo) if lo == hi else f"{_k(lo)}–{_k(hi)}"  # type: ignore[arg-type]
+    if hi_usd is None:
+        txt += "+"
+    est = " est." if period not in (None, "year") else ""
+    return f"{txt}/yr{est}"
+
+
+AVATAR_COLORS = 10  # CSS classes .hue-0 .. .hue-9 (inline styles are blocked by the CSP)
+
+
+def avatar_hue(name: str | None) -> int:
+    """Deterministic colour index from the company name (no images)."""
+    h = 0
+    for ch in (name or "?").lower():
+        h = (h * 31 + ord(ch)) % 100003
+    return h % AVATAR_COLORS
+
+
+def initial(name: str | None) -> str:
+    for ch in name or "":
+        if ch.isalnum():
+            return ch.upper()
+    return "?"
+
+
+def years_phrase(lo: int | None, hi: int | None) -> str:
+    if lo is None and hi is None:
+        return "The posting does not state years of experience."
+    chip = years_chip(lo, hi)
+    return f"Asks for {chip.replace(' yrs', ' years')} of experience."
+
+
+def why_matched(j: Mapping[str, Any]) -> list[str]:
+    """Plain-English reasons (no tier names) for the detail pane."""
+    out: list[str] = [years_phrase(j.get("years_min"), j.get("years_max"))]
+    visa = j.get("visa_status")
+    if visa == "offered":
+        out.append("Offers visa sponsorship.")
+    elif visa == "not_available":
+        out.append("Says it will not sponsor visas.")
+    else:
+        out.append("Does not mention sponsorship either way.")
+    pay = pay_line(
+        j.get("salary_min_usd"), j.get("salary_max_usd"), j.get("salary_period"),
+        j.get("salary_min"), j.get("salary_max"),
+    )  # fmt: skip
+    out.append(f"Pay: {pay}." if pay else "Pay is not stated.")
+    loc = LOCATION_RANK_TEXT.get(j.get("location_rank"))  # type: ignore[arg-type]
+    if loc:
+        out.append(f"Location counts as: {loc}.")
+    ind = j.get("industry_rank")
+    if ind == 0:
+        out.append("The employer is in one of your priority industries.")
+    for r in j.get("match_reasons") or []:
+        if r in WARN_TEXT:
+            out.append(f"Heads up: {WARN_TEXT[r]}.")
+    return out

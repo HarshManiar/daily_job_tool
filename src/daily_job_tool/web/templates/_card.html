@@ -1,0 +1,46 @@
+{% from "_icons.html" import xmark %}
+{% macro card(r, now, since=None, selected=False, here="/", show_reasons=False) %}
+{% set href = r.apply_url | safe_url %}
+<li class="card hue-{{ r.company_name | avatar_hue }}{% if selected %} is-selected{% endif %}{% if r.viewed_at %} is-viewed{% endif %}{% if r.dismissed_at %} is-dismissed{% endif %}" id="card-{{ r.id }}" data-id="{{ r.id }}"{% if href %} data-apply="{{ href }}"{% endif %}{% if selected %} aria-current="true"{% endif %}>
+  <span class="avatar" aria-hidden="true">{{ r.company_name | initial }}</span>
+  <div class="card-main">
+    <h3 class="card-h"><a class="job-title" href="/jobs/{{ r.id }}">{{ r.title }}</a>{% if since and r.first_seen_at > since %} <span class="tag new">New</span>{% endif %}</h3>
+    <div class="card-co">{{ r.company_name }}</div>
+    <div class="card-loc">{{ r.locations | card_location(r.remote_type) }}</div>
+    {% set pay = r.salary_min_usd | pay_line(r.salary_max_usd, r.salary_period, r.salary_min, r.salary_max) %}
+    {% if pay %}<div class="card-pay">{{ pay }}</div>{% endif %}
+    {% set yrs = r.years_min | years_chip(r.years_max) %}
+    {% set warns = r.match_reasons | warn_chips %}
+    {% set quiet = r.match_reasons | quiet_chips %}
+    {% if r.visa_status in ('offered', 'not_available') or yrs or warns or quiet or r.employment_type not in ('unknown', 'full_time') %}
+    <div class="chips">
+      {% if r.visa_status == 'offered' %}<span class="chip good">Offers sponsorship</span>{% endif %}
+      {% if r.visa_status == 'not_available' and not show_reasons %}<span class="chip bad">Says no sponsorship</span>{% endif %}
+      {% if yrs %}<span class="chip">{{ yrs }}</span>{% endif %}
+      {% if r.employment_type not in ('unknown', 'full_time') %}<span class="chip">{{ r.employment_type | emp_label }}</span>{% endif %}
+      {% for w in warns %}<span class="chip warn">{{ w }}</span>{% endfor %}
+      {% for w in quiet %}<span class="chip quiet">{{ w }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    {% if show_reasons %}
+    <ul class="why">
+      {% for code in r.match_reasons | exclusion_reasons %}
+      <li><strong>{{ code | reason_text }}</strong>{% if code == 'visa:not_available' and r.visa_evidence %}: <q class="evidence">{{ r.visa_evidence }}</q>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="card-meta"><span class="posted">{{ r.posted_at | posted_ago(r.freshness_at, now) }}</span><span class="viewed-tag"> · Viewed</span></div>
+  </div>
+  {% if r.dismissed_at %}
+  <form class="x" method="post" action="/jobs/{{ r.id }}/undismiss" hx-post="/jobs/{{ r.id }}/undismiss" hx-target="#card-{{ r.id }}" hx-swap="outerHTML">
+    <input type="hidden" name="next" value="{{ here }}">
+    <button class="link-btn" type="submit">Undo<span class="sr"> dismiss of {{ r.title }}</span></button>
+  </form>
+  {% else %}
+  <form class="x" method="post" action="/jobs/{{ r.id }}/dismiss" hx-post="/jobs/{{ r.id }}/dismiss" hx-target="#card-{{ r.id }}" hx-swap="outerHTML">
+    <input type="hidden" name="next" value="{{ here }}">
+    <button class="x-btn" type="submit" title="Dismiss (x)" aria-label="Dismiss {{ r.title }}">{{ xmark() }}</button>
+  </form>
+  {% endif %}
+</li>
+{% endmacro %}

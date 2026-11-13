@@ -30,6 +30,15 @@ _env.filters.update(
     exclusion_reasons=fmt.exclusion_reasons,
     location_text=fmt.location_text,
     tier_label=fmt.tier_label,
+    ago=fmt.ago,
+    posted_ago=fmt.posted_ago,
+    pay_line=fmt.pay_line,
+    card_location=fmt.card_location,
+    work_mode=fmt.work_mode,
+    emp_label=fmt.emp_label,
+    avatar_hue=fmt.avatar_hue,
+    initial=fmt.initial,
+    why_matched=fmt.why_matched,
     since_text=since_text,
 )
 _env.globals.update(

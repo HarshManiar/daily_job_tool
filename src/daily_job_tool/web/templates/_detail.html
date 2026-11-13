@@ -1,0 +1,51 @@
+{% from "_icons.html" import ext %}
+{% set href = j.apply_url | safe_url %}
+{% set hd = 'h2' if pane else 'h1' %}
+<article class="detail hue-{{ j.company_name | avatar_hue }}" aria-labelledby="d-title" data-job="{{ j.id }}">
+  {% if track_view %}<span hx-post="/jobs/{{ j.id }}/viewed" hx-trigger="load" hx-swap="none" hidden></span>{% endif %}
+  <header class="d-head">
+    <div class="d-co"><span class="avatar lg" aria-hidden="true">{{ j.company_name | initial }}</span><a href="/companies/{{ j.company_slug }}">{{ j.company_name }}</a></div>
+    <{{ hd }} id="d-title" class="d-title">{{ j.title }}</{{ hd }}>
+    <p class="d-meta">{{ j.locations | location_text(j.remote_type) }} · {% if j.posted_at %}Posted {{ j.posted_at | ago(now) }}{% else %}First seen {{ j.freshness_at | ago(now) }}{% endif %}</p>
+    <p class="d-meta">Seen on the employer's site {{ j.last_seen_at | ago(now) }}</p>
+    {% if j.closed_at %}<p class="chip warn">Closed {{ j.closed_at.strftime('%Y-%m-%d') }}</p>{% endif %}
+    <div class="d-chips">
+      {% if j.remote_type | work_mode %}<span class="pillchip">{{ j.remote_type | work_mode }}</span>{% endif %}
+      {% if j.employment_type | emp_label %}<span class="pillchip">{{ j.employment_type | emp_label }}</span>{% else %}<span class="pillchip quiet">type not stated</span>{% endif %}
+      {% if j.visa_status == 'offered' %}<span class="pillchip good">Offers sponsorship</span>{% endif %}
+      {% if j.visa_status == 'not_available' %}<span class="pillchip bad">Says no sponsorship</span>{% endif %}
+    </div>
+    <div class="d-actions">
+      {% if href %}<a class="btn-primary apply" href="{{ href }}" target="_blank" rel="noopener noreferrer">Apply on {{ j.company_name }} {{ ext() }}</a>{% endif %}
+      {% if j.dismissed_at %}
+      <form method="post" action="/jobs/{{ j.id }}/undismiss"{% if pane %} hx-post="/jobs/{{ j.id }}/undismiss" hx-target="#card-{{ j.id }}" hx-swap="outerHTML"{% endif %}>
+        <input type="hidden" name="next" value="/"><button class="btn-outline" type="submit">Undo dismiss</button></form>
+      {% else %}
+      <form method="post" action="/jobs/{{ j.id }}/dismiss"{% if pane %} hx-post="/jobs/{{ j.id }}/dismiss" hx-target="#card-{{ j.id }}" hx-swap="outerHTML"{% endif %}>
+        <input type="hidden" name="next" value="/"><button class="btn-outline" type="submit" data-dismiss-detail>Not interested</button></form>
+      {% endif %}
+    </div>
+  </header>
+
+  <section class="why-box" aria-labelledby="why-h-{{ j.id }}">
+    <h3 id="why-h-{{ j.id }}">Why this matched</h3>
+    <ul>
+      {% for line in j | why_matched %}<li>{{ line }}</li>{% endfor %}
+    </ul>
+    {% if j.visa_evidence and j.visa_status != 'not_stated' %}<p class="evidence-line">Sponsorship wording in the posting: <q class="evidence">{{ j.visa_evidence }}</q></p>{% endif %}
+  </section>
+
+  <section class="desc" aria-labelledby="desc-h-{{ j.id }}">
+    <h3 id="desc-h-{{ j.id }}">About the job</h3>
+    {% if j.description_html %}<div class="prose">{{ j.description_html | sanitize | safe }}</div>
+    {% else %}<p class="muted">No description stored.</p>{% endif %}
+  </section>
+
+  <footer class="meta muted">
+    First seen {{ j.first_seen_at.strftime('%Y-%m-%d') }} · last seen {{ j.last_seen_at.strftime('%Y-%m-%d') }}
+    {% if j.posted_at %}· posted {{ j.posted_at.strftime('%Y-%m-%d') }}{% endif %}
+    {% if j.source_adapter %}· board: {{ j.source_adapter }}/{{ j.source_token }}{% endif %}
+    {% set purl = j.posting_url | safe_url %}
+    {% if purl %}· <a href="{{ purl }}" target="_blank" rel="noopener noreferrer">hosted posting</a>{% endif %}
+  </footer>
+</article>

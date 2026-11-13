@@ -1,0 +1,8 @@
+{% if items %}
+<ul class="co-opts" role="listbox" aria-label="Matching companies">
+{% for c in items %}
+  <li><label class="check"><input type="checkbox" name="companies" value="{{ c.id }}"{% if full %} disabled{% endif %}> {{ c.name }} <span class="muted small">{{ c.open_jobs }} open</span></label></li>
+{% endfor %}
+</ul>
+{% elif q %}<p class="muted small">No company matches “{{ q }}”.</p>{% endif %}
+{% if full %}<p class="muted small">You can pick at most 20 companies.</p>{% endif %}

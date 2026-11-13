@@ -40,10 +40,8 @@ async def test_company_page_renders_svg(client, db):
     assert r.status_code == 200
     t = r.text
     assert 'role="img"' in t and "<title" in t and "<desc" in t
-    assert (
-        "<svg" in t and "<rect" in t and "tier 1: 1" in t and "<strong>1</strong> open roles" in t
-    )
-    assert "<script" not in t.split("<main>")[1]
+    assert "<svg" in t and "<rect" in t and "<strong>1</strong> open roles" in t
+    assert "<script" not in t.split(chr(60) + "main")[1]
 
 
 def test_trend_chart_geometry():

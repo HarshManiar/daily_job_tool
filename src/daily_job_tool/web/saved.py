@@ -23,6 +23,7 @@ class SavedSearch:
     name: str
     filters: FeedFilters | None  # None -> stored query failed validation
     error: str = ""
+    note: str = ""  # e.g. "tier is no longer a filter": loaded, but some keys were ignored
     matches: int = 0
     new: int = 0
 
@@ -30,6 +31,25 @@ class SavedSearch:
     def href(self) -> str:
         qs = self.filters.query_string() if self.filters else ""
         return "/?" + qs if qs else "/"
+
+
+REMOVED_KEYS = ("tier", "targets_only")
+REMOVED_NOTE = "skipped: tier is no longer a filter"
+
+
+def parse_query_note(raw: Any) -> tuple[FeedFilters | None, str, str]:
+    """Like parse_query, plus a note when removed filter keys (tier / targets_only) were dropped."""
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except ValueError:
+            return None, "stored query is not valid JSON", ""
+    note = ""
+    if isinstance(raw, dict) and any(k in raw for k in REMOVED_KEYS):
+        raw = {k: v for k, v in raw.items() if k not in REMOVED_KEYS}
+        note = REMOVED_NOTE
+    f, err = parse_query(raw)
+    return f, err, note
 
 
 def parse_query(raw: Any) -> tuple[FeedFilters | None, str]:
@@ -46,7 +66,7 @@ def parse_query(raw: Any) -> tuple[FeedFilters | None, str]:
     except ValidationError as exc:
         first = exc.errors()[0]
         return None, f"invalid filter {'.'.join(map(str, first['loc']))}: {first['msg']}"
-    return f.model_copy(update={"offset": 0, "reason": ""}), ""
+    return f.model_copy(update={"offset": 0, "reason": "", "tier": "any"}), ""
 
 
 def clean_name(name: str) -> str:
@@ -62,8 +82,8 @@ async def list_saved(conn: AsyncConnection, since: Any, *, with_counts: bool = T
     ).all()
     out: list[SavedSearch] = []
     for r in rows:
-        f, err = parse_query(r.query)
-        item = SavedSearch(r.id, r.name, f, err)
+        f, err, note = parse_query_note(r.query)
+        item = SavedSearch(r.id, r.name, f, err, note)
         if f is not None and with_counts:
             item.matches, item.new = await queries.match_and_new_counts(conn, f, since)
         out.append(item)

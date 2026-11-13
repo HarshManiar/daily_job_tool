@@ -12,7 +12,8 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-PAGE_SIZE = 50
+PAGE_SIZE = 25
+MAX_COMPANIES = 20
 PLACE_RANK = {"nj": 0, "nyc": 1, "remote": 2, "other": 3}
 
 FEED_COLS = """
@@ -20,8 +21,12 @@ FEED_COLS = """
     co.industry AS company_industry, j.locations, j.remote_type, j.posted_at, j.freshness_at,
     j.first_seen_at, j.salary_min_usd, j.salary_max_usd, j.match_tier, j.match_status,
     j.match_reasons, j.visa_status, j.visa_evidence, j.years_min, j.years_max, j.fit_score,
-    j.apply_url, j.location_rank, j.industry_rank
+    j.apply_url, j.location_rank, j.industry_rank, j.last_seen_at, j.salary_min, j.salary_max,
+    j.salary_period, j.employment_type, 
+    (SELECT s.viewed_at FROM job_state s WHERE s.job_id = j.id) AS viewed_at,
+    (SELECT s.dismissed_at FROM job_state s WHERE s.job_id = j.id) AS dismissed_at
 """
+FEED_FROM = "jobs j JOIN companies co ON co.id = j.company_id"
 
 
 SENIORITY = (
@@ -29,7 +34,7 @@ SENIORITY = (
 ).split()
 _TAG_RE = re.compile(r"^[a-z0-9][a-z0-9+#.\-_/ ]{0,39}$")
 _FUNC_RE = re.compile(r"^[a-z][a-z0-9_]{0,31}$")
-_LIST_FIELDS = ("seniority", "tags")
+_LIST_FIELDS = ("seniority", "tags", "companies")
 
 
 class FeedFilters(BaseModel):
@@ -55,7 +60,13 @@ class FeedFilters(BaseModel):
     tags: list[str] = Field(default_factory=list, max_length=10)
     emp: Literal["any", "full_time", "full_time_unknown"] = "any"
     clean_only: bool = False
-    days: Literal["7", "14", "30", "all"] = "14"
+    days: Literal["1", "2", "7", "14", "30", "all"] = "14"
+    sponsorship: Literal["1", "0"] = "1"  # "1" (default): hide jobs that say no sponsorship
+    experience: Literal["any", "0-2", "3-5", "5+"] = "any"
+    only_stated_years: bool = False
+    verified: bool = False
+    companies: list[int] = Field(default_factory=list, max_length=MAX_COMPANIES)
+    show_dismissed: bool = False
     posted24: bool = False
     posted48: bool = False
     sort: Literal["best", "newest"] = "best"
@@ -83,11 +94,28 @@ class FeedFilters(BaseModel):
 
     @field_validator(
         "industry_only", "visa_only", "hide_no_pay", "clean_only", "posted24", "posted48",
+        "only_stated_years", "verified", "show_dismissed",
         mode="before",
     )  # fmt: skip
     @classmethod
     def _bool(cls, v: Any) -> Any:
         return False if v in (None, "") else v
+
+    @field_validator("companies", mode="before")
+    @classmethod
+    def _co_ids(cls, v: Any) -> Any:
+        if v in (None, ""):
+            return []
+        items = [v] if not isinstance(v, list | tuple) else list(v)
+        out: list[int] = []
+        for item in items:
+            for part in str(item).split(","):
+                part = part.strip()
+                if part:
+                    n = int(part)
+                    if n not in out and 0 < n < 2**62:
+                        out.append(n)
+        return out
 
     @field_validator("seniority", "tags", mode="before")
     @classmethod
@@ -124,11 +152,17 @@ class FeedFilters(BaseModel):
         """24/48 h boxes override the days dropdown; both checked behaves as 48 h."""
         if self.posted48:
             return 48
-        return 24 if self.posted24 else None
+        if self.posted24:
+            return 24
+        return {"1": 24, "2": 48}.get(self.days)
+
+    @property
+    def hide_no_sponsor(self) -> bool:
+        return self.sponsorship == "1"
 
     def non_default(self) -> dict[str, Any]:
         """Only the fields that differ from defaults (JSON-able); no paging, no /filtered reason."""
-        d = self.model_dump(mode="json", exclude={"limit", "offset", "reason"})
+        d = self.model_dump(mode="json", exclude={"limit", "offset", "reason", "tier"})
         return {k: v for k, v in d.items() if v != type(self).model_fields[k].get_default(
             call_default_factory=True
         )}  # fmt: skip
@@ -186,11 +220,38 @@ NOT_REMOVED = (
 )
 
 
+# Hard-exclusion reasons other than the visa one: a job excluded ONLY for "says no sponsorship"
+# is brought back when the sponsorship toggle is off; anything else stays excluded.
+_OTHER_EXCLUSION = (
+    "NOT EXISTS (SELECT 1 FROM unnest(j.match_reasons) r WHERE r IN "
+    "('employment:contract', 'company:excluded', 'company:staffing') "
+    "OR r LIKE 'years:min\\_%')"
+)
+NOT_DISMISSED = (
+    "NOT EXISTS (SELECT 1 FROM job_state s WHERE s.job_id = j.id AND s.dismissed_at IS NOT NULL)"
+)
+IS_DISMISSED = (
+    "EXISTS (SELECT 1 FROM job_state s WHERE s.job_id = j.id AND s.dismissed_at IS NOT NULL)"
+)
+
+
 def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dict[str, Any]]:
-    """Return (where_sql, order_sql, params). Only fixed SQL fragments are concatenated."""
+    """Return (where_sql, order_sql, params). Only fixed SQL fragments are concatenated.
+
+    Dismissed state is an (anti-)semi-join on job_state, so `FROM jobs j` is enough."""
     where = ["j.closed_at IS NULL", NOT_REMOVED]
     p: dict[str, Any] = {}
-    where.append("j.match_status = 'excluded'" if excluded else "j.match_status <> 'excluded'")
+    if excluded:
+        where.append("j.match_status = 'excluded'")
+    elif f.hide_no_sponsor:
+        where.append("j.match_status <> 'excluded'")
+        where.append("j.visa_status <> 'not_available'")
+    else:
+        where.append(
+            "(j.match_status <> 'excluded' OR "
+            f"(j.visa_status = 'not_available' AND {_OTHER_EXCLUSION}))"
+        )
+    where.append(IS_DISMISSED if f.show_dismissed else NOT_DISMISSED)
     hours = f.window_hours
     if hours is not None:
         where.append("j.freshness_at > now() - make_interval(hours => :hours)")
@@ -213,6 +274,21 @@ def build_feed(f: FeedFilters, *, excluded: bool = False) -> tuple[str, str, dic
         where.append("j.industry_rank = 0")
     if f.visa_only:
         where.append("j.visa_status = 'offered'")
+    if f.companies:
+        where.append("j.company_id = ANY(CAST(:cids AS bigint[]))")
+        p["cids"] = f.companies
+    if f.verified:
+        where.append("j.last_seen_at > now() - interval '48 hours'")
+    stated = "(j.years_min IS NOT NULL OR j.years_max IS NOT NULL)"
+    unk = "" if f.only_stated_years else "j.years_min IS NULL OR "
+    if f.experience == "0-2":
+        where.append(f"({unk}j.years_min <= 2)")
+    elif f.experience == "3-5":
+        where.append(f"({unk}(j.years_min <= 5 AND COALESCE(j.years_max, j.years_min) >= 3))")
+    elif f.experience == "5+":
+        where.append(f"({unk}j.years_min >= 5 OR j.years_max >= 5)")
+    elif f.only_stated_years:
+        where.append(stated)
     if f.company:
         where.append("j.company_id IN (SELECT c.id FROM companies c WHERE c.name ILIKE :co)")
         p["co"] = f"%{_like_escape(f.company)}%"
@@ -263,7 +339,7 @@ async def fetch_feed(
     """Return (rows, has_more, total, now)."""
     where, order, p = build_feed(f, excluded=excluded)
     sql = (
-        f"SELECT {FEED_COLS}, now() AS _now FROM jobs j JOIN companies co ON co.id = j.company_id "
+        f"SELECT {FEED_COLS}, now() AS _now FROM {FEED_FROM} "
         f"WHERE {where} ORDER BY {order} LIMIT :lim OFFSET :off"
     )
     res = await conn.execute(text(sql), {**p, "lim": f.limit + 1, "off": f.offset})
@@ -312,7 +388,8 @@ async def match_and_new_counts(
         await conn.execute(
             text(
                 "SELECT count(*) AS n, count(*) FILTER (WHERE j.first_seen_at > "
-                f"CAST(:since AS timestamptz)) AS new FROM jobs j WHERE {where}"
+                f"CAST(:since AS timestamptz)) AS new FROM jobs j "
+                f"WHERE {where}"
             ),
             {**p, "since": since},
         )
@@ -365,7 +442,8 @@ async def reason_counts(conn: AsyncConnection, f: FeedFilters) -> list[tuple[str
     where, _, p = build_feed(f2, excluded=True)
     res = await conn.execute(
         text(
-            f"SELECT r, count(*) AS n FROM jobs j, unnest(j.match_reasons) r WHERE {where} "
+            f"SELECT r, count(*) AS n FROM jobs j, "
+            f"unnest(j.match_reasons) r WHERE {where} "
             "AND (r IN ('visa:not_available','employment:contract','company:excluded',"
             "'company:staffing') OR r LIKE 'years:min\\_%') GROUP BY r ORDER BY n DESC, r"
         ),
@@ -375,7 +453,9 @@ async def reason_counts(conn: AsyncConnection, f: FeedFilters) -> list[tuple[str
 
 
 JOB_DETAIL = """
-SELECT j.*, co.name AS company_name, co.slug AS company_slug, co.industry AS company_industry,
+SELECT j.*, (SELECT s.viewed_at FROM job_state s WHERE s.job_id = j.id) AS viewed_at,
+       (SELECT s.dismissed_at FROM job_state s WHERE s.job_id = j.id) AS dismissed_at,
+       co.name AS company_name, co.slug AS company_slug, co.industry AS company_industry,
        co.domain AS company_domain, p.url AS posting_url, s.adapter AS source_adapter,
        s.token AS source_token
 FROM jobs j JOIN companies co ON co.id = j.company_id
@@ -415,7 +495,7 @@ async def company_jobs(
 ) -> tuple[list[dict[str, Any]], Any]:
     op = "=" if excluded else "<>"
     sql = (
-        f"SELECT {FEED_COLS}, now() AS _now FROM jobs j JOIN companies co ON co.id = j.company_id "
+        f"SELECT {FEED_COLS}, now() AS _now FROM {FEED_FROM} "
         f"WHERE j.company_id = :c AND j.closed_at IS NULL AND co.status <> 'removed' "
         f"AND j.match_status {op} 'excluded' "
         "ORDER BY j.match_tier NULLS LAST, j.location_rank, j.industry_rank, j.fit_score DESC, "
@@ -513,3 +593,58 @@ async def health_data(conn: AsyncConnection) -> dict[str, Any]:
     d["oldest_due"] = dict(oldest) if oldest else None
     d["now"] = (await conn.execute(text("SELECT now()"))).scalar_one()
     return d
+
+
+async def search_companies(
+    conn: AsyncConnection, q: str, exclude: list[int] | None = None, limit: int = 10
+) -> list[dict[str, Any]]:
+    """Typeahead: companies with open jobs whose name contains `q` (prefix matches first)."""
+    q = q.strip()[:100]
+    res = await conn.execute(
+        text(
+            "SELECT c.id, c.name, c.slug, count(j.id) AS open_jobs FROM companies c "
+            "JOIN jobs j ON j.company_id = c.id AND j.closed_at IS NULL "
+            "AND j.match_status <> 'excluded' "
+            "WHERE c.status <> 'removed' AND c.name ILIKE :like ESCAPE '\\' "
+            "AND NOT (c.id = ANY(CAST(:ex AS bigint[]))) "
+            "GROUP BY c.id ORDER BY (c.name ILIKE :pre ESCAPE '\\') DESC, count(j.id) DESC, "
+            "c.name LIMIT :lim"
+        ),
+        {
+            "like": f"%{_like_escape(q)}%",
+            "pre": f"{_like_escape(q)}%",
+            "ex": exclude or [],
+            "lim": limit,
+        },
+    )
+    return [dict(r) for r in res.mappings()]
+
+
+async def companies_by_ids(conn: AsyncConnection, ids: list[int]) -> list[dict[str, Any]]:
+    if not ids:
+        return []
+    res = await conn.execute(
+        text(
+            "SELECT id, name, slug FROM companies WHERE id = ANY(CAST(:ids AS bigint[])) "
+            "AND status <> 'removed' ORDER BY name"
+        ),
+        {"ids": ids},
+    )
+    return [dict(r) for r in res.mappings()]
+
+
+async def fetch_card(conn: AsyncConnection, job_id: int) -> dict[str, Any] | None:
+    row = (
+        (
+            await conn.execute(
+                text(
+                    f"SELECT {FEED_COLS}, now() AS _now FROM {FEED_FROM} "
+                    "WHERE j.id = :id AND co.status <> 'removed'"
+                ),
+                {"id": job_id},
+            )
+        )
+        .mappings()
+        .first()
+    )
+    return dict(row) if row else None

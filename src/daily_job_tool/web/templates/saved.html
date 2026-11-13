@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Saved searches · Daily Job Tool{% endblock %}
+{% block content %}
+<h1>Saved searches</h1>
+<section id="save" aria-labelledby="save-h">
+  <h2 id="save-h">Save the current filters</h2>
+  <form class="save" action="/saved" method="post">
+    <input type="hidden" name="qs" value="{{ save_qs }}">
+    <label>Name <input type="text" name="name" maxlength="80" required placeholder="e.g. NJ analyst roles"></label>
+    <button class="btn-primary sm" type="submit">Save this search</button>
+  </form>
+  <p class="muted small">Filters being saved: {{ save_qs or 'defaults (no filters)' }}</p>
+</section>
+<section aria-labelledby="list-h">
+  <h2 id="list-h">Your saved searches</h2>
+  {% if saved %}
+  <ul class="saved">
+    {% for s in saved %}
+    <li>
+      {% if s.filters %}
+      <a href="{{ s.href }}">{{ s.name }}</a>
+      <span class="muted small">{{ s.matches }} match{{ 'es' if s.matches != 1 }}{% if since %} · {{ s.new }} new{% endif %}</span>
+      {% else %}
+      <span>{{ s.name }}</span> <span class="chip warn" title="{{ s.error }}">skipped: {{ s.error }}</span>
+      {% endif %}
+      {% if s.note %}<span class="chip quiet">{{ s.note }}</span>{% endif %}
+      <details class="inline"><summary>Edit</summary>
+        <form action="/saved/{{ s.id }}/rename" method="post">
+          <label>Rename <input type="text" name="name" maxlength="80" required value="{{ s.name }}"></label>
+          <button class="btn-outline sm" type="submit">Rename</button>
+        </form>
+        <form action="/saved/{{ s.id }}/delete" method="post">
+          <button class="btn-outline sm danger" type="submit" aria-label="Delete saved search {{ s.name }}">Delete</button>
+        </form>
+      </details>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty">No saved searches yet.</p>{% endif %}
+</section>
+{% endblock %}

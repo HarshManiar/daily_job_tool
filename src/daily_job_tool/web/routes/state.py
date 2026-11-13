@@ -13,7 +13,7 @@ from fastapi import APIRouter, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 
 from daily_job_tool.web import saved, visits
-from daily_job_tool.web.deps import RWConn
+from daily_job_tool.web.deps import Conn, RWConn, templates
 from daily_job_tool.web.queries import FeedFilters
 
 router = APIRouter()
@@ -28,6 +28,27 @@ def _safe_next(nxt: str) -> str:
 
 def _see_other(url: str) -> RedirectResponse:
     return RedirectResponse(url, status_code=303)
+
+
+@router.get("/saved")
+async def saved_page(request: Request, conn: Conn):
+    """Manage saved searches; any filter querystring passed in is offered for saving."""
+    try:
+        f = FeedFilters.from_qs(request.url.query)
+    except ValueError:
+        f = FeedFilters()
+    since, _ = visits.effective_since(await visits.read_state(conn), request.app.state.clock())
+    return templates.TemplateResponse(
+        request,
+        "saved.html",
+        {
+            "page": "saved",
+            "saved": await saved.list_saved(conn, since),
+            "save_qs": f.query_string(offset=0),
+            "since": since,
+        },
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.post("/visit/touch")

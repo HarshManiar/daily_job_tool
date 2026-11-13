@@ -268,6 +268,14 @@ app_state = Table(
     Column("value", Text, nullable=False),
 )
 
+job_state = Table(
+    "job_state",
+    metadata,
+    Column("job_id", BigInteger, ForeignKey("jobs.id", ondelete="CASCADE"), primary_key=True),
+    _ts("viewed_at"),
+    _ts("dismissed_at"),
+)
+
 saved_searches = Table(
     "saved_searches",
     metadata,

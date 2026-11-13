@@ -42,8 +42,8 @@ async def test_counts_respect_other_filters_and_ignore_days(client, db):
 async def test_counts_refreshed_out_of_band_on_htmx_swap(client, db):
     c = await db.company("Oob")
     await db.job(c, title="x", age_days=0.1)
-    r = await client.get("/?posted24=1", headers={"HX-Request": "true", "HX-Target": "results"})
-    assert 'id="cnt24" hx-swap-oob="true"' in r.text and "<html" not in r.text
+    r = await client.get("/?posted24=1", headers={"HX-Request": "true", "HX-Target": "browse"})
+    assert 'id="cnt24"' in r.text and "<html" not in r.text and 'id="browse"' in r.text
 
 
 async def test_count_cache_ttl_with_fake_clock():

@@ -1,8 +1,1 @@
-{% extends "base.html" %}
-{% block title %}Filtered out · Daily Job Tool{% endblock %}
-{% block content %}
-<h1>Filtered out</h1>
-<p class="muted">Jobs excluded by your hard filters. Audit here for wrong exclusions.</p>
-{% include "_filters.html" %}
-<section id="results" aria-live="polite">{% include "_results.html" %}</section>
-{% endblock %}
+{% extends "feed.html" %}

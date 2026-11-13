@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_row.html" import row %}
+{% from "_card.html" import card %}
 {% block title %}{{ co.name }} · Daily Job Tool{% endblock %}
 {% block content %}
 <h1>{{ co.name }}</h1>
@@ -8,16 +8,15 @@
   · last 30 days: {{ act.opened }} opened, {{ act.closed }} closed</p>
 <section aria-labelledby="hiring-h">
   <h2 id="hiring-h">Hiring, last 90 days</h2>
-  <p><strong>{{ tiers.open }}</strong> open roles ·
-    tier 1: {{ tiers['1'] }} · tier 2: {{ tiers['2'] }} · tier 3: {{ tiers['3'] }} · other titles: {{ tiers.other }}</p>
+  <p><strong>{{ tiers.open }}</strong> open roles</p>
   {% include "_trend.html" %}
 </section>
 <h2>Open jobs ({{ rows | length }})</h2>
-{% if rows %}<ul class="jobs">{% for r in rows %}{{ row(r, now) }}{% endfor %}</ul>{% else %}<p class="empty">No open matching jobs.</p>{% endif %}
+{% if rows %}<ul class="cards plain">{% for r in rows %}{{ card(r, now, None, False, '/companies/' ~ co.slug) }}{% endfor %}</ul>{% else %}<p class="empty">No open matching jobs.</p>{% endif %}
 {% if ex_rows %}
 <details class="excluded-box">
   <summary>Filtered out ({{ ex_rows | length }})</summary>
-  <ul class="jobs">{% for r in ex_rows %}{{ row(r, now, show_reasons=True) }}{% endfor %}</ul>
+  <ul class="cards plain">{% for r in ex_rows %}{{ card(r, now, None, False, '/companies/' ~ co.slug, True) }}{% endfor %}</ul>
 </details>
 {% endif %}
 {% endblock %}
