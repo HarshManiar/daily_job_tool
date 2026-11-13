@@ -15,6 +15,8 @@ from daily_job_tool.adapters import registry
 from daily_job_tool.config import get_user_agent
 from daily_job_tool.http.client import CrawlClient
 from daily_job_tool.normalize import NormContext
+from daily_job_tool.ops.heartbeat import HeartbeatWriter
+from daily_job_tool.ops.power import PowerAssertion
 from daily_job_tool.pipeline.ingest import compute_next_crawl_at, ingest_source
 from daily_job_tool.scheduler.breaker import apply_breaker
 
@@ -260,6 +262,8 @@ async def run_worker(
     shutdown_grace_seconds: float = SHUTDOWN_GRACE_SECONDS,
     stop: asyncio.Event | None = None,
     force_stop: asyncio.Event | None = None,
+    power: PowerAssertion | None = None,
+    heartbeat: HeartbeatWriter | None = None,
 ) -> list[CrawlSummary]:
     """Claim and crawl due sources with a continuous pool of up to `concurrency` in flight.
 
@@ -292,9 +296,17 @@ async def run_worker(
     stop_waiter = asyncio.ensure_future(stop.wait())
     force_waiter = asyncio.ensure_future(force_stop.wait())
 
+    def pulse(*, force: bool = False) -> None:
+        if power is not None:
+            power.update(len(in_flight))
+        if heartbeat is not None:
+            heartbeat.tick(len(in_flight), force=force)
+
     def collect(done: set[asyncio.Task[CrawlSummary]]) -> None:
         for t in done:
             c = in_flight.pop(t)
+            if heartbeat is not None:
+                heartbeat.last_finished_source = f"{c.adapter}/{c.token}"
             if t.cancelled():
                 summaries.append(
                     CrawlSummary(c.id, c.adapter, c.token, "timeout", error=CANCEL_ERROR)
@@ -317,6 +329,8 @@ async def run_worker(
                 claimed = await claim_sources(
                     engine, free, adapter=adapter, source_id=source_id, skip=skip
                 )
+                if heartbeat is not None:
+                    heartbeat.poll()
                 if not claimed and once:
                     exhausted = True
                 for c in claimed:
@@ -333,6 +347,7 @@ async def run_worker(
                         )  # fmt: skip
                     )
                     in_flight[task] = c
+            pulse()
             limit_hit = limit is not None and started >= limit
             exhausted = exhausted or limit_hit
             if not in_flight and (once or limit_hit) and exhausted:
@@ -341,10 +356,15 @@ async def run_worker(
             # (only needed while slots are free and more work may appear)
             can_refill = not exhausted and len(in_flight) < concurrency
             timeout = poll_seconds if can_refill else None
+            if heartbeat is not None:
+                timeout = (
+                    heartbeat.interval if timeout is None else min(timeout, heartbeat.interval)
+                )
             await asyncio.wait(
                 {*in_flight, stop_waiter}, timeout=timeout, return_when=asyncio.FIRST_COMPLETED
             )
             collect({t for t in in_flight if t.done()})
+            pulse()
 
         # shutdown path (also reached with nothing in flight)
         if in_flight and not force_stop.is_set():
@@ -359,6 +379,10 @@ async def run_worker(
             await asyncio.gather(*in_flight, return_exceptions=True)
             collect(set(in_flight))
     finally:
+        if power is not None:
+            power.stop()
+        if heartbeat is not None:
+            heartbeat.clear()
         for t in (stop_waiter, force_waiter):
             t.cancel()
         for t in list(in_flight):  # only on unexpected exit

@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any
@@ -209,17 +210,62 @@ def _run_worker(*, once: bool, limit: int | None, adapter: str | None, source: i
 def worker(
     adapter: Annotated[str | None, typer.Option("--adapter")] = None,
     concurrency: Annotated[int, typer.Option("--concurrency")] = 8,
+    forever: Annotated[
+        bool, typer.Option("--forever/--once", help="Poll for due sources forever (default)")
+    ] = True,
+    poll_seconds: Annotated[float, typer.Option("--poll-seconds")] = 30.0,
+    heartbeat_file: Annotated[
+        Path | None, typer.Option("--heartbeat-file", help="Default ~/.daily_job_tool/")
+    ] = None,
+    no_caffeinate: Annotated[bool, typer.Option("--no-caffeinate")] = False,
 ) -> None:
     """Run the crawl worker until interrupted (SIGINT/SIGTERM finish in-flight work)."""
+    import logging
+
+    from sqlalchemy import text
+
     from daily_job_tool.db.session import get_engine
     from daily_job_tool.normalize import NormContext
+    from daily_job_tool.ops.heartbeat import HeartbeatWriter, default_heartbeat_path
+    from daily_job_tool.ops.power import PowerAssertion
+    from daily_job_tool.ops.status import DUE_SQL
     from daily_job_tool.scheduler.worker import run_worker
+
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
+    log = logging.getLogger("daily_job_tool.worker")
 
     async def run() -> list[Any]:
         engine = get_engine()
         try:
             ctx = NormContext.load(await _latest_fx_rates())
-            return await run_worker(engine, ctx, adapter=adapter, concurrency=concurrency)
+            async with engine.connect() as conn:
+                now = datetime.now(UTC)
+                due = (await conn.execute(text(DUE_SQL), {"now": now})).scalar()
+                active = (
+                    await conn.execute(text("SELECT count(*) FROM sources WHERE status='active'"))
+                ).scalar()
+                busy = (
+                    await conn.execute(
+                        text("SELECT count(*) FROM sources WHERE locked_until > :now"), {"now": now}
+                    )
+                ).scalar()
+            log.info(
+                "worker start: %s active sources, %s due now, %s in flight (leased); "
+                "mode=%s concurrency=%s",
+                active, due, busy, "forever" if forever else "once", concurrency,
+            )  # fmt: skip
+            return await run_worker(
+                engine,
+                ctx,
+                once=not forever,
+                adapter=adapter,
+                concurrency=concurrency,
+                poll_seconds=poll_seconds,
+                power=None if no_caffeinate else PowerAssertion(),
+                heartbeat=HeartbeatWriter(heartbeat_file or default_heartbeat_path()),
+            )
         finally:
             await engine.dispose()
 
@@ -451,3 +497,59 @@ def detect(
         raise typer.BadParameter("provide --csv or --domain")
     counts = asyncio.run(run_batch(csv_path, out, limit=limit, concurrency=concurrency))
     typer.echo(f"wrote {out}: {dict(sorted(counts.items()))}")
+
+
+@app.command()
+def status() -> None:
+    """Print a short operational status (last crawl, due sources, worker, backups)."""
+    from daily_job_tool.config import get_settings
+    from daily_job_tool.db.session import get_engine
+    from daily_job_tool.ops.status import collect_status, format_status
+
+    async def run() -> dict[str, Any]:
+        engine = get_engine()
+        try:
+            return await collect_status(engine, datetime.now(UTC))
+        finally:
+            await engine.dispose()
+
+    typer.echo(format_status(asyncio.run(run()), get_settings().bot_contact))
+
+
+@app.command()
+def backup(
+    directory: Annotated[
+        Path | None, typer.Option("--dir", help="Default ~/Backups/daily_job_tool")
+    ] = None,
+    keep: Annotated[int, typer.Option("--keep")] = 14,
+) -> None:
+    """pg_dump -Fc the database, keep the newest 14 dumps."""
+    from daily_job_tool.config import get_settings
+    from daily_job_tool.ops.backup import BackupError, default_backup_dir, make_backup
+
+    try:
+        out, pruned = make_backup(
+            get_settings().database_url, directory or default_backup_dir(), keep=keep
+        )
+    except BackupError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(f"wrote {out} ({out.stat().st_size / 1e6:.1f} MB); pruned {len(pruned)} old dump(s)")
+
+
+@app.command()
+def restore(
+    path: Annotated[Path, typer.Argument(help="A .dump file from `backup`")],
+    into: Annotated[str, typer.Option("--into", help="NEW database name")],
+    yes_overwrite: Annotated[bool, typer.Option("--yes-overwrite")] = False,
+) -> None:
+    """Restore a dump into a new database (refuses to replace an existing one by default)."""
+    from daily_job_tool.config import get_settings
+    from daily_job_tool.ops.backup import BackupError, restore_backup
+
+    try:
+        restore_backup(get_settings().database_url, path, into, overwrite=yes_overwrite)
+    except BackupError as exc:
+        typer.echo(f"error: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(f"restored {path} into database {into}")
